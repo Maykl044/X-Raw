@@ -15,8 +15,8 @@
     <Product>X-Rav</Product>
     <Authors>X-Rav</Authors>
     <NeutralLanguage>ru-RU</NeutralLanguage>
-    <Platforms>AnyCPU;x64</Platforms>
-    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+    <Platforms>AnyCPU;x64;x86</Platforms>
+    <RuntimeIdentifiers>win-x64;win-x86</RuntimeIdentifiers>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='Release'">

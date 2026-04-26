@@ -18,10 +18,13 @@ public sealed class WinTunnelService : ITunnelService, INotifyPropertyChanged, I
     private readonly SemaphoreSlim _gate = new(1, 1);
     private Process? _xray;
     private Process? _hev;
+    private Process? _singBox;
     private DataReceivedEventHandler? _xrayErr;
     private DataReceivedEventHandler? _xrayOut;
     private DataReceivedEventHandler? _hevErr;
     private DataReceivedEventHandler? _hevOut;
+    private DataReceivedEventHandler? _sbErr;
+    private DataReceivedEventHandler? _sbOut;
     private TunnelConnectionState _state = TunnelConnectionState.Disconnected;
     private string? _lastError;
 
@@ -63,18 +66,10 @@ public sealed class WinTunnelService : ITunnelService, INotifyPropertyChanged, I
             var hevExe = Path.Combine(AppDataPaths.ToolsDir, "hev-socks5-tunnel.exe");
             var wintunDll = Path.Combine(AppDataPaths.ToolsDir, "wintun.dll");
             var msysDll = Path.Combine(AppDataPaths.ToolsDir, "msys-2.0.dll");
+            var singBoxExe = Path.Combine(AppDataPaths.ToolsDir, "sing-box.exe");
             Directory.CreateDirectory(AppDataPaths.ToolsDir);
 
-            if (!File.Exists(xrayExe) || !File.Exists(hevExe) || !File.Exists(wintunDll) || !File.Exists(msysDll))
-            {
-                LastError = "Не найдены бинарники в "
-                    + AppDataPaths.ToolsDir
-                    + ". Откройте «Настройки → Бинарники» и нажмите «Подготовить» (нужен интернет).";
-                State = TunnelConnectionState.Error;
-                return;
-            }
-
-            if (!VpnKeyXrayConfig.TryGetPatchedConfig(activeKey, out var configJson, out var cfgErr))
+            if (!VpnKeyXrayConfig.TryGetBackend(activeKey, out var backend, out var cfgErr))
             {
                 LastError = cfgErr;
                 State = TunnelConnectionState.Error;
@@ -83,73 +78,33 @@ public sealed class WinTunnelService : ITunnelService, INotifyPropertyChanged, I
 
             Directory.CreateDirectory(AppDataPaths.RuntimeDir);
             Directory.CreateDirectory(AppDataPaths.XrayAssetDir);
-            await File.WriteAllTextAsync(AppDataPaths.XrayConfigPath, configJson, cancellationToken).ConfigureAwait(false);
-            var hevYaml = HevSocks5YamlBuilder.Build();
-            await File.WriteAllTextAsync(AppDataPaths.HevConfigPath, hevYaml, cancellationToken).ConfigureAwait(false);
 
-            var tools = AppDataPaths.ToolsDir;
-            var cfg = AppDataPaths.XrayConfigPath;
-            var hevCfg = AppDataPaths.HevConfigPath;
-
-            await Task.Run(
-                () =>
+            if (backend!.Kind == BackendKind.SingBox)
             {
-                var xrayPsi = new ProcessStartInfo
+                if (!File.Exists(singBoxExe) || !File.Exists(wintunDll))
                 {
-                    FileName = xrayExe,
-                    Arguments = $"run -c \"{cfg}\"",
-                    WorkingDirectory = tools,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    RedirectStandardError = true,
-                    RedirectStandardOutput = true
-                };
-                xrayPsi.Environment["XRAY_LOCATION_ASSET"] = AppDataPaths.XrayAssetDir;
-                _xray = Process.Start(xrayPsi);
-                if (_xray is null) throw new InvalidOperationException("xray: Process.Start вернул null.");
-                AttachXrayLogHandlers();
-                _xray.BeginErrorReadLine();
-                _xray.BeginOutputReadLine();
-                Thread.Sleep(400);
-                if (_xray.HasExited)
-                {
-                    var code = _xray.ExitCode;
-                    DetachXrayLog();
-                    _xray = null;
-                    throw new InvalidOperationException(
-                        $"xray сразу завершился (код {code}). Проверьте JSON и geoip.dat/geosite.dat в «{AppDataPaths.XrayAssetDir}».");
+                    LastError = $"Нет sing-box.exe или wintun.dll в {AppDataPaths.ToolsDir}. "
+                        + "Откройте «Настройки → Бинарники» и нажмите «Подготовить».";
+                    State = TunnelConnectionState.Error;
+                    return;
                 }
-
-                var hevPsi = new ProcessStartInfo
+                await File.WriteAllTextAsync(AppDataPaths.SingBoxConfigPath, backend.ConfigJson, cancellationToken).ConfigureAwait(false);
+                await StartSingBoxAsync(singBoxExe, AppDataPaths.SingBoxConfigPath, cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                if (!File.Exists(xrayExe) || !File.Exists(hevExe) || !File.Exists(wintunDll) || !File.Exists(msysDll))
                 {
-                    FileName = hevExe,
-                    Arguments = $"\"{hevCfg}\"",
-                    WorkingDirectory = tools,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    RedirectStandardError = true,
-                    RedirectStandardOutput = true
-                };
-                hevPsi.Environment["XRAY_LOCATION_ASSET"] = AppDataPaths.XrayAssetDir;
-                _hev = Process.Start(hevPsi);
-                if (_hev is null) throw new InvalidOperationException("hev: Process.Start вернул null.");
-                AttachHevLogHandlers();
-                _hev.BeginErrorReadLine();
-                _hev.BeginOutputReadLine();
-                Thread.Sleep(400);
-                if (_hev.HasExited)
-                {
-                    var code = _hev.ExitCode;
-                    DetachHevLog();
-                    TryKill(_xray);
-                    DetachXrayLog();
-                    _xray = null;
-                    _hev = null;
-                    throw new InvalidOperationException(
-                        $"hev-socks5-tunnel сразу завершился (код {code}). wintun.dll рядом с hev, админ, YAML: «{hevCfg}».");
+                    LastError = "Не найдены бинарники в "
+                        + AppDataPaths.ToolsDir
+                        + ". Откройте «Настройки → Бинарники» и нажмите «Подготовить» (нужен интернет).";
+                    State = TunnelConnectionState.Error;
+                    return;
                 }
-            },
-                cancellationToken).ConfigureAwait(false);
+                await File.WriteAllTextAsync(AppDataPaths.XrayConfigPath, backend.ConfigJson, cancellationToken).ConfigureAwait(false);
+                await File.WriteAllTextAsync(AppDataPaths.HevConfigPath, HevSocks5YamlBuilder.Build(), cancellationToken).ConfigureAwait(false);
+                await StartXrayHevAsync(xrayExe, AppDataPaths.XrayConfigPath, hevExe, AppDataPaths.HevConfigPath, cancellationToken).ConfigureAwait(false);
+            }
 
             State = TunnelConnectionState.Connected;
         }
@@ -199,6 +154,119 @@ public sealed class WinTunnelService : ITunnelService, INotifyPropertyChanged, I
             TryKill(_xray);
             _xray = null;
         }
+        if (_singBox is not null)
+        {
+            DetachSingBoxLog();
+            TryKill(_singBox);
+            _singBox = null;
+        }
+    }
+
+    private Task StartXrayHevAsync(string xrayExe, string xrayCfg, string hevExe, string hevCfg, CancellationToken ct) =>
+        Task.Run(() =>
+        {
+            var tools = AppDataPaths.ToolsDir;
+            var xrayPsi = new ProcessStartInfo
+            {
+                FileName = xrayExe,
+                Arguments = $"run -c \"{xrayCfg}\"",
+                WorkingDirectory = tools,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardError = true,
+                RedirectStandardOutput = true
+            };
+            xrayPsi.Environment["XRAY_LOCATION_ASSET"] = AppDataPaths.XrayAssetDir;
+            _xray = Process.Start(xrayPsi);
+            if (_xray is null) throw new InvalidOperationException("xray: Process.Start вернул null.");
+            AttachXrayLogHandlers();
+            _xray.BeginErrorReadLine();
+            _xray.BeginOutputReadLine();
+            Thread.Sleep(400);
+            if (_xray.HasExited)
+            {
+                var code = _xray.ExitCode;
+                DetachXrayLog();
+                _xray = null;
+                throw new InvalidOperationException(
+                    $"xray сразу завершился (код {code}). Проверьте JSON и geoip.dat/geosite.dat в «{AppDataPaths.XrayAssetDir}».");
+            }
+
+            var hevPsi = new ProcessStartInfo
+            {
+                FileName = hevExe,
+                Arguments = $"\"{hevCfg}\"",
+                WorkingDirectory = tools,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardError = true,
+                RedirectStandardOutput = true
+            };
+            _hev = Process.Start(hevPsi);
+            if (_hev is null) throw new InvalidOperationException("hev: Process.Start вернул null.");
+            AttachHevLogHandlers();
+            _hev.BeginErrorReadLine();
+            _hev.BeginOutputReadLine();
+            Thread.Sleep(400);
+            if (_hev.HasExited)
+            {
+                var code = _hev.ExitCode;
+                DetachHevLog();
+                TryKill(_xray);
+                DetachXrayLog();
+                _xray = null;
+                _hev = null;
+                throw new InvalidOperationException(
+                    $"hev-socks5-tunnel сразу завершился (код {code}). wintun.dll рядом с hev, админ, YAML: «{hevCfg}».");
+            }
+        }, ct);
+
+    private Task StartSingBoxAsync(string singBoxExe, string sbCfg, CancellationToken ct) =>
+        Task.Run(() =>
+        {
+            var tools = AppDataPaths.ToolsDir;
+            var psi = new ProcessStartInfo
+            {
+                FileName = singBoxExe,
+                Arguments = $"run -c \"{sbCfg}\"",
+                WorkingDirectory = tools,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardError = true,
+                RedirectStandardOutput = true
+            };
+            // sing-box ищет wintun.dll в рабочем каталоге; tools = AppDataPaths.ToolsDir, wintun.dll лежит там
+            _singBox = Process.Start(psi);
+            if (_singBox is null) throw new InvalidOperationException("sing-box: Process.Start вернул null.");
+            AttachSingBoxLogHandlers();
+            _singBox.BeginErrorReadLine();
+            _singBox.BeginOutputReadLine();
+            Thread.Sleep(600);
+            if (_singBox.HasExited)
+            {
+                var code = _singBox.ExitCode;
+                DetachSingBoxLog();
+                _singBox = null;
+                throw new InvalidOperationException(
+                    $"sing-box сразу завершился (код {code}). Проверьте JSON в «{sbCfg}», нужен запуск от администратора и wintun.dll в tools.");
+            }
+        }, ct);
+
+    private void AttachSingBoxLogHandlers()
+    {
+        if (_singBox is null) return;
+        _sbErr = (_, e) => EmitLog("sing-box", e.Data);
+        _sbOut = (_, e) => EmitLog("sing-box", e.Data);
+        _singBox.ErrorDataReceived += _sbErr;
+        _singBox.OutputDataReceived += _sbOut;
+    }
+
+    private void DetachSingBoxLog()
+    {
+        if (_singBox is null) return;
+        if (_sbErr is not null) _singBox.ErrorDataReceived -= _sbErr;
+        if (_sbOut is not null) _singBox.OutputDataReceived -= _sbOut;
+        _sbErr = _sbOut = null;
     }
 
     private void EmitLog(string source, string? data)

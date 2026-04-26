@@ -10,6 +10,10 @@ on:
 jobs:
   build:
     runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        rid: [ win-x64, win-x86 ]
     steps:
       - uses: actions/checkout@v4
 
@@ -23,18 +27,18 @@ jobs:
       - name: Build
         run: dotnet build Xrav.sln -c Release --no-restore
 
-      - name: Publish single-file self-contained
+      - name: Publish single-file self-contained (${{ matrix.rid }})
         run: |
           dotnet publish src/Xrav.Desktop/Xrav.Desktop.csproj `
-            -c Release -r win-x64 --self-contained true `
+            -c Release -r ${{ matrix.rid }} --self-contained true `
             /p:PublishSingleFile=true `
             /p:IncludeNativeLibrariesForSelfExtract=true `
             /p:DebugType=None /p:DebugSymbols=false `
-            -o publish/win-x64
+            -o publish/${{ matrix.rid }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: X-Rav-win-x64
-          path: publish/win-x64/X-Rav.exe
+          name: X-Rav-${{ matrix.rid }}
+          path: publish/${{ matrix.rid }}/X-Rav.exe
           if-no-files-found: error

@@ -247,15 +247,48 @@ public static class XrayConfigBuilder
         ["settings"] = new JsonObject()
     };
 
+    /// <summary>
+    /// DNS с DoH (1.1.1.1 + dns.google) и резолвом самих DoH-эндпоинтов через локальный 1.1.1.1 —
+    /// помогает в странах, где провайдеры подменяют DNS.
+    /// </summary>
     public static JsonObject DefaultDns() => new()
     {
-        ["servers"] = new JsonArray("1.1.1.1", "8.8.8.8")
+        ["hosts"] = new JsonObject
+        {
+            ["dns.google"] = new JsonArray("8.8.8.8", "8.8.4.4"),
+            ["cloudflare-dns.com"] = new JsonArray("1.1.1.1", "1.0.0.1"),
+            ["dns.cloudflare.com"] = new JsonArray("1.1.1.1", "1.0.0.1")
+        },
+        ["servers"] = new JsonArray(
+            new JsonObject
+            {
+                ["address"] = "https://1.1.1.1/dns-query",
+                ["domains"] = new JsonArray("geosite:geolocation-!cn"),
+                ["expectIPs"] = new JsonArray("geoip:!cn")
+            },
+            new JsonObject
+            {
+                ["address"] = "https://dns.google/dns-query",
+                ["domains"] = new JsonArray("geosite:geolocation-!cn")
+            },
+            "1.1.1.1",
+            "8.8.8.8"
+        ),
+        ["queryStrategy"] = "UseIP",
+        ["disableCache"] = false,
+        ["disableFallback"] = false
     };
 
     public static JsonObject DefaultRouting() => new()
     {
         ["domainStrategy"] = "IPIfNonMatch",
         ["rules"] = new JsonArray(
+            new JsonObject
+            {
+                ["type"] = "field",
+                ["domain"] = new JsonArray("geosite:category-ads-all"),
+                ["outboundTag"] = BlockOutboundTag
+            },
             new JsonObject
             {
                 ["type"] = "field",

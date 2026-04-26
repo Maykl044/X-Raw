@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using Xrav.Desktop.Storage;
 
@@ -15,18 +16,21 @@ public sealed class BootstrapException : Exception
 
 /// <summary>
 /// Скачивает в <see cref="AppDataPaths.ToolsDir"/> Windows-бинарники, нужные туннелю:
-///   * xray-core (https://github.com/XTLS/Xray-core/releases/latest)
-///   * hev-socks5-tunnel (https://github.com/heiher/hev-socks5-tunnel/releases/latest)
-///   * wintun.dll (амальгама архива из xray-core, у которого она поставляется в комплекте)
+///   * xray-core (https://github.com/XTLS/Xray-core/releases/latest) — x86 или x64 в зависимости от арх. процесса
+///   * hev-socks5-tunnel (https://github.com/heiher/hev-socks5-tunnel/releases/latest) — только x64 (для x86 будет sing-box)
+///   * sing-box (https://github.com/SagerNet/sing-box/releases/latest) — для Hysteria2/TUIC и для x86 host'а
+///   * wintun.dll, geoip.dat, geosite.dat — поставляются вместе с xray-core
 /// Использует только GitHub API + публичные релизы; никаких авторизаций не нужно.
 /// </summary>
 public sealed class ToolBootstrapper
 {
     private readonly HttpClient _http;
+    private readonly bool _isX86;
 
     public ToolBootstrapper(HttpClient? http = null)
     {
         _http = http ?? CreateDefaultClient();
+        _isX86 = RuntimeInformation.ProcessArchitecture == Architecture.X86;
     }
 
     public static HttpClient CreateDefaultClient()
@@ -41,33 +45,45 @@ public sealed class ToolBootstrapper
     public async Task EnsureToolsAsync(IProgress<BootstrapStatus>? progress = null, CancellationToken ct = default)
     {
         Directory.CreateDirectory(AppDataPaths.ToolsDir);
+        Directory.CreateDirectory(AppDataPaths.XrayAssetDir);
+
         var xrayExe = Path.Combine(AppDataPaths.ToolsDir, "xray.exe");
         var hevExe = Path.Combine(AppDataPaths.ToolsDir, "hev-socks5-tunnel.exe");
+        var msysDll = Path.Combine(AppDataPaths.ToolsDir, "msys-2.0.dll");
         var wintunDll = Path.Combine(AppDataPaths.ToolsDir, "wintun.dll");
+        var singBoxExe = Path.Combine(AppDataPaths.ToolsDir, "sing-box.exe");
         var geoip = Path.Combine(AppDataPaths.XrayAssetDir, "geoip.dat");
         var geosite = Path.Combine(AppDataPaths.XrayAssetDir, "geosite.dat");
-        Directory.CreateDirectory(AppDataPaths.XrayAssetDir);
 
         if (!File.Exists(xrayExe) || !File.Exists(geoip) || !File.Exists(geosite) || !File.Exists(wintunDll))
         {
-            progress?.Report(new("xray-core", "Запрос последнего релиза…"));
+            progress?.Report(new("xray-core", $"Запрос последнего релиза… (arch={(_isX86 ? "x86" : "x64")})"));
             await DownloadAndExtractXrayAsync(xrayExe, geoip, geosite, wintunDll, progress, ct).ConfigureAwait(false);
         }
+        else progress?.Report(new("xray-core", "уже установлен"));
+
+        if (!_isX86)
+        {
+            // hev-socks5-tunnel у автора собирается только под x64 → на x86 пропускаем,
+            // там туннель пойдёт через sing-box (он есть и под x86).
+            if (!File.Exists(hevExe) || !File.Exists(msysDll))
+            {
+                progress?.Report(new("hev-socks5-tunnel", "Запрос последнего релиза…"));
+                await DownloadHevAsync(hevExe, msysDll, wintunDll, progress, ct).ConfigureAwait(false);
+            }
+            else progress?.Report(new("hev-socks5-tunnel", "уже установлен"));
+        }
         else
         {
-            progress?.Report(new("xray-core", "уже установлен"));
+            progress?.Report(new("hev-socks5-tunnel", "пропущен: только x64-релиз"));
         }
 
-        var msysDll = Path.Combine(AppDataPaths.ToolsDir, "msys-2.0.dll");
-        if (!File.Exists(hevExe) || !File.Exists(msysDll))
+        if (!File.Exists(singBoxExe))
         {
-            progress?.Report(new("hev-socks5-tunnel", "Запрос последнего релиза…"));
-            await DownloadHevAsync(hevExe, msysDll, wintunDll, progress, ct).ConfigureAwait(false);
+            progress?.Report(new("sing-box", "Запрос последнего релиза…"));
+            await DownloadSingBoxAsync(singBoxExe, progress, ct).ConfigureAwait(false);
         }
-        else
-        {
-            progress?.Report(new("hev-socks5-tunnel", "уже установлен"));
-        }
+        else progress?.Report(new("sing-box", "уже установлен"));
 
         progress?.Report(new("done", $"Готово: {AppDataPaths.ToolsDir}"));
     }
@@ -80,26 +96,14 @@ public sealed class ToolBootstrapper
         IProgress<BootstrapStatus>? progress,
         CancellationToken ct)
     {
-        var releaseJson = await _http.GetStringAsync(
-            "https://api.github.com/repos/XTLS/Xray-core/releases/latest", ct).ConfigureAwait(false);
-        using var doc = JsonDocument.Parse(releaseJson);
-        if (!doc.RootElement.TryGetProperty("assets", out var assets))
-            throw new BootstrapException("xray-core: assets отсутствуют в релизе.");
+        var assetName = _isX86 ? "Xray-windows-32.zip" : "Xray-windows-64.zip";
+        var assetUrl = await PickAssetUrlAsync(
+            "https://api.github.com/repos/XTLS/Xray-core/releases/latest",
+            n => string.Equals(n, assetName, StringComparison.OrdinalIgnoreCase),
+            $"xray-core: не нашли {assetName} в последнем релизе.",
+            ct).ConfigureAwait(false);
 
-        string? assetUrl = null;
-        foreach (var asset in assets.EnumerateArray())
-        {
-            var name = asset.GetProperty("name").GetString() ?? "";
-            if (string.Equals(name, "Xray-windows-64.zip", StringComparison.OrdinalIgnoreCase))
-            {
-                assetUrl = asset.GetProperty("browser_download_url").GetString();
-                break;
-            }
-        }
-        if (string.IsNullOrEmpty(assetUrl))
-            throw new BootstrapException("xray-core: не нашли Xray-windows-64.zip в последнем релизе.");
-
-        var zipPath = Path.Combine(AppDataPaths.RuntimeDir, "xray-windows-64.zip");
+        var zipPath = Path.Combine(AppDataPaths.RuntimeDir, assetName);
         Directory.CreateDirectory(AppDataPaths.RuntimeDir);
         progress?.Report(new("xray-core", "Скачиваем zip…"));
         await DownloadFileAsync(assetUrl, zipPath, progress, ct).ConfigureAwait(false);
@@ -124,26 +128,13 @@ public sealed class ToolBootstrapper
 
     private async Task DownloadHevAsync(string hevExe, string msysDll, string wintunDll, IProgress<BootstrapStatus>? progress, CancellationToken ct)
     {
-        var releaseJson = await _http.GetStringAsync(
-            "https://api.github.com/repos/heiher/hev-socks5-tunnel/releases/latest", ct).ConfigureAwait(false);
-        using var doc = JsonDocument.Parse(releaseJson);
-        if (!doc.RootElement.TryGetProperty("assets", out var assets))
-            throw new BootstrapException("hev-socks5-tunnel: assets отсутствуют в релизе.");
-
-        string? assetUrl = null;
-        foreach (var asset in assets.EnumerateArray())
-        {
-            var name = asset.GetProperty("name").GetString() ?? "";
-            if (name.Equals("hev-socks5-tunnel-win64.zip", StringComparison.OrdinalIgnoreCase)
-                || (name.Contains("win", StringComparison.OrdinalIgnoreCase)
-                    && name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase)))
-            {
-                assetUrl = asset.GetProperty("browser_download_url").GetString();
-                break;
-            }
-        }
-        if (string.IsNullOrEmpty(assetUrl))
-            throw new BootstrapException("hev-socks5-tunnel: не нашли windows x64 zip в последнем релизе.");
+        var assetUrl = await PickAssetUrlAsync(
+            "https://api.github.com/repos/heiher/hev-socks5-tunnel/releases/latest",
+            n => n.Equals("hev-socks5-tunnel-win64.zip", StringComparison.OrdinalIgnoreCase)
+                 || (n.Contains("win", StringComparison.OrdinalIgnoreCase)
+                     && n.EndsWith(".zip", StringComparison.OrdinalIgnoreCase)),
+            "hev-socks5-tunnel: не нашли windows zip в последнем релизе.",
+            ct).ConfigureAwait(false);
 
         var zipPath = Path.Combine(AppDataPaths.RuntimeDir, "hev-win64.zip");
         Directory.CreateDirectory(AppDataPaths.RuntimeDir);
@@ -154,11 +145,53 @@ public sealed class ToolBootstrapper
         {
             ExtractEntryByExactName(zip, "hev-socks5-tunnel.exe", hevExe);
             ExtractEntryByExactName(zip, "msys-2.0.dll", msysDll);
-            // Берём wintun.dll из этого же zip — он там же присутствует
             if (!File.Exists(wintunDll))
                 ExtractEntryByExactName(zip, "wintun.dll", wintunDll, optional: true);
         }
         TryDelete(zipPath);
+    }
+
+    private async Task DownloadSingBoxAsync(string singBoxExe, IProgress<BootstrapStatus>? progress, CancellationToken ct)
+    {
+        // Современная сборка sing-box (без legacy windows-7), под нужную арх.
+        var archTag = _isX86 ? "windows-386" : "windows-amd64";
+        var assetUrl = await PickAssetUrlAsync(
+            "https://api.github.com/repos/SagerNet/sing-box/releases/latest",
+            n => n.Contains(archTag, StringComparison.OrdinalIgnoreCase)
+                 && !n.Contains("legacy", StringComparison.OrdinalIgnoreCase)
+                 && n.EndsWith(".zip", StringComparison.OrdinalIgnoreCase),
+            $"sing-box: не нашли {archTag} zip в последнем релизе.",
+            ct).ConfigureAwait(false);
+
+        var zipPath = Path.Combine(AppDataPaths.RuntimeDir, $"sing-box-{archTag}.zip");
+        Directory.CreateDirectory(AppDataPaths.RuntimeDir);
+        progress?.Report(new("sing-box", "Скачиваем zip…"));
+        await DownloadFileAsync(assetUrl, zipPath, progress, ct).ConfigureAwait(false);
+        progress?.Report(new("sing-box", "Распаковка…"));
+        using (var zip = ZipFile.OpenRead(zipPath))
+        {
+            ExtractEntryByExactName(zip, "sing-box.exe", singBoxExe);
+        }
+        TryDelete(zipPath);
+    }
+
+    private async Task<string> PickAssetUrlAsync(string releaseApiUrl, Func<string, bool> match, string errorMsg, CancellationToken ct)
+    {
+        var releaseJson = await _http.GetStringAsync(releaseApiUrl, ct).ConfigureAwait(false);
+        using var doc = JsonDocument.Parse(releaseJson);
+        if (!doc.RootElement.TryGetProperty("assets", out var assets))
+            throw new BootstrapException(errorMsg);
+
+        foreach (var asset in assets.EnumerateArray())
+        {
+            var name = asset.GetProperty("name").GetString() ?? "";
+            if (match(name))
+            {
+                var url = asset.GetProperty("browser_download_url").GetString();
+                if (!string.IsNullOrEmpty(url)) return url!;
+            }
+        }
+        throw new BootstrapException(errorMsg);
     }
 
     private async Task DownloadAsset(string url, string dest, IProgress<BootstrapStatus>? progress, string label, CancellationToken ct)
@@ -229,8 +262,8 @@ public sealed class ToolBootstrapper
         File.Move(tmp, dest);
     }
 
-    private static void TryDelete(string p)
+    private static void TryDelete(string path)
     {
-        try { if (File.Exists(p)) File.Delete(p); } catch { /* ignore */ }
+        try { if (File.Exists(path)) File.Delete(path); } catch { }
     }
 }

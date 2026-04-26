@@ -15,6 +15,7 @@ public static class AppDataPaths
 
     public static string XrayConfigPath { get; } = Path.Combine(RuntimeDir, "config.json");
     public static string HevConfigPath { get; } = Path.Combine(RuntimeDir, "hev-socks5-tunnel.yml");
+    public static string SingBoxConfigPath { get; } = Path.Combine(RuntimeDir, "sing-box.json");
 
     /// <summary>Каталог с geoip.dat / geosite.dat — переменная <c>XRAY_LOCATION_ASSET</c> (аналог <c>filesDir/xray_env</c> в Android).</summary>
     public static string XrayAssetDir { get; } = Path.Combine(XravRoot, "xray_assets");
