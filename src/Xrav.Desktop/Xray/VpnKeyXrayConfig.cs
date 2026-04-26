@@ -1,4 +1,6 @@
 using Xrav.Core.Domain;
+using Xrav.Core.Xray;
+using Xrav.Desktop.Tunnel;
 
 namespace Xrav.Desktop.Xray;
 
@@ -9,19 +11,43 @@ public static class VpnKeyXrayConfig
         json = "";
         if (key is null)
         {
-            error = "Нет ключа. Добавьте в список как минимум один ключ (на Windows сейчас используется первый).";
+            error = "Нет ключа. Добавьте в список как минимум один ключ.";
             return false;
         }
-        if (key.Protocol != KeyProtocol.Json)
-        {
-            error = "Сборка outbound из VLESS/VMess/Trojan-ссылок на Windows пока не перенесена. Добавьте ключ с протоколом «JSON» (готовый config.json из v2rayN / sing-box, экспорт).";
-            return false;
-        }
+
         try
         {
-            json = ImportedXrayJsonPatcher.PatchForWindowsTunnel(key.Raw);
-            error = null;
-            return true;
+            switch (key.Protocol)
+            {
+                case KeyProtocol.Json:
+                    json = ImportedXrayJsonPatcher.PatchForWindowsTunnel(key.Raw);
+                    error = null;
+                    return true;
+
+                case KeyProtocol.Vless:
+                case KeyProtocol.VMess:
+                case KeyProtocol.Trojan:
+                case KeyProtocol.Shadowsocks:
+                {
+                    if (!ShareLinkParser.TryParse(key.Raw, out var link, out _, out var parseErr))
+                    {
+                        error = parseErr ?? "Не удалось распарсить ключ.";
+                        return false;
+                    }
+                    json = XrayConfigBuilder.BuildFromShareLink(link!, TunnelConstants.SocksInboundPort);
+                    error = null;
+                    return true;
+                }
+
+                case KeyProtocol.Hysteria2:
+                case KeyProtocol.Tuic:
+                    error = $"Протокол {key.Protocol} требует sing-box, а не xray-core. Поддержка добавится отдельным backend.";
+                    return false;
+
+                default:
+                    error = "Неизвестный протокол ключа.";
+                    return false;
+            }
         }
         catch (Exception ex)
         {

@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="clr-namespace:Xrav.Desktop.Ui"
         Title="X-Rav"
-        Height="780" Width="420" MinWidth="360" MinHeight="560"
+        Height="780" Width="480" MinWidth="420" MinHeight="600"
         WindowStartupLocation="CenterScreen"
         Background="#FF0B0D1A"
         TextOptions.TextFormattingMode="Display">
@@ -60,7 +60,7 @@
             </ControlTemplate>
           </Button.Template>
         </Button>
-        <TextBlock Text="кнопка питания — как на Android" Style="{StaticResource Xrav.Text.Caption}" HorizontalAlignment="Center" Margin="0,6,0,0" />
+        <TextBlock Text="Кнопка питания" Style="{StaticResource Xrav.Text.Caption}" HorizontalAlignment="Center" Margin="0,6,0,0" />
       </StackPanel>
 
       <Grid Grid.Row="2" ClipToBounds="True">

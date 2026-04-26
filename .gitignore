@@ -25,5 +25,6 @@ coverage/
 # Local artefacts
 artifacts/
 release-zip/
+dist-tools/
 *.zip
 !docs/*.zip

@@ -9,13 +9,40 @@
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
 
     <TextBlock Grid.Row="0" Text="Серверы" Style="{StaticResource Xrav.Text.Title}" Margin="0,0,0,4" />
     <TextBlock Grid.Row="1" Style="{StaticResource Xrav.Text.Caption}" TextWrapping="Wrap"
-               Text="Выберите сервер (активный ключ) — к нему пойдёт подключение. Сохраняется в user.json." />
-    <Border Grid.Row="2" Background="{StaticResource Xrav.Brush.Surface}" BorderBrush="{StaticResource Xrav.Brush.Outline}" BorderThickness="1" CornerRadius="16" Padding="0,8" Margin="0,12,0,0">
+               Text="Выберите сервер. Можно добавить вручную (vless/vmess/trojan/ss) или импортировать из буфера обмена. Состояние сохраняется в user.json." />
+
+    <Grid Grid.Row="2" Margin="0,8,0,0">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+      <TextBox Grid.Column="0" Text="{Binding ManualKeyText, UpdateSourceTrigger=PropertyChanged}"
+               Background="#33161A2B" Foreground="{StaticResource Xrav.Brush.TextPrimary}"
+               BorderBrush="{StaticResource Xrav.Brush.Outline}" Padding="6,4"
+               TextWrapping="Wrap" AcceptsReturn="True" MinHeight="40" MaxHeight="100"
+               VerticalScrollBarVisibility="Auto"
+               ToolTip="vless://… или vmess://… (поддерживается несколько строк сразу)" />
+      <StackPanel Grid.Column="1" Margin="6,0,0,0" Orientation="Vertical">
+        <Button Content="Добавить" Command="{Binding AddManualKeyCommand}"
+                Padding="10,4" Margin="0,0,0,4"
+                Foreground="{StaticResource Xrav.Brush.TextPrimary}" Background="#33161A2B"
+                BorderBrush="{StaticResource Xrav.Brush.Outline}" />
+        <Button Content="Из буфера" Command="{Binding ImportFromClipboardCommand}"
+                Padding="10,4"
+                Foreground="{StaticResource Xrav.Brush.TextPrimary}" Background="#33161A2B"
+                BorderBrush="{StaticResource Xrav.Brush.Outline}" />
+      </StackPanel>
+    </Grid>
+
+    <Border Grid.Row="3" Background="{StaticResource Xrav.Brush.Surface}" BorderBrush="{StaticResource Xrav.Brush.Outline}"
+            BorderThickness="1" CornerRadius="16" Padding="0,8" Margin="0,12,0,0">
       <ListView ItemsSource="{Binding Keys}" SelectedItem="{Binding SelectedKey, Mode=TwoWay}"
                 BorderThickness="0" Background="Transparent"
                 Foreground="{StaticResource Xrav.Brush.TextPrimary}" Padding="4,0">
@@ -27,8 +54,8 @@
                 <ColumnDefinition Width="Auto" />
               </Grid.ColumnDefinitions>
               <StackPanel>
-                <TextBlock Text="{Binding Remark}" Foreground="{StaticResource Xrav.Brush.TextPrimary}" FontWeight="SemiBold" />
-                <TextBlock Text="{Binding Subtitle}" Foreground="{StaticResource Xrav.Brush.TextMuted}" FontSize="12" />
+                <TextBlock Text="{Binding Remark}" Foreground="{StaticResource Xrav.Brush.TextPrimary}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                <TextBlock Text="{Binding Subtitle}" Foreground="{StaticResource Xrav.Brush.TextMuted}" FontSize="12" TextTrimming="CharacterEllipsis" />
               </StackPanel>
               <Border Grid.Column="1" Background="{StaticResource Xrav.Brush.GlassStroke}" Opacity="0.5" CornerRadius="8" Padding="6,2" VerticalAlignment="Center">
                 <TextBlock Text="{Binding ShortProtocolLabel}" Foreground="{StaticResource Xrav.Brush.TextSecondary}" FontSize="11" />
@@ -38,5 +65,12 @@
         </ListView.ItemTemplate>
       </ListView>
     </Border>
+
+    <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+      <Button Content="Удалить" Command="{Binding RemoveSelectedKeyCommand}"
+              Padding="10,4"
+              Foreground="{StaticResource Xrav.Brush.TextPrimary}" Background="#33161A2B"
+              BorderBrush="{StaticResource Xrav.Brush.Outline}" />
+    </StackPanel>
   </Grid>
 </UserControl>

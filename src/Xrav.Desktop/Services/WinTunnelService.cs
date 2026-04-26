@@ -62,23 +62,14 @@ public sealed class WinTunnelService : ITunnelService, INotifyPropertyChanged, I
             var xrayExe = Path.Combine(AppDataPaths.ToolsDir, "xray.exe");
             var hevExe = Path.Combine(AppDataPaths.ToolsDir, "hev-socks5-tunnel.exe");
             var wintunDll = Path.Combine(AppDataPaths.ToolsDir, "wintun.dll");
+            var msysDll = Path.Combine(AppDataPaths.ToolsDir, "msys-2.0.dll");
             Directory.CreateDirectory(AppDataPaths.ToolsDir);
 
-            if (!File.Exists(xrayExe))
+            if (!File.Exists(xrayExe) || !File.Exists(hevExe) || !File.Exists(wintunDll) || !File.Exists(msysDll))
             {
-                LastError = $"Нет {xrayExe}. Положите xray.exe (Windows) в папку tools.";
-                State = TunnelConnectionState.Error;
-                return;
-            }
-            if (!File.Exists(hevExe))
-            {
-                LastError = $"Нет {hevExe}. Соберите hev-socks5-tunnel (Windows) и положите .exe в tools.";
-                State = TunnelConnectionState.Error;
-                return;
-            }
-            if (!File.Exists(wintunDll))
-            {
-                LastError = $"Нет {wintunDll}. С wintun.net скачайте wintun.dll в папку tools (рядом с hev).";
+                LastError = "Не найдены бинарники в "
+                    + AppDataPaths.ToolsDir
+                    + ". Откройте «Настройки → Бинарники» и нажмите «Подготовить» (нужен интернет).";
                 State = TunnelConnectionState.Error;
                 return;
             }

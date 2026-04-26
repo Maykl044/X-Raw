@@ -3,7 +3,10 @@ using System.Text.Json.Nodes;
 
 namespace Xrav.Desktop.Xray;
 
-/// <summary>Правки импортируемого <c>config.json</c> в духе <c>sanitizeImportedJson</c> + <c>stripTunInbound</c> + <c>ensureSocksInbound</c> + <c>ensureDefaultRouting</c> (Android <c>XrayConfigBuilder</c>).</summary>
+/// <summary>
+/// Подготавливает импортированный пользовательский <c>config.json</c> для использования в качестве backend xray на Windows:
+/// убирает sockopt.mark, чистит TUN inbound, гарантирует SOCKS inbound на 127.0.0.1:10808 и корректный routing на outbound с tag=proxy.
+/// </summary>
 public static class ImportedXrayJsonPatcher
 {
     public static string PatchForWindowsTunnel(string rawJson)
@@ -16,6 +19,7 @@ public static class ImportedXrayJsonPatcher
         StripTunInbound(root);
         EnsureDns(root);
         EnsureSocksInbound(root);
+        EnsureProxyOutboundTag(root);
         EnsureDefaultRouting(root);
         return root.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
     }
@@ -39,7 +43,7 @@ public static class ImportedXrayJsonPatcher
             if (item is not JsonObject inb) continue;
             var proto = inb["protocol"]?.GetValue<string?>();
             if (string.Equals(proto, "tun", StringComparison.OrdinalIgnoreCase)) continue;
-            filtered.Add(inb);
+            filtered.Add(JsonNode.Parse(inb.ToJsonString())!);
         }
         root["inbounds"] = filtered;
     }
@@ -69,9 +73,15 @@ public static class ImportedXrayJsonPatcher
         {
             var p = item["protocol"]?.GetValue<string?>();
             var port = item["port"]?.GetValue<int?>();
+            var listen = item["listen"]?.GetValue<string?>();
             if (string.Equals(p, "socks", StringComparison.OrdinalIgnoreCase) &&
-                port == Tunnel.TunnelConstants.SocksInboundPort)
+                port == Tunnel.TunnelConstants.SocksInboundPort &&
+                (string.IsNullOrEmpty(listen) || listen == "127.0.0.1"))
+            {
+                // Принудительно проставим тэг для маршрутизации
+                item["tag"] = Tunnel.TunnelConstants.XraySocksInboundTag;
                 return;
+            }
         }
         inbounds.Add(SocksInbound());
     }
@@ -101,6 +111,39 @@ public static class ImportedXrayJsonPatcher
             ["routeOnly"] = false
         };
 
+    /// <summary>Гарантирует наличие хотя бы одного outbound с tag=proxy. Если нет — присваивает первому.</summary>
+    private static void EnsureProxyOutboundTag(JsonObject root)
+    {
+        var outbounds = root["outbounds"] as JsonArray;
+        if (outbounds is null || outbounds.Count == 0)
+        {
+            // конфиг без outbound — сломан, но добавим freedom как заглушку
+            outbounds = new JsonArray(new JsonObject
+            {
+                ["tag"] = "proxy",
+                ["protocol"] = "freedom",
+                ["settings"] = new JsonObject()
+            });
+            root["outbounds"] = outbounds;
+            return;
+        }
+        var hasProxy = outbounds.OfType<JsonObject>()
+            .Any(o => o["tag"]?.GetValue<string?>() == "proxy");
+        if (!hasProxy)
+        {
+            // ставим tag=proxy первому outbound (skip blackhole/dns)
+            JsonObject? target = null;
+            foreach (var ob in outbounds.OfType<JsonObject>())
+            {
+                var p = ob["protocol"]?.GetValue<string?>();
+                if (p is "blackhole" or "dns") continue;
+                target = ob; break;
+            }
+            target ??= outbounds.OfType<JsonObject>().FirstOrDefault();
+            if (target is not null) target["tag"] = "proxy";
+        }
+    }
+
     private static void EnsureDefaultRouting(JsonObject root)
     {
         var routing = root["routing"] as JsonObject ?? new JsonObject();
@@ -114,18 +157,12 @@ public static class ImportedXrayJsonPatcher
         if (rules.Count == 0)
         {
             rules.Add(PrivateDirectRule());
-            rules.Add(CatchAllProxyRule());
+            rules.Add(SocksToProxyRule());
             return;
         }
         if (!IsRoutingAlreadyCoversSocksIn(rules))
         {
-            rules.Add(new JsonObject
-            {
-                ["type"] = "field",
-                ["inboundTag"] = new JsonArray { Tunnel.TunnelConstants.XraySocksInboundTag },
-                ["outboundTag"] = "proxy",
-                ["network"] = "tcp,udp"
-            });
+            rules.Add(SocksToProxyRule());
         }
     }
 
@@ -141,10 +178,11 @@ public static class ImportedXrayJsonPatcher
             ["outboundTag"] = "direct"
         };
 
-    private static JsonObject CatchAllProxyRule() =>
+    private static JsonObject SocksToProxyRule() =>
         new()
         {
             ["type"] = "field",
+            ["inboundTag"] = new JsonArray { Tunnel.TunnelConstants.XraySocksInboundTag },
             ["outboundTag"] = "proxy",
             ["network"] = "tcp,udp"
         };
@@ -162,10 +200,6 @@ public static class ImportedXrayJsonPatcher
                         return true;
                 }
             }
-            var outbound = r["outboundTag"]?.GetValue<string?>();
-            var net = r["network"]?.GetValue<string?>() ?? "";
-            if (tag is null && outbound == "proxy" && net.Contains("tcp", StringComparison.OrdinalIgnoreCase))
-                return true;
         }
         return false;
     }
