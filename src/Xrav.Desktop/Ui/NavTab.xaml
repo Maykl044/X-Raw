@@ -1,0 +1,33 @@
+<UserControl x:Class="Xrav.Desktop.Ui.NavTab"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Name="Self"
+             Background="Transparent">
+  <Button x:Name="Btn" Background="Transparent" BorderThickness="0" Cursor="Hand"
+          Command="{Binding Command, ElementName=Self}">
+    <Button.Template>
+      <ControlTemplate TargetType="Button">
+        <Border x:Name="bd" Background="Transparent" CornerRadius="16" Padding="6,8" Margin="2">
+          <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+            <TextBlock x:Name="GlyphText" Text="{Binding Glyph, ElementName=Self}"
+                       FontSize="18" HorizontalAlignment="Center"
+                       Foreground="{StaticResource X.Brush.TextSoft}" />
+            <TextBlock x:Name="TitleText" Text="{Binding Title, ElementName=Self}"
+                       FontSize="11" HorizontalAlignment="Center" Margin="0,2,0,0"
+                       Foreground="{StaticResource X.Brush.TextMuted}" />
+          </StackPanel>
+        </Border>
+        <ControlTemplate.Triggers>
+          <DataTrigger Binding="{Binding IsActive, ElementName=Self}" Value="True">
+            <Setter TargetName="bd" Property="Background" Value="{StaticResource X.Brush.AccentGrad}" />
+            <Setter TargetName="GlyphText" Property="Foreground" Value="White" />
+            <Setter TargetName="TitleText" Property="Foreground" Value="White" />
+          </DataTrigger>
+          <Trigger Property="IsMouseOver" Value="True">
+            <Setter TargetName="bd" Property="Opacity" Value="0.92" />
+          </Trigger>
+        </ControlTemplate.Triggers>
+      </ControlTemplate>
+    </Button.Template>
+  </Button>
+</UserControl>

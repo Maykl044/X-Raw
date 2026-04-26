@@ -78,6 +78,7 @@ public sealed class MainViewModel : ViewModelBase
                 {
                     OnPropertyChanged(nameof(TunnelState));
                     OnPropertyChanged(nameof(TunnelStateDisplay));
+                    OnPropertyChanged(nameof(PowerHint));
                     OnPropertyChanged(nameof(TunnelError));
                     OnPropertyChanged(nameof(CanConnect));
                     RaiseAllCanExecute();
@@ -216,6 +217,14 @@ public sealed class MainViewModel : ViewModelBase
         TunnelConnectionState.Reconnecting => "Переподключение…",
         TunnelConnectionState.Error => "Ошибка",
         _ => "—"
+    };
+    public string PowerHint => TunnelState switch
+    {
+        TunnelConnectionState.Connected => "Нажмите для отключения",
+        TunnelConnectionState.Connecting => "Подключение…",
+        TunnelConnectionState.Reconnecting => "Переподключение…",
+        TunnelConnectionState.Error => "Ошибка — исправьте и попробуйте снова",
+        _ => "Нажмите для подключения"
     };
     public bool CanConnect => _tunnel.State is TunnelConnectionState.Disconnected or TunnelConnectionState.Error;
     public bool PowerBusy

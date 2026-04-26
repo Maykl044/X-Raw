@@ -4,76 +4,77 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
-             d:DesignHeight="600" d:DesignWidth="400">
-  <Grid Margin="16,0,16,8">
+             d:DesignHeight="600" d:DesignWidth="500">
+  <Grid Margin="20,4,20,8">
     <Grid.RowDefinitions>
-      <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />
       <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
 
-    <TextBlock Grid.Row="0" Text="Подписка" Style="{StaticResource Xrav.Text.Title}" Margin="0,0,0,8" />
-    <TextBlock Grid.Row="1" Style="{StaticResource Xrav.Text.Caption}" TextWrapping="Wrap"
-               Text="URL подписки: тело — base64 со списком ссылок (vless://…, vmess://…) или plain. Ключи привязываются к подписке и обновляются по кнопке." />
+    <StackPanel Grid.Row="0">
+      <TextBlock Text="Подписка" Style="{StaticResource X.Text.H2}" />
+      <TextBlock Style="{StaticResource X.Text.Caption}" TextWrapping="Wrap" Margin="0,2,0,0"
+                 Text="URL: тело — base64 со списком ссылок или plain. Ключи привязываются к подписке." />
+    </StackPanel>
 
-    <Grid Grid.Row="2" Margin="0,8,0,0">
-      <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="*" />
-        <ColumnDefinition Width="Auto" />
-      </Grid.ColumnDefinitions>
-      <Grid.RowDefinitions>
-        <RowDefinition Height="Auto" />
-        <RowDefinition Height="Auto" />
-      </Grid.RowDefinitions>
-      <TextBox Grid.Row="0" Grid.Column="0" Text="{Binding NewSubscriptionUrl, UpdateSourceTrigger=PropertyChanged}"
-               Background="#33161A2B" Foreground="{StaticResource Xrav.Brush.TextPrimary}"
-               BorderBrush="{StaticResource Xrav.Brush.Outline}" Padding="6,4"
-               ToolTip="https://example.com/subscription/...?token=..." />
-      <Button Grid.Row="0" Grid.Column="1" Content="Добавить" Margin="6,0,0,0"
-              Command="{Binding AddSubscriptionCommand}"
-              Padding="10,4"
-              Foreground="{StaticResource Xrav.Brush.TextPrimary}" Background="#33161A2B"
-              BorderBrush="{StaticResource Xrav.Brush.Outline}" />
-      <TextBox Grid.Row="1" Grid.Column="0" Margin="0,4,0,0"
-               Text="{Binding NewSubscriptionLabel, UpdateSourceTrigger=PropertyChanged}"
-               Background="#33161A2B" Foreground="{StaticResource Xrav.Brush.TextPrimary}"
-               BorderBrush="{StaticResource Xrav.Brush.Outline}" Padding="6,4"
-               ToolTip="Метка (опционально)" />
-      <Button Grid.Row="1" Grid.Column="1" Content="Обновить все" Margin="6,4,0,0"
-              Command="{Binding RefreshAllSubscriptionsCommand}"
-              Padding="10,4"
-              Foreground="{StaticResource Xrav.Brush.TextPrimary}" Background="#33161A2B"
-              BorderBrush="{StaticResource Xrav.Brush.Outline}" />
-    </Grid>
-
-    <Border Grid.Row="3" Background="{StaticResource Xrav.Brush.Surface}" BorderBrush="{StaticResource Xrav.Brush.Outline}"
-            BorderThickness="1" CornerRadius="16" Padding="0,8" Margin="0,12,0,0">
-      <ListView ItemsSource="{Binding Subscriptions}" SelectedItem="{Binding SelectedSubscription, Mode=TwoWay}"
-                BorderThickness="0" Background="Transparent"
-                Foreground="{StaticResource Xrav.Brush.TextPrimary}" Padding="4,0">
-        <ListView.ItemTemplate>
-          <DataTemplate>
-            <StackPanel Margin="8,6">
-              <TextBlock Text="{Binding Label}" Foreground="{StaticResource Xrav.Brush.TextPrimary}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-              <TextBlock Text="{Binding Url}" Foreground="{StaticResource Xrav.Brush.TextMuted}" FontSize="11" TextTrimming="CharacterEllipsis" />
-              <TextBlock Text="{Binding LastStatus}" Foreground="{StaticResource Xrav.Brush.TextSecondary}" FontSize="11" />
-            </StackPanel>
-          </DataTemplate>
-        </ListView.ItemTemplate>
-      </ListView>
+    <Border Grid.Row="1" Margin="0,12,0,0" Background="{StaticResource X.Brush.Surface}"
+            BorderBrush="{StaticResource X.Brush.OutlineSoft}" BorderThickness="1" CornerRadius="14" Padding="10">
+      <Grid>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <TextBox Grid.Row="0" Grid.Column="0" Text="{Binding NewSubscriptionUrl, UpdateSourceTrigger=PropertyChanged}"
+                 Style="{StaticResource X.TextBox}"
+                 ToolTip="https://example.com/subscription/...?token=..." />
+        <Button  Grid.Row="0" Grid.Column="1" Content="Добавить" Margin="8,0,0,0"
+                 Command="{Binding AddSubscriptionCommand}" Style="{StaticResource X.Btn.Primary}" />
+        <TextBox Grid.Row="1" Grid.Column="0" Margin="0,8,0,0"
+                 Text="{Binding NewSubscriptionLabel, UpdateSourceTrigger=PropertyChanged}"
+                 Style="{StaticResource X.TextBox}"
+                 ToolTip="Метка (опционально)" />
+        <Button  Grid.Row="1" Grid.Column="1" Content="Обновить все" Margin="8,8,0,0"
+                 Command="{Binding RefreshAllSubscriptionsCommand}" Style="{StaticResource X.Btn.Ghost}" />
+      </Grid>
     </Border>
 
-    <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
-      <Button Content="Обновить" Command="{Binding RefreshSubscriptionCommand}"
-              Padding="10,4" Margin="0,0,6,0"
-              Foreground="{StaticResource Xrav.Brush.TextPrimary}" Background="#33161A2B"
-              BorderBrush="{StaticResource Xrav.Brush.Outline}" />
-      <Button Content="Удалить" Command="{Binding RemoveSubscriptionCommand}"
-              Padding="10,4"
-              Foreground="{StaticResource Xrav.Brush.TextPrimary}" Background="#33161A2B"
-              BorderBrush="{StaticResource Xrav.Brush.Outline}" />
+    <Border Grid.Row="2" Margin="0,12,0,0">
+      <ListBox ItemsSource="{Binding Subscriptions}" SelectedItem="{Binding SelectedSubscription, Mode=TwoWay}" Style="{StaticResource X.ListBox}">
+        <ListBox.ItemTemplate>
+          <DataTemplate>
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <Border Grid.Column="0" Width="40" Height="40" CornerRadius="10"
+                      Background="{StaticResource X.Brush.AccentGrad}" VerticalAlignment="Center" Margin="0,0,12,0">
+                <TextBlock Text="🔗" Foreground="White" FontSize="18"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+              </Border>
+              <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                <TextBlock Text="{Binding Label}" Foreground="{StaticResource X.Brush.Text}"
+                           FontWeight="SemiBold" FontSize="14" TextTrimming="CharacterEllipsis" />
+                <TextBlock Text="{Binding Url}" Foreground="{StaticResource X.Brush.TextMuted}"
+                           FontSize="11" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" />
+                <TextBlock Text="{Binding LastStatus}" Foreground="{StaticResource X.Brush.TextSoft}"
+                           FontSize="11" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" />
+              </StackPanel>
+            </Grid>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </Border>
+
+    <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+      <Button Content="Обновить выбранную" Command="{Binding RefreshSubscriptionCommand}" Style="{StaticResource X.Btn.Ghost}" Margin="0,0,8,0" />
+      <Button Content="Удалить" Command="{Binding RemoveSubscriptionCommand}" Style="{StaticResource X.Btn.Danger}" />
     </StackPanel>
   </Grid>
 </UserControl>

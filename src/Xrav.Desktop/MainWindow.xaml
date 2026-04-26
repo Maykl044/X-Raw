@@ -3,82 +3,126 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="clr-namespace:Xrav.Desktop.Ui"
         Title="X-Rav"
-        Height="780" Width="480" MinWidth="420" MinHeight="600"
+        Height="780" Width="500" MinWidth="440" MinHeight="620"
         WindowStartupLocation="CenterScreen"
-        Background="#FF0B0D1A"
+        Background="{StaticResource X.Brush.Bg}"
         TextOptions.TextFormattingMode="Display">
   <Window.Resources>
     <BooleanToVisibilityConverter x:Key="BoolToVis" />
     <ui:NonEmptyStringToVisibilityConverter x:Key="StringToVis" />
+    <ui:TunnelStateToColorConverter x:Key="StateToColor" />
+    <ui:TunnelStateToPowerBrushConverter x:Key="StateToPowerBrush" />
   </Window.Resources>
+
   <Grid>
-    <Grid.Background>
-      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="#FF0B0D1A" Offset="0" />
-        <GradientStop Color="#FF161A2B" Offset="0.45" />
-        <GradientStop Color="#FF0E1224" Offset="1" />
-      </LinearGradientBrush>
-    </Grid.Background>
+    <!-- Декоративная подсветка фона -->
+    <Ellipse HorizontalAlignment="Right" VerticalAlignment="Top" Width="600" Height="600"
+             Margin="0,-200,-200,0" Opacity="0.18">
+      <Ellipse.Fill>
+        <RadialGradientBrush>
+          <GradientStop Color="#FF7C5CFF" Offset="0" />
+          <GradientStop Color="#000B0C16" Offset="1" />
+        </RadialGradientBrush>
+      </Ellipse.Fill>
+    </Ellipse>
+    <Ellipse HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="500" Height="500"
+             Margin="-180,0,0,-200" Opacity="0.14">
+      <Ellipse.Fill>
+        <RadialGradientBrush>
+          <GradientStop Color="#FF18BFFF" Offset="0" />
+          <GradientStop Color="#000B0C16" Offset="1" />
+        </RadialGradientBrush>
+      </Ellipse.Fill>
+    </Ellipse>
+
     <Grid Margin="0,0,0,8">
       <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
         <RowDefinition Height="Auto" />
         <RowDefinition Height="Auto" />
         <RowDefinition Height="*" />
         <RowDefinition Height="Auto" />
       </Grid.RowDefinitions>
 
-      <StackPanel Grid.Row="0" Margin="20,20,20,4">
-        <TextBlock Text="{Binding TunnelStateDisplay}" Foreground="{StaticResource Xrav.Brush.TextPrimary}" FontSize="16" FontWeight="SemiBold" />
-        <TextBlock Text="{Binding TunnelError}" Foreground="#FFFF453A" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"
-                   Visibility="{Binding TunnelError, Converter={StaticResource StringToVis}}" />
-      </StackPanel>
+      <!-- Шапка: лого + статус-пилюля -->
+      <Grid Grid.Row="0" Margin="20,18,20,0">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+          <Border Width="32" Height="32" CornerRadius="9" Background="{StaticResource X.Brush.AccentGrad}">
+            <TextBlock Text="X" Foreground="White" FontWeight="Bold" FontSize="18"
+                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+          </Border>
+          <TextBlock Text="X-Rav" Foreground="{StaticResource X.Brush.Text}" FontWeight="Bold"
+                     FontSize="20" Margin="10,0,0,0" VerticalAlignment="Center" />
+        </StackPanel>
+        <Border Grid.Column="1" Background="{StaticResource X.Brush.Surface}" CornerRadius="14"
+                BorderBrush="{StaticResource X.Brush.OutlineSoft}" BorderThickness="1" Padding="10,5">
+          <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+            <Ellipse Width="8" Height="8" Margin="0,0,8,0" VerticalAlignment="Center"
+                     Fill="{Binding TunnelState, Converter={StaticResource StateToColor}}" />
+            <TextBlock Text="{Binding TunnelStateDisplay}" Foreground="{StaticResource X.Brush.Text}"
+                       FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" />
+          </StackPanel>
+        </Border>
+      </Grid>
 
-      <StackPanel Grid.Row="1" HorizontalAlignment="Center" Margin="0,8,0,8">
-        <Button Width="120" Height="120" Click="OnPowerClick" ToolTip="Подключить или отключить"
+      <!-- Сообщение об ошибке -->
+      <Border Grid.Row="1" Margin="20,12,20,0" CornerRadius="10" Padding="12,8"
+              Background="#22FF4D6D" BorderBrush="{StaticResource X.Brush.Danger}" BorderThickness="1"
+              Visibility="{Binding TunnelError, Converter={StaticResource StringToVis}}">
+        <TextBlock Text="{Binding TunnelError}" Foreground="{StaticResource X.Brush.Text}"
+                   FontSize="12" TextWrapping="Wrap" />
+      </Border>
+
+      <!-- Большая кнопка питания -->
+      <StackPanel Grid.Row="2" HorizontalAlignment="Center" Margin="0,18,0,18">
+        <Button Width="140" Height="140" Click="OnPowerClick" ToolTip="Подключить или отключить"
                 Background="Transparent" BorderThickness="0" Cursor="Hand">
           <Button.Template>
             <ControlTemplate TargetType="Button">
               <Grid>
-                <Ellipse>
-                  <Ellipse.Fill>
-                    <RadialGradientBrush GradientOrigin="0.35,0.3">
-                      <GradientStop Color="#6630D158" Offset="0" />
-                      <GradientStop Color="#1A1B2136" Offset="0.6" />
-                      <GradientStop Color="#0D141E2E" Offset="1" />
-                    </RadialGradientBrush>
-                  </Ellipse.Fill>
-                </Ellipse>
-                <Ellipse>
-                  <Ellipse.Stroke>
-                    <SolidColorBrush Color="#33FFFFFF" />
-                  </Ellipse.Stroke>
-                </Ellipse>
-                <Viewbox Width="40" Height="40">
-                  <TextBlock Text="⏻" Foreground="#FF4AA3FF" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                <Ellipse Width="140" Height="140"
+                         Fill="{Binding TunnelState, Converter={StaticResource StateToPowerBrush}}" />
+                <Ellipse Width="118" Height="118" StrokeThickness="2"
+                         Stroke="{StaticResource X.Brush.OutlineSoft}" Fill="{StaticResource X.Brush.CanvasMid}" />
+                <Ellipse Width="116" Height="116" StrokeThickness="1"
+                         Stroke="{Binding TunnelState, Converter={StaticResource StateToColor}}" Opacity="0.5" />
+                <Viewbox Width="46" Height="46">
+                  <Path Stretch="Uniform"
+                        Stroke="{Binding TunnelState, Converter={StaticResource StateToColor}}"
+                        StrokeThickness="2.4" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                        Data="M 12 4 L 12 12 M 6 7 A 8 8 0 1 0 18 7" />
                 </Viewbox>
               </Grid>
             </ControlTemplate>
           </Button.Template>
         </Button>
-        <TextBlock Text="Кнопка питания" Style="{StaticResource Xrav.Text.Caption}" HorizontalAlignment="Center" Margin="0,6,0,0" />
+        <TextBlock Text="{Binding PowerHint}" Foreground="{StaticResource X.Brush.TextSoft}"
+                   FontSize="12" HorizontalAlignment="Center" Margin="0,8,0,0" />
       </StackPanel>
 
-      <Grid Grid.Row="2" ClipToBounds="True">
+      <!-- Контент таба -->
+      <Grid Grid.Row="3" ClipToBounds="True">
         <ui:ServersView DataContext="{Binding}" Visibility="{Binding IsServersTab, Converter={StaticResource BoolToVis}}" />
         <ui:SubscriptionView DataContext="{Binding}" Visibility="{Binding IsSubscriptionTab, Converter={StaticResource BoolToVis}}" />
         <ui:SettingsView DataContext="{Binding}" Visibility="{Binding IsSettingsTab, Converter={StaticResource BoolToVis}}" />
       </Grid>
 
-      <Border Grid.Row="3" Margin="12,4,12,0" Background="{StaticResource Xrav.Brush.GlassTint}" BorderBrush="{StaticResource Xrav.Brush.GlassStroke}" BorderThickness="1" CornerRadius="22" Padding="4,6">
+      <!-- Нижняя навигация -->
+      <Border Grid.Row="4" Margin="14,8,14,4" Background="{StaticResource X.Brush.Surface}"
+              BorderBrush="{StaticResource X.Brush.OutlineSoft}" BorderThickness="1" CornerRadius="22" Padding="6">
         <Grid>
           <Grid.ColumnDefinitions>
             <ColumnDefinition />
             <ColumnDefinition />
             <ColumnDefinition />
           </Grid.ColumnDefinitions>
-          <Button Grid.Column="0" Content="Серверы" Command="{Binding GoServersCommand}" Foreground="{StaticResource Xrav.Brush.TextPrimary}" Background="Transparent" BorderThickness="0" Padding="8,6" />
-          <Button Grid.Column="1" Content="Подписка" Command="{Binding GoSubscriptionCommand}" Foreground="{StaticResource Xrav.Brush.TextPrimary}" Background="Transparent" BorderThickness="0" Padding="8,6" />
-          <Button Grid.Column="2" Content="Настройки" Command="{Binding GoSettingsCommand}" Foreground="{StaticResource Xrav.Brush.TextPrimary}" Background="Transparent" BorderThickness="0" Padding="8,6" />
+          <ui:NavTab Grid.Column="0" Glyph="🌐" Title="Серверы"  IsActive="{Binding IsServersTab}"      Command="{Binding GoServersCommand}" />
+          <ui:NavTab Grid.Column="1" Glyph="🔗" Title="Подписка" IsActive="{Binding IsSubscriptionTab}" Command="{Binding GoSubscriptionCommand}" />
+          <ui:NavTab Grid.Column="2" Glyph="⚙"  Title="Настройки" IsActive="{Binding IsSettingsTab}"    Command="{Binding GoSettingsCommand}" />
         </Grid>
       </Border>
     </Grid>

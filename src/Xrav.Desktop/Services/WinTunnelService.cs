@@ -19,6 +19,16 @@ public sealed class WinTunnelService : ITunnelService, INotifyPropertyChanged, I
     private Process? _xray;
     private Process? _hev;
     private Process? _singBox;
+    private readonly System.Collections.Concurrent.ConcurrentQueue<string> _xrayTail = new();
+    private readonly System.Collections.Concurrent.ConcurrentQueue<string> _hevTail = new();
+    private readonly System.Collections.Concurrent.ConcurrentQueue<string> _sbTail = new();
+
+    private static void Tail(System.Collections.Concurrent.ConcurrentQueue<string> q, string? line)
+    {
+        if (string.IsNullOrWhiteSpace(line)) return;
+        q.Enqueue(line.TrimEnd());
+        while (q.Count > 8 && q.TryDequeue(out _)) { }
+    }
     private DataReceivedEventHandler? _xrayErr;
     private DataReceivedEventHandler? _xrayOut;
     private DataReceivedEventHandler? _hevErr;
@@ -179,17 +189,20 @@ public sealed class WinTunnelService : ITunnelService, INotifyPropertyChanged, I
             xrayPsi.Environment["XRAY_LOCATION_ASSET"] = AppDataPaths.XrayAssetDir;
             _xray = Process.Start(xrayPsi);
             if (_xray is null) throw new InvalidOperationException("xray: Process.Start вернул null.");
+            _xrayTail.Clear();
             AttachXrayLogHandlers();
             _xray.BeginErrorReadLine();
             _xray.BeginOutputReadLine();
-            Thread.Sleep(400);
+            Thread.Sleep(700);
             if (_xray.HasExited)
             {
                 var code = _xray.ExitCode;
+                var tail = string.Join(" | ", _xrayTail);
                 DetachXrayLog();
                 _xray = null;
                 throw new InvalidOperationException(
-                    $"xray сразу завершился (код {code}). Проверьте JSON и geoip.dat/geosite.dat в «{AppDataPaths.XrayAssetDir}».");
+                    $"xray сразу завершился (код {code}). "
+                    + (string.IsNullOrEmpty(tail) ? "Нет stderr (вероятно Windows Defender / SmartScreen блокирует xray.exe — добавьте исключение для " + AppDataPaths.ToolsDir + ")." : "stderr: " + tail));
             }
 
             var hevPsi = new ProcessStartInfo
@@ -204,20 +217,23 @@ public sealed class WinTunnelService : ITunnelService, INotifyPropertyChanged, I
             };
             _hev = Process.Start(hevPsi);
             if (_hev is null) throw new InvalidOperationException("hev: Process.Start вернул null.");
+            _hevTail.Clear();
             AttachHevLogHandlers();
             _hev.BeginErrorReadLine();
             _hev.BeginOutputReadLine();
-            Thread.Sleep(400);
+            Thread.Sleep(700);
             if (_hev.HasExited)
             {
                 var code = _hev.ExitCode;
+                var tail = string.Join(" | ", _hevTail);
                 DetachHevLog();
                 TryKill(_xray);
                 DetachXrayLog();
                 _xray = null;
                 _hev = null;
                 throw new InvalidOperationException(
-                    $"hev-socks5-tunnel сразу завершился (код {code}). wintun.dll рядом с hev, админ, YAML: «{hevCfg}».");
+                    $"hev-socks5-tunnel сразу завершился (код {code}). "
+                    + (string.IsNullOrEmpty(tail) ? "wintun.dll рядом с hev, запуск от админа. YAML: \"" + hevCfg + "\"." : "stderr: " + tail));
             }
         }, ct);
 
@@ -238,25 +254,28 @@ public sealed class WinTunnelService : ITunnelService, INotifyPropertyChanged, I
             // sing-box ищет wintun.dll в рабочем каталоге; tools = AppDataPaths.ToolsDir, wintun.dll лежит там
             _singBox = Process.Start(psi);
             if (_singBox is null) throw new InvalidOperationException("sing-box: Process.Start вернул null.");
+            _sbTail.Clear();
             AttachSingBoxLogHandlers();
             _singBox.BeginErrorReadLine();
             _singBox.BeginOutputReadLine();
-            Thread.Sleep(600);
+            Thread.Sleep(700);
             if (_singBox.HasExited)
             {
                 var code = _singBox.ExitCode;
+                var tail = string.Join(" | ", _sbTail);
                 DetachSingBoxLog();
                 _singBox = null;
                 throw new InvalidOperationException(
-                    $"sing-box сразу завершился (код {code}). Проверьте JSON в «{sbCfg}», нужен запуск от администратора и wintun.dll в tools.");
+                    $"sing-box сразу завершился (код {code}). "
+                    + (string.IsNullOrEmpty(tail) ? $"Нужен запуск от админа и wintun.dll в {AppDataPaths.ToolsDir}." : "stderr: " + tail));
             }
         }, ct);
 
     private void AttachSingBoxLogHandlers()
     {
         if (_singBox is null) return;
-        _sbErr = (_, e) => EmitLog("sing-box", e.Data);
-        _sbOut = (_, e) => EmitLog("sing-box", e.Data);
+        _sbErr = (_, e) => { Tail(_sbTail, e.Data); EmitLog("sing-box", e.Data); };
+        _sbOut = (_, e) => { Tail(_sbTail, e.Data); EmitLog("sing-box", e.Data); };
         _singBox.ErrorDataReceived += _sbErr;
         _singBox.OutputDataReceived += _sbOut;
     }
@@ -278,8 +297,8 @@ public sealed class WinTunnelService : ITunnelService, INotifyPropertyChanged, I
     private void AttachXrayLogHandlers()
     {
         if (_xray is null) return;
-        _xrayErr = (_, e) => EmitLog("xray", e.Data);
-        _xrayOut = (_, e) => EmitLog("xray", e.Data);
+        _xrayErr = (_, e) => { Tail(_xrayTail, e.Data); EmitLog("xray", e.Data); };
+        _xrayOut = (_, e) => { Tail(_xrayTail, e.Data); EmitLog("xray", e.Data); };
         _xray.ErrorDataReceived += _xrayErr;
         _xray.OutputDataReceived += _xrayOut;
     }
@@ -295,8 +314,8 @@ public sealed class WinTunnelService : ITunnelService, INotifyPropertyChanged, I
     private void AttachHevLogHandlers()
     {
         if (_hev is null) return;
-        _hevErr = (_, e) => EmitLog("hev", e.Data);
-        _hevOut = (_, e) => EmitLog("hev", e.Data);
+        _hevErr = (_, e) => { Tail(_hevTail, e.Data); EmitLog("hev", e.Data); };
+        _hevOut = (_, e) => { Tail(_hevTail, e.Data); EmitLog("hev", e.Data); };
         _hev.ErrorDataReceived += _hevErr;
         _hev.OutputDataReceived += _hevOut;
     }
