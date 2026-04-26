@@ -1,0 +1,9 @@
+<Project>
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <Authors>X-Rav</Authors>
+    <Product>X-Rav</Product>
+  </PropertyGroup>
+</Project>

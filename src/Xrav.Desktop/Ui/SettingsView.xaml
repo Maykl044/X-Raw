@@ -1,0 +1,34 @@
+<UserControl x:Class="Xrav.Desktop.Ui.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:storage="clr-namespace:Xrav.Desktop.Storage"
+             mc:Ignorable="d"
+             d:DesignHeight="600" d:DesignWidth="400">
+  <StackPanel Margin="16,0,16,8">
+    <TextBlock Text="Настройки" Style="{StaticResource Xrav.Text.Title}" Margin="0,0,0,8" />
+    <TextBlock Style="{StaticResource Xrav.Text.Body}" TextWrapping="Wrap" Margin="0,0,0,12"
+               Text="Тема, лог, маскировка, фильтр приложений и прочие подэкраны — по образцу Android. Язык фиксирован: русский." />
+    <TextBlock Text="Версия" Style="{StaticResource Xrav.Text.Caption}" />
+    <TextBlock Text="X-Rav для Windows (ранняя сборка)" Foreground="{StaticResource Xrav.Brush.TextPrimary}" />
+    <TextBlock Text="Папка данных" Style="{StaticResource Xrav.Text.Caption}" Margin="0,12,0,0" />
+    <TextBlock Text="{x:Static storage:AppDataPaths.XravRoot}" Style="{StaticResource Xrav.Text.Caption}" TextWrapping="Wrap" />
+    <TextBlock Text="Сюда в подпапку tools положите xray.exe, wintun.dll, hev-socks5-tunnel.exe" Style="{StaticResource Xrav.Text.Body}" TextWrapping="Wrap" Margin="0,4,0,0" />
+    <TextBlock Text="{x:Static storage:AppDataPaths.ToolsDir}" Style="{StaticResource Xrav.Text.Caption}" TextWrapping="Wrap" />
+    <TextBlock Text="Папка geo (geoip.dat, geosite.dat) — XRAY_LOCATION_ASSET, как xray_env на Android" Style="{StaticResource Xrav.Text.Body}" TextWrapping="Wrap" Margin="0,8,0,0" />
+    <TextBlock Text="{x:Static storage:AppDataPaths.XrayAssetDir}" Style="{StaticResource Xrav.Text.Caption}" TextWrapping="Wrap" />
+    <TextBlock Text="Лог xray / hev" Style="{StaticResource Xrav.Text.Caption}" Margin="0,12,0,0" />
+    <Grid>
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+      <ListBox Grid.Column="0" ItemsSource="{Binding TunnelLog}" MaxHeight="200" MinHeight="80"
+               Background="#33161A2B" Foreground="{StaticResource Xrav.Brush.TextSecondary}" FontSize="11"
+               FontFamily="Consolas" BorderBrush="{StaticResource Xrav.Brush.Outline}" Padding="4" Margin="0,4,8,0" />
+      <Button Grid.Column="1" Content="Очистить" VerticalAlignment="Top" Command="{Binding ClearTunnelLogCommand}"
+              Padding="10,4" Foreground="{StaticResource Xrav.Brush.TextPrimary}" Background="#33161A2B" BorderBrush="{StaticResource Xrav.Brush.Outline}" />
+    </Grid>
+  </StackPanel>
+</UserControl>

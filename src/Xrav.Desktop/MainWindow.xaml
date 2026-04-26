@@ -1,0 +1,86 @@
+<Window x:Class="Xrav.Desktop.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="clr-namespace:Xrav.Desktop.Ui"
+        Title="X-Rav"
+        Height="780" Width="420" MinWidth="360" MinHeight="560"
+        WindowStartupLocation="CenterScreen"
+        Background="#FF0B0D1A"
+        TextOptions.TextFormattingMode="Display">
+  <Window.Resources>
+    <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    <ui:NonEmptyStringToVisibilityConverter x:Key="StringToVis" />
+  </Window.Resources>
+  <Grid>
+    <Grid.Background>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#FF0B0D1A" Offset="0" />
+        <GradientStop Color="#FF161A2B" Offset="0.45" />
+        <GradientStop Color="#FF0E1224" Offset="1" />
+      </LinearGradientBrush>
+    </Grid.Background>
+    <Grid Margin="0,0,0,8">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="*" />
+        <RowDefinition Height="Auto" />
+      </Grid.RowDefinitions>
+
+      <StackPanel Grid.Row="0" Margin="20,20,20,4">
+        <TextBlock Text="{Binding TunnelStateDisplay}" Foreground="{StaticResource Xrav.Brush.TextPrimary}" FontSize="16" FontWeight="SemiBold" />
+        <TextBlock Text="{Binding TunnelError}" Foreground="#FFFF453A" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"
+                   Visibility="{Binding TunnelError, Converter={StaticResource StringToVis}}" />
+      </StackPanel>
+
+      <StackPanel Grid.Row="1" HorizontalAlignment="Center" Margin="0,8,0,8">
+        <Button Width="120" Height="120" Click="OnPowerClick" ToolTip="Подключить или отключить"
+                Background="Transparent" BorderThickness="0" Cursor="Hand">
+          <Button.Template>
+            <ControlTemplate TargetType="Button">
+              <Grid>
+                <Ellipse>
+                  <Ellipse.Fill>
+                    <RadialGradientBrush GradientOrigin="0.35,0.3">
+                      <GradientStop Color="#6630D158" Offset="0" />
+                      <GradientStop Color="#1A1B2136" Offset="0.6" />
+                      <GradientStop Color="#0D141E2E" Offset="1" />
+                    </RadialGradientBrush>
+                  </Ellipse.Fill>
+                </Ellipse>
+                <Ellipse>
+                  <Ellipse.Stroke>
+                    <SolidColorBrush Color="#33FFFFFF" />
+                  </Ellipse.Stroke>
+                </Ellipse>
+                <Viewbox Width="40" Height="40">
+                  <TextBlock Text="⏻" Foreground="#FF4AA3FF" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Viewbox>
+              </Grid>
+            </ControlTemplate>
+          </Button.Template>
+        </Button>
+        <TextBlock Text="кнопка питания — как на Android" Style="{StaticResource Xrav.Text.Caption}" HorizontalAlignment="Center" Margin="0,6,0,0" />
+      </StackPanel>
+
+      <Grid Grid.Row="2" ClipToBounds="True">
+        <ui:ServersView DataContext="{Binding}" Visibility="{Binding IsServersTab, Converter={StaticResource BoolToVis}}" />
+        <ui:SubscriptionView DataContext="{Binding}" Visibility="{Binding IsSubscriptionTab, Converter={StaticResource BoolToVis}}" />
+        <ui:SettingsView DataContext="{Binding}" Visibility="{Binding IsSettingsTab, Converter={StaticResource BoolToVis}}" />
+      </Grid>
+
+      <Border Grid.Row="3" Margin="12,4,12,0" Background="{StaticResource Xrav.Brush.GlassTint}" BorderBrush="{StaticResource Xrav.Brush.GlassStroke}" BorderThickness="1" CornerRadius="22" Padding="4,6">
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+            <ColumnDefinition />
+            <ColumnDefinition />
+          </Grid.ColumnDefinitions>
+          <Button Grid.Column="0" Content="Серверы" Command="{Binding GoServersCommand}" Foreground="{StaticResource Xrav.Brush.TextPrimary}" Background="Transparent" BorderThickness="0" Padding="8,6" />
+          <Button Grid.Column="1" Content="Подписка" Command="{Binding GoSubscriptionCommand}" Foreground="{StaticResource Xrav.Brush.TextPrimary}" Background="Transparent" BorderThickness="0" Padding="8,6" />
+          <Button Grid.Column="2" Content="Настройки" Command="{Binding GoSettingsCommand}" Foreground="{StaticResource Xrav.Brush.TextPrimary}" Background="Transparent" BorderThickness="0" Padding="8,6" />
+        </Grid>
+      </Border>
+    </Grid>
+  </Grid>
+</Window>

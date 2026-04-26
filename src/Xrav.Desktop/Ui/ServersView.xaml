@@ -1,0 +1,42 @@
+<UserControl x:Class="Xrav.Desktop.Ui.ServersView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="600" d:DesignWidth="400">
+  <Grid Margin="16,0,16,8">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+
+    <TextBlock Grid.Row="0" Text="Серверы" Style="{StaticResource Xrav.Text.Title}" Margin="0,0,0,4" />
+    <TextBlock Grid.Row="1" Style="{StaticResource Xrav.Text.Caption}" TextWrapping="Wrap"
+               Text="Выберите сервер (активный ключ) — к нему пойдёт подключение. Сохраняется в user.json." />
+    <Border Grid.Row="2" Background="{StaticResource Xrav.Brush.Surface}" BorderBrush="{StaticResource Xrav.Brush.Outline}" BorderThickness="1" CornerRadius="16" Padding="0,8" Margin="0,12,0,0">
+      <ListView ItemsSource="{Binding Keys}" SelectedItem="{Binding SelectedKey, Mode=TwoWay}"
+                BorderThickness="0" Background="Transparent"
+                Foreground="{StaticResource Xrav.Brush.TextPrimary}" Padding="4,0">
+        <ListView.ItemTemplate>
+          <DataTemplate>
+            <Grid Margin="8,6">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+              <StackPanel>
+                <TextBlock Text="{Binding Remark}" Foreground="{StaticResource Xrav.Brush.TextPrimary}" FontWeight="SemiBold" />
+                <TextBlock Text="{Binding Subtitle}" Foreground="{StaticResource Xrav.Brush.TextMuted}" FontSize="12" />
+              </StackPanel>
+              <Border Grid.Column="1" Background="{StaticResource Xrav.Brush.GlassStroke}" Opacity="0.5" CornerRadius="8" Padding="6,2" VerticalAlignment="Center">
+                <TextBlock Text="{Binding ShortProtocolLabel}" Foreground="{StaticResource Xrav.Brush.TextSecondary}" FontSize="11" />
+              </Border>
+            </Grid>
+          </DataTemplate>
+        </ListView.ItemTemplate>
+      </ListView>
+    </Border>
+  </Grid>
+</UserControl>

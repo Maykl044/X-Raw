@@ -1,0 +1,29 @@
+# .NET build outputs
+bin/
+obj/
+out/
+publish/
+*.user
+*.suo
+.vs/
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Tooling
+TestResults/
+coverage/
+*.coverage
+*.cobertura.xml
+
+# Local artefacts
+artifacts/
+release-zip/
+*.zip
+!docs/*.zip
