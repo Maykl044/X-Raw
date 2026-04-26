@@ -39,4 +39,29 @@
   <ItemGroup>
     <None Include="Assets\app.ico" Condition="Exists('Assets\app.ico')" />
   </ItemGroup>
+
+  <!--
+    Bundled tools: bin'арники зашиваются в .exe и распаковываются в %APPDATA%\X-Rav\
+    при первом запуске. Файлы могут отсутствовать (CI скачивает их сам перед publish);
+    в этом случае EmbeddedResource просто становится пустым.
+  -->
+  <ItemGroup>
+    <EmbeddedResource Include="Bundled\common\geoip.dat"   Condition="Exists('Bundled\common\geoip.dat')"   LogicalName="Bundled.common.geoip.dat" />
+    <EmbeddedResource Include="Bundled\common\geosite.dat" Condition="Exists('Bundled\common\geosite.dat')" LogicalName="Bundled.common.geosite.dat" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
+    <EmbeddedResource Include="Bundled\x64\xray.exe"               Condition="Exists('Bundled\x64\xray.exe')"               LogicalName="Bundled.x64.xray.exe" />
+    <EmbeddedResource Include="Bundled\x64\sing-box.exe"           Condition="Exists('Bundled\x64\sing-box.exe')"           LogicalName="Bundled.x64.sing-box.exe" />
+    <EmbeddedResource Include="Bundled\x64\hev-socks5-tunnel.exe"  Condition="Exists('Bundled\x64\hev-socks5-tunnel.exe')"  LogicalName="Bundled.x64.hev-socks5-tunnel.exe" />
+    <EmbeddedResource Include="Bundled\x64\msys-2.0.dll"           Condition="Exists('Bundled\x64\msys-2.0.dll')"           LogicalName="Bundled.x64.msys-2.0.dll" />
+    <EmbeddedResource Include="Bundled\x64\libcronet.dll"          Condition="Exists('Bundled\x64\libcronet.dll')"          LogicalName="Bundled.x64.libcronet.dll" />
+    <EmbeddedResource Include="Bundled\x64\wintun.dll"             Condition="Exists('Bundled\x64\wintun.dll')"             LogicalName="Bundled.x64.wintun.dll" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x86'">
+    <EmbeddedResource Include="Bundled\x86\xray.exe"     Condition="Exists('Bundled\x86\xray.exe')"     LogicalName="Bundled.x86.xray.exe" />
+    <EmbeddedResource Include="Bundled\x86\sing-box.exe" Condition="Exists('Bundled\x86\sing-box.exe')" LogicalName="Bundled.x86.sing-box.exe" />
+    <EmbeddedResource Include="Bundled\x86\wintun.dll"   Condition="Exists('Bundled\x86\wintun.dll')"   LogicalName="Bundled.x86.wintun.dll" />
+  </ItemGroup>
 </Project>

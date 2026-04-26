@@ -69,13 +69,30 @@
         </Border>
       </Grid>
 
-      <!-- Сообщение об ошибке -->
-      <Border Grid.Row="1" Margin="20,12,20,0" CornerRadius="10" Padding="12,8"
-              Background="#22FF4D6D" BorderBrush="{StaticResource X.Brush.Danger}" BorderThickness="1"
-              Visibility="{Binding TunnelError, Converter={StaticResource StringToVis}}">
-        <TextBlock Text="{Binding TunnelError}" Foreground="{StaticResource X.Brush.Text}"
-                   FontSize="12" TextWrapping="Wrap" />
-      </Border>
+      <!-- Сообщение об ошибке + баннер обновления -->
+      <StackPanel Grid.Row="1" Margin="20,12,20,0">
+        <Border CornerRadius="10" Padding="12,8" Margin="0,0,0,6"
+                Background="#22FF4D6D" BorderBrush="{StaticResource X.Brush.Danger}" BorderThickness="1"
+                Visibility="{Binding TunnelError, Converter={StaticResource StringToVis}}">
+          <TextBlock Text="{Binding TunnelError}" Foreground="{StaticResource X.Brush.Text}"
+                     FontSize="12" TextWrapping="Wrap" />
+        </Border>
+        <Border CornerRadius="10" Padding="12,8"
+                Background="#22FFB547" BorderBrush="{StaticResource X.Brush.Warn}" BorderThickness="1"
+                Visibility="{Binding UpdateBanner, Converter={StaticResource StringToVis}}">
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="{Binding UpdateBanner}" Foreground="{StaticResource X.Brush.Text}"
+                       FontSize="12" TextWrapping="Wrap" VerticalAlignment="Center" />
+            <Button Grid.Column="1" Content="✕" Command="{Binding DismissUpdateBannerCommand}"
+                    Background="Transparent" BorderThickness="0" Foreground="{StaticResource X.Brush.TextSoft}"
+                    FontSize="14" Padding="8,2" Cursor="Hand" />
+          </Grid>
+        </Border>
+      </StackPanel>
 
       <!-- Большая кнопка питания -->
       <StackPanel Grid.Row="2" HorizontalAlignment="Center" Margin="0,18,0,18">

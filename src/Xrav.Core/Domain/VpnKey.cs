@@ -12,8 +12,12 @@ public sealed record VpnKey(
     string? SubscriptionId = null
 )
 {
+    /// <summary>Последний измеренный TCP RTT (мс), или null если не пинговали.</summary>
+    public int? LatencyMs { get; init; }
+
     public string ShortProtocolLabel => Protocol.ShortLabel();
     public string Subtitle => $"{ShortProtocolLabel} · {Host ?? "—"}";
+    public string LatencyDisplay => LatencyMs is null ? "—" : $"{LatencyMs} мс";
 }
 
 public enum KeyProtocol

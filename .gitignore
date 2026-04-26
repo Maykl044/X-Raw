@@ -28,3 +28,8 @@ release-zip/
 dist-tools/
 *.zip
 !docs/*.zip
+
+# Bundled binaries (downloaded at build time, never committed)
+src/Xrav.Desktop/Bundled/x64/
+src/Xrav.Desktop/Bundled/x86/
+src/Xrav.Desktop/Bundled/common/

@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Threading;
 using Xrav.Desktop.Logging;
+using Xrav.Desktop.Tools;
 
 namespace Xrav.Desktop;
 
@@ -20,6 +21,18 @@ public partial class App : Application
         TaskScheduler.UnobservedTaskException += OnUnobservedTask;
 
         FileLogger.Log("app", "X-Rav started");
+
+        try
+        {
+            int extracted = BundledTools.ExtractMissing();
+            if (extracted > 0)
+                FileLogger.Log("app", $"Распакованы {extracted} встроенных бинарников.");
+        }
+        catch (Exception ex)
+        {
+            FileLogger.Error("bundled", ex);
+        }
+
         base.OnStartup(e);
     }
 

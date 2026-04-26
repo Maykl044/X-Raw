@@ -70,6 +70,10 @@ public sealed class MainViewModel : ViewModelBase
         BootstrapToolsCommand = new RelayCommand(async () => await BootstrapToolsAsync(), () => !BootstrapBusy);
         OpenDataFolderCommand = new RelayCommand(OpenDataFolder);
         OpenLogFileCommand = new RelayCommand(OpenLogFile);
+        PingSelectedKeyCommand = new RelayCommand(async () => await PingKeyAsync(SelectedKey), () => SelectedKey is not null && !PingBusy);
+        PingAllKeysCommand    = new RelayCommand(async () => await PingAllKeysAsync(), () => Keys.Count > 0 && !PingBusy);
+        DismissUpdateBannerCommand = new RelayCommand(() => UpdateBanner = null);
+        _ = CheckForUpdatesAsync();
         if (tunnel is INotifyPropertyChanged npc)
         {
             npc.PropertyChanged += (_, a) =>
@@ -255,6 +259,96 @@ public sealed class MainViewModel : ViewModelBase
     public ICommand BootstrapToolsCommand { get; }
     public ICommand OpenDataFolderCommand { get; }
     public ICommand OpenLogFileCommand { get; }
+    public ICommand PingSelectedKeyCommand { get; }
+    public ICommand PingAllKeysCommand { get; }
+    public ICommand DismissUpdateBannerCommand { get; }
+
+    private string? _updateBanner;
+    public string? UpdateBanner
+    {
+        get => _updateBanner;
+        private set
+        {
+            if (_updateBanner == value) return;
+            _updateBanner = value;
+            OnPropertyChanged();
+        }
+    }
+
+    private bool _pingBusy;
+    public bool PingBusy
+    {
+        get => _pingBusy;
+        private set
+        {
+            if (_pingBusy == value) return;
+            _pingBusy = value;
+            OnPropertyChanged();
+            (PingSelectedKeyCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            (PingAllKeysCommand as RelayCommand)?.RaiseCanExecuteChanged();
+        }
+    }
+
+    private async Task PingKeyAsync(VpnKey? key)
+    {
+        if (key is null) return;
+        PingBusy = true;
+        try
+        {
+            var ms = await Tools.PingTester.MeasureAsync(key).ConfigureAwait(false);
+            UpdateKeyLatency(key, ms);
+        }
+        finally { PingBusy = false; }
+    }
+
+    private async Task PingAllKeysAsync()
+    {
+        PingBusy = true;
+        try
+        {
+            var snap = Keys.ToList();
+            var tasks = snap.Select(async k =>
+            {
+                var ms = await Tools.PingTester.MeasureAsync(k).ConfigureAwait(false);
+                return (k, ms);
+            }).ToArray();
+            var results = await Task.WhenAll(tasks).ConfigureAwait(false);
+            foreach (var (k, ms) in results) UpdateKeyLatency(k, ms);
+        }
+        finally { PingBusy = false; }
+    }
+
+    private void UpdateKeyLatency(VpnKey key, int? ms)
+    {
+        var app = Application.Current;
+        void Apply()
+        {
+            for (int i = 0; i < Keys.Count; i++)
+            {
+                if (Keys[i].Id == key.Id)
+                {
+                    Keys[i] = Keys[i] with { LatencyMs = ms };
+                    if (SelectedKey?.Id == key.Id) SelectedKey = Keys[i];
+                    break;
+                }
+            }
+        }
+        if (app?.Dispatcher is not null && !app.Dispatcher.CheckAccess())
+            app.Dispatcher.Invoke(Apply);
+        else Apply();
+    }
+
+    private async Task CheckForUpdatesAsync()
+    {
+        try
+        {
+            var updates = await Tools.UpdateChecker.CheckAsync(SharedHttp).ConfigureAwait(false);
+            if (updates.Count == 0) return;
+            var msg = string.Join(", ", updates.Select(u => $"{u.Tool} {u.Current}→{u.Latest}"));
+            UpdateBanner = $"Доступны обновления: {msg}. Нажмите «Подготовить» в Настройках для скачивания.";
+        }
+        catch { /* offline */ }
+    }
 
     public ITunnelService Tunnel => _tunnel;
 

@@ -21,6 +21,59 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
+      - name: Fetch bundled binaries (xray, sing-box, hev, wintun, geo)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $rid = "${{ matrix.rid }}"
+          $arch = if ($rid -eq 'win-x86') { 'x86' } else { 'x64' }
+          $bundled = "src/Xrav.Desktop/Bundled"
+          New-Item -ItemType Directory -Force -Path "$bundled/$arch" | Out-Null
+          New-Item -ItemType Directory -Force -Path "$bundled/common" | Out-Null
+
+          $tmp = "$env:RUNNER_TEMP/x-rav-tools"
+          New-Item -ItemType Directory -Force -Path $tmp | Out-Null
+
+          # xray-core (XTLS/Xray-core, latest)
+          $xrayZip = if ($arch -eq 'x86') { 'Xray-windows-32.zip' } else { 'Xray-windows-64.zip' }
+          $xrayUrl = (Invoke-RestMethod 'https://api.github.com/repos/XTLS/Xray-core/releases/latest').assets | Where-Object { $_.name -eq $xrayZip } | Select-Object -ExpandProperty browser_download_url
+          Invoke-WebRequest $xrayUrl -OutFile "$tmp/xray.zip"
+          Expand-Archive "$tmp/xray.zip" "$tmp/xray" -Force
+          Copy-Item "$tmp/xray/xray.exe"     "$bundled/$arch/xray.exe"
+          Copy-Item "$tmp/xray/geoip.dat"    "$bundled/common/geoip.dat"
+          Copy-Item "$tmp/xray/geosite.dat"  "$bundled/common/geosite.dat"
+
+          # sing-box (SagerNet, latest)
+          $sbAsset = if ($arch -eq 'x86') { 'windows-386' } else { 'windows-amd64' }
+          $sbUrl = (Invoke-RestMethod 'https://api.github.com/repos/SagerNet/sing-box/releases/latest').assets | Where-Object { $_.name -match "$sbAsset\.zip$" -and $_.name -notmatch 'legacy' } | Select-Object -First 1 -ExpandProperty browser_download_url
+          Invoke-WebRequest $sbUrl -OutFile "$tmp/sb.zip"
+          Expand-Archive "$tmp/sb.zip" "$tmp/sb" -Force
+          $sbExe = Get-ChildItem -Recurse "$tmp/sb" -Filter 'sing-box.exe' | Select-Object -First 1
+          Copy-Item $sbExe.FullName "$bundled/$arch/sing-box.exe"
+
+          # wintun (download Wintun-0.14.1.zip from sing-box mirror or wintun.net)
+          Invoke-WebRequest 'https://www.wintun.net/builds/wintun-0.14.1.zip' -OutFile "$tmp/wintun.zip"
+          Expand-Archive "$tmp/wintun.zip" "$tmp/wt" -Force
+          $wtArchPath = if ($arch -eq 'x86') { 'wintun/bin/x86/wintun.dll' } else { 'wintun/bin/amd64/wintun.dll' }
+          Copy-Item "$tmp/wt/$wtArchPath" "$bundled/$arch/wintun.dll"
+
+          # hev-socks5-tunnel (только x64)
+          if ($arch -eq 'x64') {
+            $hevUrl = (Invoke-RestMethod 'https://api.github.com/repos/heiher/hev-socks5-tunnel/releases/latest').assets | Where-Object { $_.name -match 'win.*amd64\.tar\.gz$' -or $_.name -match 'windows.*amd64' -or $_.name -eq 'hev-socks5-tunnel-windows-x86_64.tar.gz' } | Select-Object -First 1 -ExpandProperty browser_download_url
+            if ($hevUrl) {
+              Invoke-WebRequest $hevUrl -OutFile "$tmp/hev.tar.gz"
+              tar -xzf "$tmp/hev.tar.gz" -C "$tmp"
+              $hevExe = Get-ChildItem -Recurse "$tmp" -Filter 'hev-socks5-tunnel.exe' | Select-Object -First 1
+              if ($hevExe) {
+                Copy-Item $hevExe.FullName "$bundled/$arch/hev-socks5-tunnel.exe"
+                $msys = Get-ChildItem -Recurse "$tmp" -Filter 'msys-2.0.dll' | Select-Object -First 1
+                if ($msys) { Copy-Item $msys.FullName "$bundled/$arch/msys-2.0.dll" }
+              }
+            }
+          }
+
+          Get-ChildItem -Recurse "$bundled" | Format-Table Name, Length
+
       - name: Restore
         run: dotnet restore Xrav.sln
 
