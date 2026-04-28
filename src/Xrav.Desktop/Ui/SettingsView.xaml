@@ -179,7 +179,7 @@
           <TextBlock Text="{loc:T settings.appearance}" Style="{StaticResource X.Text.H2}" Margin="14,0,0,0" VerticalAlignment="Center" />
         </DockPanel>
 
-        <Border Background="{DynamicResource X.Brush.Surface}" BorderBrush="{DynamicResource X.Brush.OutlineSoft}"
+        <Border Background="{DynamicResource X.Brush.GlassFill}" BorderBrush="{DynamicResource X.Brush.GlassBorder}"
                 BorderThickness="1" CornerRadius="14" Padding="14">
           <StackPanel>
             <TextBlock Style="{StaticResource X.Text.Caption}" Margin="0,0,0,4" Text="{loc:T settings.theme}" />
@@ -217,7 +217,7 @@
           <TextBlock Text="{loc:T settings.mode}" Style="{StaticResource X.Text.H2}" Margin="14,0,0,0" VerticalAlignment="Center" />
         </DockPanel>
 
-        <Border Background="{DynamicResource X.Brush.Surface}" BorderBrush="{DynamicResource X.Brush.OutlineSoft}"
+        <Border Background="{DynamicResource X.Brush.GlassFill}" BorderBrush="{DynamicResource X.Brush.GlassBorder}"
                 BorderThickness="1" CornerRadius="14" Padding="14">
           <StackPanel>
             <TextBlock Style="{StaticResource X.Text.Caption}" TextWrapping="Wrap" Margin="0,0,0,8"
@@ -255,7 +255,7 @@
           <TextBlock Text="{loc:T settings.url}" Style="{StaticResource X.Text.H2}" Margin="14,0,0,0" VerticalAlignment="Center" />
         </DockPanel>
 
-        <Border Background="{DynamicResource X.Brush.Surface}" BorderBrush="{DynamicResource X.Brush.OutlineSoft}"
+        <Border Background="{DynamicResource X.Brush.GlassFill}" BorderBrush="{DynamicResource X.Brush.GlassBorder}"
                 BorderThickness="1" CornerRadius="14" Padding="14">
           <StackPanel>
             <TextBlock Style="{StaticResource X.Text.Caption}" TextWrapping="Wrap" Margin="0,0,0,8"
@@ -294,7 +294,7 @@
           <TextBlock Text="{loc:T settings.tools}" Style="{StaticResource X.Text.H2}" Margin="14,0,0,0" VerticalAlignment="Center" />
         </DockPanel>
 
-        <Border Background="{DynamicResource X.Brush.Surface}" BorderBrush="{DynamicResource X.Brush.OutlineSoft}"
+        <Border Background="{DynamicResource X.Brush.GlassFill}" BorderBrush="{DynamicResource X.Brush.GlassBorder}"
                 BorderThickness="1" CornerRadius="14" Padding="14">
           <StackPanel>
             <TextBlock Style="{StaticResource X.Text.Caption}" TextWrapping="Wrap" Margin="0,0,0,8"
@@ -332,7 +332,7 @@
           <TextBlock Text="{loc:T settings.folders}" Style="{StaticResource X.Text.H2}" Margin="14,0,0,0" VerticalAlignment="Center" />
         </DockPanel>
 
-        <Border Background="{DynamicResource X.Brush.Surface}" BorderBrush="{DynamicResource X.Brush.OutlineSoft}"
+        <Border Background="{DynamicResource X.Brush.GlassFill}" BorderBrush="{DynamicResource X.Brush.GlassBorder}"
                 BorderThickness="1" CornerRadius="14" Padding="14">
           <StackPanel>
             <TextBlock Text="{x:Static storage:AppDataPaths.XravRoot}" Foreground="{DynamicResource X.Brush.TextSoft}"
@@ -367,7 +367,7 @@
           <TextBlock Text="{loc:T settings.faq}" Style="{StaticResource X.Text.H2}" Margin="14,0,0,0" VerticalAlignment="Center" />
         </DockPanel>
 
-        <Border Background="{DynamicResource X.Brush.Surface}" BorderBrush="{DynamicResource X.Brush.OutlineSoft}"
+        <Border Background="{DynamicResource X.Brush.GlassFill}" BorderBrush="{DynamicResource X.Brush.GlassBorder}"
                 BorderThickness="1" CornerRadius="14" Padding="14">
           <StackPanel>
             <Expander Foreground="{DynamicResource X.Brush.Text}" Header="{loc:T faq.q1}" Margin="0,2">
@@ -407,7 +407,7 @@
           <TextBlock Text="{loc:T settings.about}" Style="{StaticResource X.Text.H2}" Margin="14,0,0,0" VerticalAlignment="Center" />
         </DockPanel>
 
-        <Border Background="{DynamicResource X.Brush.Surface}" BorderBrush="{DynamicResource X.Brush.OutlineSoft}"
+        <Border Background="{DynamicResource X.Brush.GlassFill}" BorderBrush="{DynamicResource X.Brush.GlassBorder}"
                 BorderThickness="1" CornerRadius="14" Padding="14">
           <StackPanel>
             <Grid>

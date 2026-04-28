@@ -32,8 +32,8 @@
               Style="{StaticResource X.Btn.Ghost}" VerticalAlignment="Top" />
     </Grid>
 
-    <Border Grid.Row="1" Margin="0,12,0,0" Background="{DynamicResource X.Brush.Surface}"
-            BorderBrush="{DynamicResource X.Brush.OutlineSoft}" BorderThickness="1" CornerRadius="14" Padding="10">
+    <Border Grid.Row="1" Margin="0,12,0,0" Background="{DynamicResource X.Brush.GlassFill}"
+            BorderBrush="{DynamicResource X.Brush.GlassBorder}" BorderThickness="1" CornerRadius="14" Padding="10">
       <Grid>
         <Grid.RowDefinitions>
           <RowDefinition Height="Auto" />
@@ -59,8 +59,8 @@
       <ItemsControl ItemsSource="{Binding Subscriptions}">
         <ItemsControl.ItemTemplate>
           <DataTemplate>
-            <Border Margin="0,0,0,8" Background="{DynamicResource X.Brush.Surface}"
-                    BorderBrush="{DynamicResource X.Brush.OutlineSoft}" BorderThickness="1" CornerRadius="14">
+            <Border Margin="0,0,0,8" Background="{DynamicResource X.Brush.GlassFill}"
+                    BorderBrush="{DynamicResource X.Brush.GlassBorder}" BorderThickness="1" CornerRadius="14">
               <Expander Background="Transparent" BorderThickness="0" Padding="10,8"
                         Foreground="{DynamicResource X.Brush.Text}">
                 <Expander.Header>
@@ -81,8 +81,8 @@
                         <TextBlock Text="{Binding Label}" Foreground="{DynamicResource X.Brush.Text}"
                                    FontWeight="SemiBold" FontSize="14" TextTrimming="CharacterEllipsis" />
                         <Border Margin="8,0,0,0" CornerRadius="8" Padding="6,1"
-                                Background="{DynamicResource X.Brush.CanvasMid}"
-                                BorderBrush="{DynamicResource X.Brush.OutlineSoft}" BorderThickness="1"
+                                Background="{DynamicResource X.Brush.GlassFill}"
+                                BorderBrush="{DynamicResource X.Brush.GlassBorder}" BorderThickness="1"
                                 VerticalAlignment="Center">
                           <TextBlock FontSize="11" Foreground="{DynamicResource X.Brush.TextSoft}">
                             <TextBlock.Text>
@@ -121,8 +121,8 @@
                   <ItemsControl.ItemTemplate>
                     <DataTemplate>
                       <Border Margin="0,2" Padding="8" CornerRadius="10"
-                              Background="{DynamicResource X.Brush.CanvasMid}"
-                              BorderBrush="{DynamicResource X.Brush.OutlineSoft}" BorderThickness="1">
+                              Background="{DynamicResource X.Brush.GlassFill}"
+                              BorderBrush="{DynamicResource X.Brush.GlassBorder}" BorderThickness="1">
                         <Grid>
                           <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />

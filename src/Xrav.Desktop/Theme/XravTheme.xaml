@@ -26,6 +26,38 @@
   <SolidColorBrush x:Key="X.Brush.WarnTint"    Color="{DynamicResource X.Color.WarnTint}" />
   <SolidColorBrush x:Key="X.Brush.AccentTint"  Color="{DynamicResource X.Color.AccentTint}" />
 
+  <!-- Liquid Glass: полупрозрачные кисти -->
+  <SolidColorBrush x:Key="X.Brush.GlassFill"        Color="{DynamicResource X.Color.GlassFill}" />
+  <SolidColorBrush x:Key="X.Brush.GlassFillStrong"  Color="{DynamicResource X.Color.GlassFillStrong}" />
+  <SolidColorBrush x:Key="X.Brush.GlassBorder"      Color="{DynamicResource X.Color.GlassBorder}" />
+  <SolidColorBrush x:Key="X.Brush.GlassHighlight"   Color="{DynamicResource X.Color.GlassHighlight}" />
+  <SolidColorBrush x:Key="X.Brush.GlassShadow"      Color="{DynamicResource X.Color.GlassShadow}" />
+
+  <LinearGradientBrush x:Key="X.Brush.GlassSheen" StartPoint="0,0" EndPoint="0,1">
+    <GradientStop Color="{DynamicResource X.Color.GlassHighlight}" Offset="0" />
+    <GradientStop Color="#00000000" Offset="0.45" />
+    <GradientStop Color="#00000000" Offset="1" />
+  </LinearGradientBrush>
+
+  <!-- Стиль «стеклянной» карточки: полупрозрачный фон + тонкая обводка + блик сверху + мягкая тень -->
+  <Style x:Key="X.Card.Glass" TargetType="Border">
+    <Setter Property="Background" Value="{DynamicResource X.Brush.GlassFill}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource X.Brush.GlassBorder}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="14" />
+    <Setter Property="Padding" Value="12" />
+    <Setter Property="SnapsToDevicePixels" Value="True" />
+    <Setter Property="Effect">
+      <Setter.Value>
+        <DropShadowEffect Color="{DynamicResource X.Color.GlassShadow}" BlurRadius="22" ShadowDepth="0" Opacity="0.35" />
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style x:Key="X.Card.Glass.Strong" TargetType="Border" BasedOn="{StaticResource X.Card.Glass}">
+    <Setter Property="Background" Value="{DynamicResource X.Brush.GlassFillStrong}" />
+  </Style>
+
   <LinearGradientBrush x:Key="X.Brush.Bg" StartPoint="0,0" EndPoint="1,1">
     <GradientStop Color="{DynamicResource X.Color.BgGrad1}" Offset="0" />
     <GradientStop Color="{DynamicResource X.Color.BgGrad2}" Offset="0.45" />
@@ -139,8 +171,8 @@
     <Setter Property="Padding" Value="12,7" />
     <Setter Property="Cursor" Value="Hand" />
     <Setter Property="BorderThickness" Value="1" />
-    <Setter Property="BorderBrush" Value="{DynamicResource X.Brush.Outline}" />
-    <Setter Property="Background" Value="{DynamicResource X.Brush.SurfaceHi}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource X.Brush.GlassBorder}" />
+    <Setter Property="Background" Value="{DynamicResource X.Brush.GlassFill}" />
     <Setter Property="SnapsToDevicePixels" Value="True" />
     <Setter Property="Template">
       <Setter.Value>
@@ -152,6 +184,7 @@
           </Border>
           <ControlTemplate.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="bd" Property="Background" Value="{DynamicResource X.Brush.GlassFillStrong}" />
               <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource X.Brush.Accent}" />
             </Trigger>
             <Trigger Property="IsPressed" Value="True">
@@ -207,8 +240,8 @@
     <Setter Property="Foreground" Value="{DynamicResource X.Brush.Text}" />
     <Setter Property="CaretBrush" Value="{DynamicResource X.Brush.Accent}" />
     <Setter Property="SelectionBrush" Value="{DynamicResource X.Brush.Accent}" />
-    <Setter Property="Background" Value="{DynamicResource X.Brush.CanvasMid}" />
-    <Setter Property="BorderBrush" Value="{DynamicResource X.Brush.Outline}" />
+    <Setter Property="Background" Value="{DynamicResource X.Brush.GlassFill}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource X.Brush.GlassBorder}" />
     <Setter Property="BorderThickness" Value="1" />
     <Setter Property="Padding" Value="10,8" />
     <Setter Property="FontSize" Value="13" />
@@ -239,8 +272,8 @@
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="ListBoxItem">
-          <Border x:Name="bd" Background="{DynamicResource X.Brush.Surface}" CornerRadius="12"
-                  BorderBrush="{DynamicResource X.Brush.OutlineSoft}" BorderThickness="1" Padding="12,10">
+          <Border x:Name="bd" Background="{DynamicResource X.Brush.GlassFill}" CornerRadius="12"
+                  BorderBrush="{DynamicResource X.Brush.GlassBorder}" BorderThickness="1" Padding="12,10">
             <ContentPresenter />
           </Border>
           <ControlTemplate.Triggers>

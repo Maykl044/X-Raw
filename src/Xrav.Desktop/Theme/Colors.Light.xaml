@@ -28,6 +28,13 @@
   <Color x:Key="X.Color.WarnTint">#22E89B22</Color>
   <Color x:Key="X.Color.AccentTint">#226747FF</Color>
 
+  <!-- Liquid Glass (iOS 26 / Vision Pro): полупрозрачные слои -->
+  <Color x:Key="X.Color.GlassFill">#8CFFFFFF</Color>
+  <Color x:Key="X.Color.GlassFillStrong">#B3FFFFFF</Color>
+  <Color x:Key="X.Color.GlassBorder">#33000000</Color>
+  <Color x:Key="X.Color.GlassHighlight">#80FFFFFF</Color>
+  <Color x:Key="X.Color.GlassShadow">#33000000</Color>
+
   <Color x:Key="X.Color.PowerOff1">#22D8DCEA</Color>
   <Color x:Key="X.Color.PowerOff2">#0EE2E5EE</Color>
   <Color x:Key="X.Color.PowerOff3">#00F6F7FB</Color>
