@@ -87,6 +87,7 @@ public sealed class MainViewModel : ViewModelBase
         RegisterUrlSchemeCommand = new RelayCommand(RegisterUrlScheme);
         PingSelectedKeyCommand = new RelayCommand(async () => await PingKeyAsync(SelectedKey), () => SelectedKey is not null && !PingBusy);
         PingAllKeysCommand    = new RelayCommand(async () => await PingAllKeysAsync(), () => Keys.Count > 0 && !PingBusy);
+        ShowKeyJsonCommand    = new RelayCommand(ShowKeyJson, () => SelectedKey is not null);
         DismissUpdateBannerCommand = new RelayCommand(() => UpdateBanner = null);
         _ = CheckForUpdatesAsync();
         if (tunnel is INotifyPropertyChanged npc)
@@ -159,6 +160,7 @@ public sealed class MainViewModel : ViewModelBase
             _selectedKey = value;
             OnPropertyChanged();
             (RemoveSelectedKeyCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            (ShowKeyJsonCommand as RelayCommand)?.RaiseCanExecuteChanged();
             if (!_persistSuspended) Persist();
         }
     }
@@ -402,6 +404,7 @@ public sealed class MainViewModel : ViewModelBase
     public ICommand OpenLogFileCommand { get; }
     public ICommand PingSelectedKeyCommand { get; }
     public ICommand PingAllKeysCommand { get; }
+    public ICommand ShowKeyJsonCommand { get; }
     public ICommand DismissUpdateBannerCommand { get; }
 
     private string? _updateBanner;
@@ -727,6 +730,45 @@ public sealed class MainViewModel : ViewModelBase
             SelectedKey = Keys[Math.Min(idx, Keys.Count - 1)];
         else
             SelectedKey = null;
+    }
+
+    private void ShowKeyJson()
+    {
+        var k = SelectedKey;
+        if (k is null) return;
+        // Если конфиг не построен (старые ключи из state) — построить на лету.
+        var json = k.FullConfig;
+        var kind = k.FullConfigKind;
+        if (string.IsNullOrEmpty(json))
+        {
+            try
+            {
+                if (k.Protocol == KeyProtocol.Json)
+                {
+                    json = k.Raw;
+                    kind = "json";
+                }
+                else
+                {
+                    var rebuilt = ShareLinkParser.TryBuildVpnKey(k.Raw, k.SubscriptionId, k.Source);
+                    json = rebuilt?.FullConfig;
+                    kind = rebuilt?.FullConfigKind;
+                }
+            }
+            catch { /* ignore */ }
+        }
+        if (string.IsNullOrEmpty(json))
+        {
+            System.Windows.MessageBox.Show(
+                "Не удалось построить конфиг для этого ключа. Проверьте формат ссылки.",
+                "JSON конфиг", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+            return;
+        }
+        var dlg = new Ui.JsonViewerWindow(k.Remark, kind ?? "config", json)
+        {
+            Owner = System.Windows.Application.Current?.MainWindow
+        };
+        dlg.ShowDialog();
     }
 
     private async Task AddSubscriptionAsync()

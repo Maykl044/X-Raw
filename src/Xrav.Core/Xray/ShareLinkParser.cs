@@ -84,10 +84,17 @@ public static class ShareLinkParser
                     Port: null,
                     Source: source,
                     Raw: raw,
-                    SubscriptionId: subscriptionId);
+                    SubscriptionId: subscriptionId)
+                {
+                    FullConfig = TryPrettifyJson(raw),
+                    FullConfigKind = "json"
+                };
             }
             return null;
         }
+        // При импорте сразу строим полный JSON-конфиг (xray для VLESS/VMess/Trojan/SS,
+        // sing-box для Hysteria2/TUIC) — пользователь видит конкретный конфиг, не сырую ссылку.
+        var (cfg, kind) = TryBuildConfigForLink(link!, proto);
         return new VpnKey(
             Id: Guid.NewGuid().ToString("N"),
             Remark: string.IsNullOrWhiteSpace(link!.Remark) ? $"{proto} {link.Host}" : link.Remark,
@@ -96,7 +103,41 @@ public static class ShareLinkParser
             Port: link.Port,
             Source: source,
             Raw: raw,
-            SubscriptionId: subscriptionId);
+            SubscriptionId: subscriptionId)
+        {
+            FullConfig = cfg,
+            FullConfigKind = kind
+        };
+    }
+
+    private static (string? Config, string? Kind) TryBuildConfigForLink(ShareLink link, KeyProtocol proto)
+    {
+        try
+        {
+            return proto switch
+            {
+                KeyProtocol.Hysteria2 or KeyProtocol.Tuic =>
+                    (Xrav.Core.SingBox.SingBoxConfigBuilder.BuildFromShareLink(link), "sing-box"),
+                _ => (XrayConfigBuilder.BuildFromShareLink(link), "xray")
+            };
+        }
+        catch
+        {
+            return (null, null);
+        }
+    }
+
+    private static string? TryPrettifyJson(string raw)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(raw);
+            return JsonSerializer.Serialize(doc.RootElement, new JsonSerializerOptions { WriteIndented = true });
+        }
+        catch
+        {
+            return raw;
+        }
     }
 
     private static bool LooksLikeJson(string raw)

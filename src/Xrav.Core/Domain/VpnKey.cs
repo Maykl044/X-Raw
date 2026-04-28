@@ -15,6 +15,15 @@ public sealed record VpnKey(
     /// <summary>Последний измеренный TCP RTT (мс), или null если не пинговали.</summary>
     public int? LatencyMs { get; init; }
 
+    /// <summary>
+    /// Полный JSON-конфиг (xray для VLESS/VMess/Trojan/SS, sing-box для Hy2/TUIC,
+    /// либо raw JSON если импортирован напрямую). Строится при импорте.
+    /// </summary>
+    public string? FullConfig { get; init; }
+
+    /// <summary>Тип конфига: "xray" / "sing-box" / "json".</summary>
+    public string? FullConfigKind { get; init; }
+
     public string ShortProtocolLabel => Protocol.ShortLabel();
     public string Subtitle => $"{ShortProtocolLabel} · {Host ?? "—"}";
     public string LatencyDisplay => LatencyMs is null ? "—" : $"{LatencyMs} мс";
