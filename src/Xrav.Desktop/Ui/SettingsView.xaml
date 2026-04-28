@@ -5,185 +5,449 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:storage="clr-namespace:Xrav.Desktop.Storage"
              xmlns:loc="clr-namespace:Xrav.Desktop.Localization"
+             x:Name="rootView"
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="500">
+  <UserControl.Resources>
+    <!-- Стиль строки меню -->
+    <Style x:Key="X.Settings.MenuRow" TargetType="Button">
+      <Setter Property="Background" Value="{StaticResource X.Brush.Surface}" />
+      <Setter Property="BorderBrush" Value="{StaticResource X.Brush.OutlineSoft}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Foreground" Value="{StaticResource X.Brush.Text}" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="Padding" Value="14,12" />
+      <Setter Property="Margin" Value="0,0,0,8" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="FontFamily" Value="Segoe UI, Segoe UI Emoji, Segoe UI Symbol" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    CornerRadius="14" Padding="{TemplateBinding Padding}">
+              <ContentPresenter VerticalAlignment="Center" />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{StaticResource X.Brush.SurfaceHi}" />
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+  </UserControl.Resources>
   <ScrollViewer VerticalScrollBarVisibility="Auto">
-    <StackPanel Margin="20,4,20,8">
-      <TextBlock Text="{loc:T settings.title}" Style="{StaticResource X.Text.H2}" Margin="0,0,0,8" />
+    <Grid Margin="20,4,20,8" TextOptions.TextFormattingMode="Display">
+      <Grid.Resources>
+        <Style TargetType="TextBlock">
+          <Setter Property="FontFamily" Value="Segoe UI, Segoe UI Emoji, Segoe UI Symbol" />
+        </Style>
+      </Grid.Resources>
 
-      <!-- Внешний вид: тема + язык -->
-      <Border Background="{StaticResource X.Brush.Surface}" BorderBrush="{StaticResource X.Brush.OutlineSoft}"
-              BorderThickness="1" CornerRadius="14" Padding="14" Margin="0,4,0,12">
-        <StackPanel>
-          <TextBlock Text="{loc:T settings.appearance}" Style="{StaticResource X.Text.H2}" />
+      <!-- ======= MENU (главный экран Настроек) ======= -->
+      <StackPanel x:Name="PageMenu">
+        <StackPanel.Style>
+          <Style TargetType="StackPanel">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+              <DataTrigger Binding="{Binding ElementName=rootView, Path=Page}" Value="menu">
+                <Setter Property="Visibility" Value="Visible" />
+              </DataTrigger>
+            </Style.Triggers>
+          </Style>
+        </StackPanel.Style>
 
-          <TextBlock Style="{StaticResource X.Text.Caption}" Margin="0,10,0,4" Text="{loc:T settings.theme}" />
-          <ComboBox SelectedValuePath="Tag" SelectedValue="{Binding SelectedThemeCode, Mode=TwoWay}">
-            <ComboBoxItem Tag="light"  Content="{loc:T settings.theme.light}" />
-            <ComboBoxItem Tag="dark"   Content="{loc:T settings.theme.dark}" />
-            <ComboBoxItem Tag="system" Content="{loc:T settings.theme.system}" />
-          </ComboBox>
+        <TextBlock Text="{loc:T settings.title}" Style="{StaticResource X.Text.H2}" Margin="0,0,0,10" />
 
-          <TextBlock Style="{StaticResource X.Text.Caption}" Margin="0,10,0,4" Text="{loc:T settings.language}" />
-          <ComboBox SelectedValuePath="Tag" SelectedValue="{Binding SelectedLanguageCode, Mode=TwoWay}">
-            <ComboBoxItem Tag="ru" Content="Русский" />
-            <ComboBoxItem Tag="en" Content="English" />
-            <ComboBoxItem Tag="tr" Content="Türkçe" />
-          </ComboBox>
-        </StackPanel>
-      </Border>
-
-      <!-- Режим: ручной / авто -->
-      <Border Background="{StaticResource X.Brush.Surface}" BorderBrush="{StaticResource X.Brush.OutlineSoft}"
-              BorderThickness="1" CornerRadius="14" Padding="14" Margin="0,0,0,12">
-        <StackPanel>
-          <TextBlock Text="{loc:T settings.mode}" Style="{StaticResource X.Text.H2}" />
-          <TextBlock Style="{StaticResource X.Text.Caption}" TextWrapping="Wrap" Margin="0,2,0,8"
-                     Text="{loc:T settings.autoHint}" />
-          <RadioButton GroupName="mode_xrav" Content="{loc:T settings.mode.manual}"
-                       IsChecked="{Binding IsManualMode, Mode=OneWay}" Foreground="{StaticResource X.Brush.Text}"
-                       Margin="0,0,0,4">
-            <RadioButton.Style>
-              <Style TargetType="RadioButton">
-                <EventSetter Event="Checked" Handler="OnManualChecked" />
-              </Style>
-            </RadioButton.Style>
-          </RadioButton>
-          <RadioButton GroupName="mode_xrav" Content="{loc:T settings.mode.auto}"
-                       IsChecked="{Binding AutoSelectMode, Mode=TwoWay}" Foreground="{StaticResource X.Brush.Text}" />
-        </StackPanel>
-      </Border>
-
-      <!-- URL-схема -->
-      <Border Background="{StaticResource X.Brush.Surface}" BorderBrush="{StaticResource X.Brush.OutlineSoft}"
-              BorderThickness="1" CornerRadius="14" Padding="14" Margin="0,0,0,12">
-        <StackPanel>
-          <TextBlock Text="{loc:T settings.url}" Style="{StaticResource X.Text.H2}" />
-          <TextBlock Style="{StaticResource X.Text.Caption}" TextWrapping="Wrap" Margin="0,2,0,8"
-                     Text="{loc:T settings.urlCaption}" />
+        <Button Style="{StaticResource X.Settings.MenuRow}" Tag="appearance" Click="OnMenuClick">
           <Grid>
             <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="Auto" />
               <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <Button Grid.Column="0" Content="{loc:T settings.urlRegister}" Command="{Binding RegisterUrlSchemeCommand}"
-                    Style="{StaticResource X.Btn.Primary}" />
-            <TextBlock Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center"
-                       Text="{loc:T settings.urlRegistered}"
-                       Foreground="{StaticResource X.Brush.Success}" FontWeight="SemiBold" FontSize="12"
-                       Visibility="{Binding UrlSchemeRegistered, Converter={StaticResource BoolToVisHelper}}" />
+            <StackPanel Grid.Column="0">
+              <TextBlock Text="{loc:T settings.appearance}" FontWeight="SemiBold" FontSize="14" />
+              <TextBlock Text="{loc:T settings.appearance.sub}" Foreground="{StaticResource X.Brush.TextSoft}" FontSize="11" Margin="0,2,0,0" />
+            </StackPanel>
+            <TextBlock Grid.Column="1" Text="›" FontSize="22" Foreground="{StaticResource X.Brush.TextSoft}" VerticalAlignment="Center" Margin="8,0,0,0" />
           </Grid>
-        </StackPanel>
-      </Border>
+        </Button>
 
-      <!-- Бинарники -->
-      <Border Background="{StaticResource X.Brush.Surface}" BorderBrush="{StaticResource X.Brush.OutlineSoft}"
-              BorderThickness="1" CornerRadius="14" Padding="14" Margin="0,0,0,12">
-        <StackPanel>
-          <TextBlock Text="{loc:T settings.tools}" Style="{StaticResource X.Text.H2}" />
-          <TextBlock Style="{StaticResource X.Text.Caption}" TextWrapping="Wrap" Margin="0,2,0,8"
-                     Text="{loc:T settings.toolsCaption}" />
+        <Button Style="{StaticResource X.Settings.MenuRow}" Tag="mode" Click="OnMenuClick">
           <Grid>
             <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="Auto" />
               <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <Button Grid.Column="0" Content="{loc:T settings.toolsPrepare}" Command="{Binding BootstrapToolsCommand}"
-                    Style="{StaticResource X.Btn.Primary}" />
-            <TextBlock Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center"
-                       Text="{Binding BootstrapStatus}" TextWrapping="Wrap"
-                       Foreground="{StaticResource X.Brush.TextSoft}" FontSize="12" />
+            <StackPanel Grid.Column="0">
+              <TextBlock Text="{loc:T settings.mode}" FontWeight="SemiBold" FontSize="14" />
+              <TextBlock Text="{loc:T settings.mode.sub}" Foreground="{StaticResource X.Brush.TextSoft}" FontSize="11" Margin="0,2,0,0" />
+            </StackPanel>
+            <TextBlock Grid.Column="1" Text="›" FontSize="22" Foreground="{StaticResource X.Brush.TextSoft}" VerticalAlignment="Center" Margin="8,0,0,0" />
           </Grid>
-        </StackPanel>
-      </Border>
+        </Button>
 
-      <!-- Папки -->
-      <Border Background="{StaticResource X.Brush.Surface}" BorderBrush="{StaticResource X.Brush.OutlineSoft}"
-              BorderThickness="1" CornerRadius="14" Padding="14" Margin="0,0,0,12">
-        <StackPanel>
-          <TextBlock Text="{loc:T settings.folders}" Style="{StaticResource X.Text.H2}" />
-          <TextBlock Text="{x:Static storage:AppDataPaths.XravRoot}" Foreground="{StaticResource X.Brush.TextSoft}"
-                     FontSize="11" TextWrapping="Wrap" Margin="0,8,0,0" />
-          <TextBlock Text="{x:Static storage:AppDataPaths.ToolsDir}" Foreground="{StaticResource X.Brush.TextSoft}"
-                     FontSize="11" TextWrapping="Wrap" Margin="0,4,0,0" />
-          <TextBlock Text="{x:Static storage:AppDataPaths.XrayAssetDir}" Foreground="{StaticResource X.Brush.TextSoft}"
-                     FontSize="11" TextWrapping="Wrap" Margin="0,4,0,0" />
-          <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
-            <Button Content="{loc:T settings.openData}" Command="{Binding OpenDataFolderCommand}" Style="{StaticResource X.Btn.Ghost}" Margin="0,0,8,0" />
-            <Button Content="{loc:T settings.openLog}" Command="{Binding OpenLogFileCommand}" Style="{StaticResource X.Btn.Ghost}" />
-          </StackPanel>
-        </StackPanel>
-      </Border>
-
-      <!-- FAQ -->
-      <Border Background="{StaticResource X.Brush.Surface}" BorderBrush="{StaticResource X.Brush.OutlineSoft}"
-              BorderThickness="1" CornerRadius="14" Padding="14" Margin="0,0,0,12">
-        <StackPanel>
-          <TextBlock Text="{loc:T settings.faq}" Style="{StaticResource X.Text.H2}" Margin="0,0,0,8" />
-          <Expander Foreground="{StaticResource X.Brush.Text}" Header="{loc:T faq.q1}" Margin="0,2">
-            <TextBlock Text="{loc:T faq.a1}" TextWrapping="Wrap" Foreground="{StaticResource X.Brush.TextSoft}" FontSize="12" Margin="4,4,0,4" />
-          </Expander>
-          <Expander Foreground="{StaticResource X.Brush.Text}" Header="{loc:T faq.q2}" Margin="0,2">
-            <TextBlock Text="{loc:T faq.a2}" TextWrapping="Wrap" Foreground="{StaticResource X.Brush.TextSoft}" FontSize="12" Margin="4,4,0,4" />
-          </Expander>
-          <Expander Foreground="{StaticResource X.Brush.Text}" Header="{loc:T faq.q3}" Margin="0,2">
-            <TextBlock Text="{loc:T faq.a3}" TextWrapping="Wrap" Foreground="{StaticResource X.Brush.TextSoft}" FontSize="12" Margin="4,4,0,4" />
-          </Expander>
-          <Expander Foreground="{StaticResource X.Brush.Text}" Header="{loc:T faq.q4}" Margin="0,2">
-            <TextBlock Text="{loc:T faq.a4}" TextWrapping="Wrap" Foreground="{StaticResource X.Brush.TextSoft}" FontSize="12" Margin="4,4,0,4" />
-          </Expander>
-          <Expander Foreground="{StaticResource X.Brush.Text}" Header="{loc:T faq.q5}" Margin="0,2">
-            <TextBlock Text="{loc:T faq.a5}" TextWrapping="Wrap" Foreground="{StaticResource X.Brush.TextSoft}" FontSize="12" Margin="4,4,0,4" />
-          </Expander>
-        </StackPanel>
-      </Border>
-
-      <!-- О приложении -->
-      <Border Background="{StaticResource X.Brush.Surface}" BorderBrush="{StaticResource X.Brush.OutlineSoft}"
-              BorderThickness="1" CornerRadius="14" Padding="14" Margin="0,0,0,12">
-        <StackPanel>
-          <TextBlock Text="{loc:T settings.about}" Style="{StaticResource X.Text.H2}" />
-
-          <Grid Margin="0,8,0,0">
+        <Button Style="{StaticResource X.Settings.MenuRow}" Tag="url" Click="OnMenuClick">
+          <Grid>
             <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="Auto" />
               <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <TextBlock Grid.Column="0" Text="{loc:T settings.version}" Foreground="{StaticResource X.Brush.TextSoft}"
-                       FontSize="12" Margin="0,0,8,0" />
-            <TextBlock Grid.Column="1" Text="{Binding AppVersion}" Foreground="{StaticResource X.Brush.Text}"
-                       FontSize="12" FontWeight="SemiBold" />
+            <StackPanel Grid.Column="0">
+              <TextBlock Text="{loc:T settings.url}" FontWeight="SemiBold" FontSize="14" />
+              <TextBlock Text="x-rav://" Foreground="{StaticResource X.Brush.TextSoft}" FontSize="11" Margin="0,2,0,0" />
+            </StackPanel>
+            <TextBlock Grid.Column="1" Text="›" FontSize="22" Foreground="{StaticResource X.Brush.TextSoft}" VerticalAlignment="Center" Margin="8,0,0,0" />
           </Grid>
+        </Button>
 
-          <Grid Margin="0,6,0,0">
+        <Button Style="{StaticResource X.Settings.MenuRow}" Tag="tools" Click="OnMenuClick">
+          <Grid>
             <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="Auto" />
               <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <TextBlock Grid.Column="0" Text="{loc:T settings.license}" Foreground="{StaticResource X.Brush.TextSoft}"
-                       FontSize="12" Margin="0,0,8,0" />
-            <TextBlock Grid.Column="1" Text="{loc:T settings.licenseText}" Foreground="{StaticResource X.Brush.Text}"
-                       FontSize="12" FontWeight="SemiBold" />
+            <StackPanel Grid.Column="0">
+              <TextBlock Text="{loc:T settings.tools}" FontWeight="SemiBold" FontSize="14" />
+              <TextBlock Text="xray, sing-box, hev, wintun" Foreground="{StaticResource X.Brush.TextSoft}" FontSize="11" Margin="0,2,0,0" />
+            </StackPanel>
+            <TextBlock Grid.Column="1" Text="›" FontSize="22" Foreground="{StaticResource X.Brush.TextSoft}" VerticalAlignment="Center" Margin="8,0,0,0" />
           </Grid>
+        </Button>
 
-          <TextBlock Style="{StaticResource X.Text.Caption}" Margin="0,12,0,4" Text="{loc:T settings.website}" />
-          <Button Content="rock.rockefellers.store" Command="{Binding OpenWebsiteCommand}"
-                  HorizontalAlignment="Left" Style="{StaticResource X.Btn.Link}" />
+        <Button Style="{StaticResource X.Settings.MenuRow}" Tag="folders" Click="OnMenuClick">
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0">
+              <TextBlock Text="{loc:T settings.folders}" FontWeight="SemiBold" FontSize="14" />
+              <TextBlock Text="%APPDATA%\X-Rav" Foreground="{StaticResource X.Brush.TextSoft}" FontSize="11" Margin="0,2,0,0" />
+            </StackPanel>
+            <TextBlock Grid.Column="1" Text="›" FontSize="22" Foreground="{StaticResource X.Brush.TextSoft}" VerticalAlignment="Center" Margin="8,0,0,0" />
+          </Grid>
+        </Button>
 
-          <TextBlock Style="{StaticResource X.Text.Caption}" Margin="0,10,0,4" Text="{loc:T settings.github}" />
-          <Button Content="github.com/Maykl044/X-Raw" Command="{Binding OpenGithubCommand}"
-                  HorizontalAlignment="Left" Style="{StaticResource X.Btn.Link}" />
+        <Button Style="{StaticResource X.Settings.MenuRow}" Tag="faq" Click="OnMenuClick">
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0">
+              <TextBlock Text="{loc:T settings.faq}" FontWeight="SemiBold" FontSize="14" />
+              <TextBlock Text="{loc:T settings.faq.sub}" Foreground="{StaticResource X.Brush.TextSoft}" FontSize="11" Margin="0,2,0,0" />
+            </StackPanel>
+            <TextBlock Grid.Column="1" Text="›" FontSize="22" Foreground="{StaticResource X.Brush.TextSoft}" VerticalAlignment="Center" Margin="8,0,0,0" />
+          </Grid>
+        </Button>
 
-          <TextBlock Style="{StaticResource X.Text.Caption}" Margin="0,10,0,4" Text="{loc:T settings.developers}" />
-          <StackPanel Orientation="Horizontal">
-            <Button Content="@igroutech" Command="{Binding OpenDeveloper1Command}" Style="{StaticResource X.Btn.Link}" Margin="0,0,12,0" />
-            <Button Content="@BernarAr_no" Command="{Binding OpenDeveloper2Command}" Style="{StaticResource X.Btn.Link}" />
+        <Button Style="{StaticResource X.Settings.MenuRow}" Tag="about" Click="OnMenuClick">
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0">
+              <TextBlock Text="{loc:T settings.about}" FontWeight="SemiBold" FontSize="14" />
+              <TextBlock Text="X-Rav · rock.rockefellers.store" Foreground="{StaticResource X.Brush.TextSoft}" FontSize="11" Margin="0,2,0,0" />
+            </StackPanel>
+            <TextBlock Grid.Column="1" Text="›" FontSize="22" Foreground="{StaticResource X.Brush.TextSoft}" VerticalAlignment="Center" Margin="8,0,0,0" />
+          </Grid>
+        </Button>
+      </StackPanel>
+
+      <!-- ======= APPEARANCE ======= -->
+      <StackPanel x:Name="PageAppearance">
+        <StackPanel.Style>
+          <Style TargetType="StackPanel">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+              <DataTrigger Binding="{Binding ElementName=rootView, Path=Page}" Value="appearance">
+                <Setter Property="Visibility" Value="Visible" />
+              </DataTrigger>
+            </Style.Triggers>
+          </Style>
+        </StackPanel.Style>
+
+        <DockPanel Margin="0,0,0,8">
+          <Button DockPanel.Dock="Left" Style="{StaticResource X.Btn.Ghost}" Content="‹  Назад" Click="OnBackClick" />
+          <TextBlock Text="{loc:T settings.appearance}" Style="{StaticResource X.Text.H2}" Margin="14,0,0,0" VerticalAlignment="Center" />
+        </DockPanel>
+
+        <Border Background="{StaticResource X.Brush.Surface}" BorderBrush="{StaticResource X.Brush.OutlineSoft}"
+                BorderThickness="1" CornerRadius="14" Padding="14">
+          <StackPanel>
+            <TextBlock Style="{StaticResource X.Text.Caption}" Margin="0,0,0,4" Text="{loc:T settings.theme}" />
+            <ComboBox SelectedValuePath="Tag" SelectedValue="{Binding SelectedThemeCode, Mode=TwoWay}">
+              <ComboBoxItem Tag="light"  Content="{loc:T settings.theme.light}" />
+              <ComboBoxItem Tag="dark"   Content="{loc:T settings.theme.dark}" />
+              <ComboBoxItem Tag="system" Content="{loc:T settings.theme.system}" />
+            </ComboBox>
+
+            <TextBlock Style="{StaticResource X.Text.Caption}" Margin="0,14,0,4" Text="{loc:T settings.language}" />
+            <ComboBox SelectedValuePath="Tag" SelectedValue="{Binding SelectedLanguageCode, Mode=TwoWay}">
+              <ComboBoxItem Tag="ru" Content="Русский" />
+              <ComboBoxItem Tag="en" Content="English" />
+              <ComboBoxItem Tag="tr" Content="Türkçe" />
+            </ComboBox>
           </StackPanel>
-        </StackPanel>
-      </Border>
+        </Border>
+      </StackPanel>
 
-      <TextBlock Text="X-Rav · Maykl044" Foreground="{StaticResource X.Brush.TextMuted}"
-                 FontSize="11" HorizontalAlignment="Center" Margin="0,8,0,8" />
-    </StackPanel>
+      <!-- ======= MODE ======= -->
+      <StackPanel x:Name="PageMode">
+        <StackPanel.Style>
+          <Style TargetType="StackPanel">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+              <DataTrigger Binding="{Binding ElementName=rootView, Path=Page}" Value="mode">
+                <Setter Property="Visibility" Value="Visible" />
+              </DataTrigger>
+            </Style.Triggers>
+          </Style>
+        </StackPanel.Style>
+
+        <DockPanel Margin="0,0,0,8">
+          <Button DockPanel.Dock="Left" Style="{StaticResource X.Btn.Ghost}" Content="‹  Назад" Click="OnBackClick" />
+          <TextBlock Text="{loc:T settings.mode}" Style="{StaticResource X.Text.H2}" Margin="14,0,0,0" VerticalAlignment="Center" />
+        </DockPanel>
+
+        <Border Background="{StaticResource X.Brush.Surface}" BorderBrush="{StaticResource X.Brush.OutlineSoft}"
+                BorderThickness="1" CornerRadius="14" Padding="14">
+          <StackPanel>
+            <TextBlock Style="{StaticResource X.Text.Caption}" TextWrapping="Wrap" Margin="0,0,0,8"
+                       Text="{loc:T settings.autoHint}" />
+            <RadioButton GroupName="mode_xrav" Content="{loc:T settings.mode.manual}"
+                         IsChecked="{Binding IsManualMode, Mode=OneWay}" Foreground="{StaticResource X.Brush.Text}"
+                         Margin="0,0,0,4">
+              <RadioButton.Style>
+                <Style TargetType="RadioButton">
+                  <EventSetter Event="Checked" Handler="OnManualChecked" />
+                </Style>
+              </RadioButton.Style>
+            </RadioButton>
+            <RadioButton GroupName="mode_xrav" Content="{loc:T settings.mode.auto}"
+                         IsChecked="{Binding AutoSelectMode, Mode=TwoWay}" Foreground="{StaticResource X.Brush.Text}" />
+          </StackPanel>
+        </Border>
+      </StackPanel>
+
+      <!-- ======= URL SCHEME ======= -->
+      <StackPanel x:Name="PageUrl">
+        <StackPanel.Style>
+          <Style TargetType="StackPanel">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+              <DataTrigger Binding="{Binding ElementName=rootView, Path=Page}" Value="url">
+                <Setter Property="Visibility" Value="Visible" />
+              </DataTrigger>
+            </Style.Triggers>
+          </Style>
+        </StackPanel.Style>
+
+        <DockPanel Margin="0,0,0,8">
+          <Button DockPanel.Dock="Left" Style="{StaticResource X.Btn.Ghost}" Content="‹  Назад" Click="OnBackClick" />
+          <TextBlock Text="{loc:T settings.url}" Style="{StaticResource X.Text.H2}" Margin="14,0,0,0" VerticalAlignment="Center" />
+        </DockPanel>
+
+        <Border Background="{StaticResource X.Brush.Surface}" BorderBrush="{StaticResource X.Brush.OutlineSoft}"
+                BorderThickness="1" CornerRadius="14" Padding="14">
+          <StackPanel>
+            <TextBlock Style="{StaticResource X.Text.Caption}" TextWrapping="Wrap" Margin="0,0,0,8"
+                       Text="{loc:T settings.urlCaption}" />
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <Button Grid.Column="0" Content="{loc:T settings.urlRegister}" Command="{Binding RegisterUrlSchemeCommand}"
+                      Style="{StaticResource X.Btn.Primary}" />
+              <TextBlock Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center"
+                         Text="{loc:T settings.urlRegistered}"
+                         Foreground="{StaticResource X.Brush.Success}" FontWeight="SemiBold" FontSize="12"
+                         Visibility="{Binding UrlSchemeRegistered, Converter={StaticResource BoolToVisHelper}}" />
+            </Grid>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+
+      <!-- ======= TOOLS ======= -->
+      <StackPanel x:Name="PageTools">
+        <StackPanel.Style>
+          <Style TargetType="StackPanel">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+              <DataTrigger Binding="{Binding ElementName=rootView, Path=Page}" Value="tools">
+                <Setter Property="Visibility" Value="Visible" />
+              </DataTrigger>
+            </Style.Triggers>
+          </Style>
+        </StackPanel.Style>
+
+        <DockPanel Margin="0,0,0,8">
+          <Button DockPanel.Dock="Left" Style="{StaticResource X.Btn.Ghost}" Content="‹  Назад" Click="OnBackClick" />
+          <TextBlock Text="{loc:T settings.tools}" Style="{StaticResource X.Text.H2}" Margin="14,0,0,0" VerticalAlignment="Center" />
+        </DockPanel>
+
+        <Border Background="{StaticResource X.Brush.Surface}" BorderBrush="{StaticResource X.Brush.OutlineSoft}"
+                BorderThickness="1" CornerRadius="14" Padding="14">
+          <StackPanel>
+            <TextBlock Style="{StaticResource X.Text.Caption}" TextWrapping="Wrap" Margin="0,0,0,8"
+                       Text="{loc:T settings.toolsCaption}" />
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <Button Grid.Column="0" Content="{loc:T settings.toolsPrepare}" Command="{Binding BootstrapToolsCommand}"
+                      Style="{StaticResource X.Btn.Primary}" />
+              <TextBlock Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center"
+                         Text="{Binding BootstrapStatus}" TextWrapping="Wrap"
+                         Foreground="{StaticResource X.Brush.TextSoft}" FontSize="12" />
+            </Grid>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+
+      <!-- ======= FOLDERS ======= -->
+      <StackPanel x:Name="PageFolders">
+        <StackPanel.Style>
+          <Style TargetType="StackPanel">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+              <DataTrigger Binding="{Binding ElementName=rootView, Path=Page}" Value="folders">
+                <Setter Property="Visibility" Value="Visible" />
+              </DataTrigger>
+            </Style.Triggers>
+          </Style>
+        </StackPanel.Style>
+
+        <DockPanel Margin="0,0,0,8">
+          <Button DockPanel.Dock="Left" Style="{StaticResource X.Btn.Ghost}" Content="‹  Назад" Click="OnBackClick" />
+          <TextBlock Text="{loc:T settings.folders}" Style="{StaticResource X.Text.H2}" Margin="14,0,0,0" VerticalAlignment="Center" />
+        </DockPanel>
+
+        <Border Background="{StaticResource X.Brush.Surface}" BorderBrush="{StaticResource X.Brush.OutlineSoft}"
+                BorderThickness="1" CornerRadius="14" Padding="14">
+          <StackPanel>
+            <TextBlock Text="{x:Static storage:AppDataPaths.XravRoot}" Foreground="{StaticResource X.Brush.TextSoft}"
+                       FontSize="11" TextWrapping="Wrap" />
+            <TextBlock Text="{x:Static storage:AppDataPaths.ToolsDir}" Foreground="{StaticResource X.Brush.TextSoft}"
+                       FontSize="11" TextWrapping="Wrap" Margin="0,4,0,0" />
+            <TextBlock Text="{x:Static storage:AppDataPaths.XrayAssetDir}" Foreground="{StaticResource X.Brush.TextSoft}"
+                       FontSize="11" TextWrapping="Wrap" Margin="0,4,0,0" />
+            <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+              <Button Content="{loc:T settings.openData}" Command="{Binding OpenDataFolderCommand}" Style="{StaticResource X.Btn.Ghost}" Margin="0,0,8,0" />
+              <Button Content="{loc:T settings.openLog}" Command="{Binding OpenLogFileCommand}" Style="{StaticResource X.Btn.Ghost}" />
+            </StackPanel>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+
+      <!-- ======= FAQ ======= -->
+      <StackPanel x:Name="PageFaq">
+        <StackPanel.Style>
+          <Style TargetType="StackPanel">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+              <DataTrigger Binding="{Binding ElementName=rootView, Path=Page}" Value="faq">
+                <Setter Property="Visibility" Value="Visible" />
+              </DataTrigger>
+            </Style.Triggers>
+          </Style>
+        </StackPanel.Style>
+
+        <DockPanel Margin="0,0,0,8">
+          <Button DockPanel.Dock="Left" Style="{StaticResource X.Btn.Ghost}" Content="‹  Назад" Click="OnBackClick" />
+          <TextBlock Text="{loc:T settings.faq}" Style="{StaticResource X.Text.H2}" Margin="14,0,0,0" VerticalAlignment="Center" />
+        </DockPanel>
+
+        <Border Background="{StaticResource X.Brush.Surface}" BorderBrush="{StaticResource X.Brush.OutlineSoft}"
+                BorderThickness="1" CornerRadius="14" Padding="14">
+          <StackPanel>
+            <Expander Foreground="{StaticResource X.Brush.Text}" Header="{loc:T faq.q1}" Margin="0,2">
+              <TextBlock Text="{loc:T faq.a1}" TextWrapping="Wrap" Foreground="{StaticResource X.Brush.TextSoft}" FontSize="12" Margin="4,4,0,4" />
+            </Expander>
+            <Expander Foreground="{StaticResource X.Brush.Text}" Header="{loc:T faq.q2}" Margin="0,2">
+              <TextBlock Text="{loc:T faq.a2}" TextWrapping="Wrap" Foreground="{StaticResource X.Brush.TextSoft}" FontSize="12" Margin="4,4,0,4" />
+            </Expander>
+            <Expander Foreground="{StaticResource X.Brush.Text}" Header="{loc:T faq.q3}" Margin="0,2">
+              <TextBlock Text="{loc:T faq.a3}" TextWrapping="Wrap" Foreground="{StaticResource X.Brush.TextSoft}" FontSize="12" Margin="4,4,0,4" />
+            </Expander>
+            <Expander Foreground="{StaticResource X.Brush.Text}" Header="{loc:T faq.q4}" Margin="0,2">
+              <TextBlock Text="{loc:T faq.a4}" TextWrapping="Wrap" Foreground="{StaticResource X.Brush.TextSoft}" FontSize="12" Margin="4,4,0,4" />
+            </Expander>
+            <Expander Foreground="{StaticResource X.Brush.Text}" Header="{loc:T faq.q5}" Margin="0,2">
+              <TextBlock Text="{loc:T faq.a5}" TextWrapping="Wrap" Foreground="{StaticResource X.Brush.TextSoft}" FontSize="12" Margin="4,4,0,4" />
+            </Expander>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+
+      <!-- ======= ABOUT ======= -->
+      <StackPanel x:Name="PageAbout">
+        <StackPanel.Style>
+          <Style TargetType="StackPanel">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+              <DataTrigger Binding="{Binding ElementName=rootView, Path=Page}" Value="about">
+                <Setter Property="Visibility" Value="Visible" />
+              </DataTrigger>
+            </Style.Triggers>
+          </Style>
+        </StackPanel.Style>
+
+        <DockPanel Margin="0,0,0,8">
+          <Button DockPanel.Dock="Left" Style="{StaticResource X.Btn.Ghost}" Content="‹  Назад" Click="OnBackClick" />
+          <TextBlock Text="{loc:T settings.about}" Style="{StaticResource X.Text.H2}" Margin="14,0,0,0" VerticalAlignment="Center" />
+        </DockPanel>
+
+        <Border Background="{StaticResource X.Brush.Surface}" BorderBrush="{StaticResource X.Brush.OutlineSoft}"
+                BorderThickness="1" CornerRadius="14" Padding="14">
+          <StackPanel>
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <TextBlock Grid.Column="0" Text="{loc:T settings.version}" Foreground="{StaticResource X.Brush.TextSoft}"
+                         FontSize="12" Margin="0,0,8,0" />
+              <TextBlock Grid.Column="1" Text="{Binding AppVersion}" Foreground="{StaticResource X.Brush.Text}"
+                         FontSize="12" FontWeight="SemiBold" />
+            </Grid>
+
+            <Grid Margin="0,6,0,0">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <TextBlock Grid.Column="0" Text="{loc:T settings.license}" Foreground="{StaticResource X.Brush.TextSoft}"
+                         FontSize="12" Margin="0,0,8,0" />
+              <TextBlock Grid.Column="1" Text="{loc:T settings.licenseText}" Foreground="{StaticResource X.Brush.Text}"
+                         FontSize="12" FontWeight="SemiBold" />
+            </Grid>
+
+            <TextBlock Style="{StaticResource X.Text.Caption}" Margin="0,12,0,4" Text="{loc:T settings.website}" />
+            <Button Content="rock.rockefellers.store" Command="{Binding OpenWebsiteCommand}"
+                    HorizontalAlignment="Left" Style="{StaticResource X.Btn.Link}" />
+
+            <TextBlock Style="{StaticResource X.Text.Caption}" Margin="0,10,0,4" Text="{loc:T settings.github}" />
+            <Button Content="github.com/Maykl044/X-Raw" Command="{Binding OpenGithubCommand}"
+                    HorizontalAlignment="Left" Style="{StaticResource X.Btn.Link}" />
+
+            <TextBlock Style="{StaticResource X.Text.Caption}" Margin="0,10,0,4" Text="{loc:T settings.developers}" />
+            <StackPanel Orientation="Horizontal">
+              <Button Content="@igroutech" Command="{Binding OpenDeveloper1Command}" Style="{StaticResource X.Btn.Link}" Margin="0,0,12,0" />
+              <Button Content="@BernarAr_no" Command="{Binding OpenDeveloper2Command}" Style="{StaticResource X.Btn.Link}" />
+            </StackPanel>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+    </Grid>
   </ScrollViewer>
 </UserControl>

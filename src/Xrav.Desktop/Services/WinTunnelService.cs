@@ -19,6 +19,8 @@ public sealed class WinTunnelService : ITunnelService, INotifyPropertyChanged, I
     private Process? _xray;
     private Process? _hev;
     private Process? _singBox;
+    private readonly WindowsRouter _router = new();
+    private WindowsRouter.Snapshot? _routerSnapshot;
     private readonly System.Collections.Concurrent.ConcurrentQueue<string> _xrayTail = new();
     private readonly System.Collections.Concurrent.ConcurrentQueue<string> _hevTail = new();
     private readonly System.Collections.Concurrent.ConcurrentQueue<string> _sbTail = new();
@@ -114,6 +116,20 @@ public sealed class WinTunnelService : ITunnelService, INotifyPropertyChanged, I
                 await File.WriteAllTextAsync(AppDataPaths.XrayConfigPath, backend.ConfigJson, cancellationToken).ConfigureAwait(false);
                 await File.WriteAllTextAsync(AppDataPaths.HevConfigPath, HevSocks5YamlBuilder.Build(), cancellationToken).ConfigureAwait(false);
                 await StartXrayHevAsync(xrayExe, AppDataPaths.XrayConfigPath, hevExe, AppDataPaths.HevConfigPath, cancellationToken).ConfigureAwait(false);
+
+                // После старта hev НАДО прописать маршруты и DNS на TUN-интерфейс —
+                // hev на Windows этого не делает сам.
+                _router.Log = msg => EmitLog("router", msg);
+                if (!string.IsNullOrEmpty(backend.ServerHost))
+                {
+                    // Даём hev ~1с на подъём интерфейса.
+                    await Task.Delay(1500, cancellationToken).ConfigureAwait(false);
+                    _routerSnapshot = await _router.ApplyAsync(
+                        backend.ServerHost!,
+                        "X-RavWintun",
+                        TunnelConstants.TunIpv4Client,
+                        cancellationToken).ConfigureAwait(false);
+                }
             }
 
             State = TunnelConnectionState.Connected;
@@ -152,6 +168,13 @@ public sealed class WinTunnelService : ITunnelService, INotifyPropertyChanged, I
 
     private void StopProcesses()
     {
+        // Сначала откатить маршруты/DNS, потом убивать процессы — иначе при падении hev
+        // интерфейс исчезает и netsh не сможет по нему отработать.
+        if (_routerSnapshot is not null)
+        {
+            _router.Revert(_routerSnapshot);
+            _routerSnapshot = null;
+        }
         if (_hev is not null)
         {
             DetachHevLog();

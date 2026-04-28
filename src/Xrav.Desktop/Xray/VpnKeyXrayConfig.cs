@@ -14,7 +14,7 @@ public enum BackendKind
     SingBox
 }
 
-public sealed record BackendConfig(BackendKind Kind, string ConfigJson);
+public sealed record BackendConfig(BackendKind Kind, string ConfigJson, string? ServerHost = null);
 
 public static class VpnKeyXrayConfig
 {
@@ -37,7 +37,8 @@ public static class VpnKeyXrayConfig
             {
                 case KeyProtocol.Json:
                     backend = new BackendConfig(BackendKind.XrayWithHev,
-                        ImportedXrayJsonPatcher.PatchForWindowsTunnel(key.Raw));
+                        ImportedXrayJsonPatcher.PatchForWindowsTunnel(key.Raw),
+                        ImportedXrayJsonPatcher.ExtractServerHost(key.Raw));
                     error = null;
                     return true;
 
@@ -52,7 +53,8 @@ public static class VpnKeyXrayConfig
                         return false;
                     }
                     backend = new BackendConfig(BackendKind.XrayWithHev,
-                        XrayConfigBuilder.BuildFromShareLink(link!, TunnelConstants.SocksInboundPort));
+                        XrayConfigBuilder.BuildFromShareLink(link!, TunnelConstants.SocksInboundPort),
+                        link!.Host);
                     error = null;
                     return true;
                 }
@@ -66,7 +68,8 @@ public static class VpnKeyXrayConfig
                         return false;
                     }
                     backend = new BackendConfig(BackendKind.SingBox,
-                        SingBoxConfigBuilder.BuildFromShareLink(link!));
+                        SingBoxConfigBuilder.BuildFromShareLink(link!),
+                        link!.Host);
                     error = null;
                     return true;
                 }

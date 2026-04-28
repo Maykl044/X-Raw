@@ -24,6 +24,38 @@ public static class ImportedXrayJsonPatcher
         return root.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
     }
 
+    /// <summary>
+    /// Достаёт адрес первого outbound-сервера (vnext.address / servers.address) для
+    /// настройки прямого маршрута к нему минуя туннель.
+    /// </summary>
+    public static string? ExtractServerHost(string rawJson)
+    {
+        try
+        {
+            if (JsonNode.Parse(rawJson) is not JsonObject root) return null;
+            if (root["outbounds"] is not JsonArray outs) return null;
+            foreach (var ob in outs.OfType<JsonObject>())
+            {
+                if (ob["settings"] is not JsonObject st) continue;
+                if (st["vnext"] is JsonArray vnext)
+                {
+                    foreach (var v in vnext.OfType<JsonObject>())
+                        if (v["address"] is JsonValue av) return av.GetValue<string>();
+                }
+                if (st["servers"] is JsonArray servers)
+                {
+                    foreach (var s in servers.OfType<JsonObject>())
+                        if (s["address"] is JsonValue av) return av.GetValue<string>();
+                }
+            }
+            return null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     private static void RemoveSockoptMark(JsonObject root)
     {
         if (root["outbounds"] is not JsonArray outBounds) return;

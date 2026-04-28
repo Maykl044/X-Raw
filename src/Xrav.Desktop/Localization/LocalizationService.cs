@@ -107,6 +107,9 @@ public sealed class LocalizationService : INotifyPropertyChanged
 
         ["settings.title"] = "Настройки",
         ["settings.appearance"] = "Внешний вид",
+        ["settings.appearance.sub"] = "Тема и язык",
+        ["settings.mode.sub"] = "Ручной / авто-выбор",
+        ["settings.faq.sub"] = "Частые вопросы",
         ["settings.language"] = "Язык",
         ["settings.theme"] = "Тема",
         ["settings.theme.light"] = "Светлая",
@@ -197,6 +200,9 @@ public sealed class LocalizationService : INotifyPropertyChanged
 
         ["settings.title"] = "Settings",
         ["settings.appearance"] = "Appearance",
+        ["settings.appearance.sub"] = "Theme & language",
+        ["settings.mode.sub"] = "Manual / auto-select",
+        ["settings.faq.sub"] = "Frequently asked questions",
         ["settings.language"] = "Language",
         ["settings.theme"] = "Theme",
         ["settings.theme.light"] = "Light",
@@ -287,6 +293,9 @@ public sealed class LocalizationService : INotifyPropertyChanged
 
         ["settings.title"] = "Ayarlar",
         ["settings.appearance"] = "Görünüm",
+        ["settings.appearance.sub"] = "Tema ve dil",
+        ["settings.mode.sub"] = "Manuel / oto seçim",
+        ["settings.faq.sub"] = "Sıkça sorulanlar",
         ["settings.language"] = "Dil",
         ["settings.theme"] = "Tema",
         ["settings.theme.light"] = "Açık",
