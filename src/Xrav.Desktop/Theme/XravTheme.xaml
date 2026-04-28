@@ -8,45 +8,45 @@
 
   <!-- Палитра загружается из Theme/Colors.Dark.xaml или Colors.Light.xaml в ThemeService -->
 
-  <SolidColorBrush x:Key="X.Brush.Canvas"      Color="{StaticResource X.Color.Canvas}" />
-  <SolidColorBrush x:Key="X.Brush.CanvasMid"   Color="{StaticResource X.Color.CanvasMid}" />
-  <SolidColorBrush x:Key="X.Brush.Surface"     Color="{StaticResource X.Color.Surface}" />
-  <SolidColorBrush x:Key="X.Brush.SurfaceHi"   Color="{StaticResource X.Color.SurfaceHi}" />
-  <SolidColorBrush x:Key="X.Brush.Outline"     Color="{StaticResource X.Color.Outline}" />
-  <SolidColorBrush x:Key="X.Brush.OutlineSoft" Color="{StaticResource X.Color.OutlineSoft}" />
-  <SolidColorBrush x:Key="X.Brush.Accent"      Color="{StaticResource X.Color.Accent}" />
-  <SolidColorBrush x:Key="X.Brush.Accent2"     Color="{StaticResource X.Color.Accent2}" />
-  <SolidColorBrush x:Key="X.Brush.Success"     Color="{StaticResource X.Color.Success}" />
-  <SolidColorBrush x:Key="X.Brush.Warn"        Color="{StaticResource X.Color.Warn}" />
-  <SolidColorBrush x:Key="X.Brush.Danger"      Color="{StaticResource X.Color.Danger}" />
-  <SolidColorBrush x:Key="X.Brush.Text"        Color="{StaticResource X.Color.Text}" />
-  <SolidColorBrush x:Key="X.Brush.TextSoft"    Color="{StaticResource X.Color.TextSoft}" />
-  <SolidColorBrush x:Key="X.Brush.TextMuted"   Color="{StaticResource X.Color.TextMuted}" />
-  <SolidColorBrush x:Key="X.Brush.DangerTint"  Color="{StaticResource X.Color.DangerTint}" />
-  <SolidColorBrush x:Key="X.Brush.WarnTint"    Color="{StaticResource X.Color.WarnTint}" />
-  <SolidColorBrush x:Key="X.Brush.AccentTint"  Color="{StaticResource X.Color.AccentTint}" />
+  <SolidColorBrush x:Key="X.Brush.Canvas"      Color="{DynamicResource X.Color.Canvas}" />
+  <SolidColorBrush x:Key="X.Brush.CanvasMid"   Color="{DynamicResource X.Color.CanvasMid}" />
+  <SolidColorBrush x:Key="X.Brush.Surface"     Color="{DynamicResource X.Color.Surface}" />
+  <SolidColorBrush x:Key="X.Brush.SurfaceHi"   Color="{DynamicResource X.Color.SurfaceHi}" />
+  <SolidColorBrush x:Key="X.Brush.Outline"     Color="{DynamicResource X.Color.Outline}" />
+  <SolidColorBrush x:Key="X.Brush.OutlineSoft" Color="{DynamicResource X.Color.OutlineSoft}" />
+  <SolidColorBrush x:Key="X.Brush.Accent"      Color="{DynamicResource X.Color.Accent}" />
+  <SolidColorBrush x:Key="X.Brush.Accent2"     Color="{DynamicResource X.Color.Accent2}" />
+  <SolidColorBrush x:Key="X.Brush.Success"     Color="{DynamicResource X.Color.Success}" />
+  <SolidColorBrush x:Key="X.Brush.Warn"        Color="{DynamicResource X.Color.Warn}" />
+  <SolidColorBrush x:Key="X.Brush.Danger"      Color="{DynamicResource X.Color.Danger}" />
+  <SolidColorBrush x:Key="X.Brush.Text"        Color="{DynamicResource X.Color.Text}" />
+  <SolidColorBrush x:Key="X.Brush.TextSoft"    Color="{DynamicResource X.Color.TextSoft}" />
+  <SolidColorBrush x:Key="X.Brush.TextMuted"   Color="{DynamicResource X.Color.TextMuted}" />
+  <SolidColorBrush x:Key="X.Brush.DangerTint"  Color="{DynamicResource X.Color.DangerTint}" />
+  <SolidColorBrush x:Key="X.Brush.WarnTint"    Color="{DynamicResource X.Color.WarnTint}" />
+  <SolidColorBrush x:Key="X.Brush.AccentTint"  Color="{DynamicResource X.Color.AccentTint}" />
 
   <LinearGradientBrush x:Key="X.Brush.Bg" StartPoint="0,0" EndPoint="1,1">
-    <GradientStop Color="{StaticResource X.Color.BgGrad1}" Offset="0" />
-    <GradientStop Color="{StaticResource X.Color.BgGrad2}" Offset="0.45" />
-    <GradientStop Color="{StaticResource X.Color.BgGrad3}" Offset="1" />
+    <GradientStop Color="{DynamicResource X.Color.BgGrad1}" Offset="0" />
+    <GradientStop Color="{DynamicResource X.Color.BgGrad2}" Offset="0.45" />
+    <GradientStop Color="{DynamicResource X.Color.BgGrad3}" Offset="1" />
   </LinearGradientBrush>
 
   <LinearGradientBrush x:Key="X.Brush.AccentGrad" StartPoint="0,0" EndPoint="1,1">
-    <GradientStop Color="{StaticResource X.Color.Accent}" Offset="0" />
-    <GradientStop Color="{StaticResource X.Color.Accent2}" Offset="1" />
+    <GradientStop Color="{DynamicResource X.Color.Accent}" Offset="0" />
+    <GradientStop Color="{DynamicResource X.Color.Accent2}" Offset="1" />
   </LinearGradientBrush>
 
   <RadialGradientBrush x:Key="X.Brush.PowerOff" GradientOrigin="0.4,0.35">
-    <GradientStop Color="{StaticResource X.Color.PowerOff1}" Offset="0" />
-    <GradientStop Color="{StaticResource X.Color.PowerOff2}" Offset="0.7" />
-    <GradientStop Color="{StaticResource X.Color.PowerOff3}" Offset="1" />
+    <GradientStop Color="{DynamicResource X.Color.PowerOff1}" Offset="0" />
+    <GradientStop Color="{DynamicResource X.Color.PowerOff2}" Offset="0.7" />
+    <GradientStop Color="{DynamicResource X.Color.PowerOff3}" Offset="1" />
   </RadialGradientBrush>
 
   <RadialGradientBrush x:Key="X.Brush.PowerOn" GradientOrigin="0.4,0.35">
-    <GradientStop Color="{StaticResource X.Color.PowerOn1}" Offset="0" />
-    <GradientStop Color="{StaticResource X.Color.PowerOn2}" Offset="0.5" />
-    <GradientStop Color="{StaticResource X.Color.PowerOn3}" Offset="1" />
+    <GradientStop Color="{DynamicResource X.Color.PowerOn1}" Offset="0" />
+    <GradientStop Color="{DynamicResource X.Color.PowerOn2}" Offset="0.5" />
+    <GradientStop Color="{DynamicResource X.Color.PowerOn3}" Offset="1" />
   </RadialGradientBrush>
 
   <!-- Типографика -->
@@ -62,37 +62,37 @@
 
   <Style x:Key="X.Text.H1" TargetType="TextBlock">
     <Setter Property="FontFamily" Value="{StaticResource X.Font.Ui}" />
-    <Setter Property="Foreground" Value="{StaticResource X.Brush.Text}" />
+    <Setter Property="Foreground" Value="{DynamicResource X.Brush.Text}" />
     <Setter Property="FontSize" Value="22" />
     <Setter Property="FontWeight" Value="Bold" />
   </Style>
   <Style x:Key="X.Text.H2" TargetType="TextBlock">
     <Setter Property="FontFamily" Value="{StaticResource X.Font.Ui}" />
-    <Setter Property="Foreground" Value="{StaticResource X.Brush.Text}" />
+    <Setter Property="Foreground" Value="{DynamicResource X.Brush.Text}" />
     <Setter Property="FontSize" Value="16" />
     <Setter Property="FontWeight" Value="SemiBold" />
   </Style>
   <Style x:Key="X.Text.Body" TargetType="TextBlock">
     <Setter Property="FontFamily" Value="{StaticResource X.Font.Ui}" />
-    <Setter Property="Foreground" Value="{StaticResource X.Brush.TextSoft}" />
+    <Setter Property="Foreground" Value="{DynamicResource X.Brush.TextSoft}" />
     <Setter Property="FontSize" Value="13" />
   </Style>
   <Style x:Key="X.Text.Caption" TargetType="TextBlock">
     <Setter Property="FontFamily" Value="{StaticResource X.Font.Ui}" />
-    <Setter Property="Foreground" Value="{StaticResource X.Brush.TextMuted}" />
+    <Setter Property="Foreground" Value="{DynamicResource X.Brush.TextMuted}" />
     <Setter Property="FontSize" Value="11" />
   </Style>
 
   <!-- Backwards-compat aliases (старые имена в существующих view) -->
-  <SolidColorBrush x:Key="Xrav.Brush.Canvas"        Color="{StaticResource X.Color.Canvas}" />
-  <SolidColorBrush x:Key="Xrav.Brush.Surface"       Color="{StaticResource X.Color.Surface}" />
-  <SolidColorBrush x:Key="Xrav.Brush.GlassTint"     Color="{StaticResource X.Color.Surface}" />
-  <SolidColorBrush x:Key="Xrav.Brush.GlassStroke"   Color="{StaticResource X.Color.Outline}" />
-  <SolidColorBrush x:Key="Xrav.Brush.Accent"        Color="{StaticResource X.Color.Accent}" />
-  <SolidColorBrush x:Key="Xrav.Brush.TextPrimary"   Color="{StaticResource X.Color.Text}" />
-  <SolidColorBrush x:Key="Xrav.Brush.TextSecondary" Color="{StaticResource X.Color.TextSoft}" />
-  <SolidColorBrush x:Key="Xrav.Brush.TextMuted"     Color="{StaticResource X.Color.TextMuted}" />
-  <SolidColorBrush x:Key="Xrav.Brush.Outline"       Color="{StaticResource X.Color.Outline}" />
+  <SolidColorBrush x:Key="Xrav.Brush.Canvas"        Color="{DynamicResource X.Color.Canvas}" />
+  <SolidColorBrush x:Key="Xrav.Brush.Surface"       Color="{DynamicResource X.Color.Surface}" />
+  <SolidColorBrush x:Key="Xrav.Brush.GlassTint"     Color="{DynamicResource X.Color.Surface}" />
+  <SolidColorBrush x:Key="Xrav.Brush.GlassStroke"   Color="{DynamicResource X.Color.Outline}" />
+  <SolidColorBrush x:Key="Xrav.Brush.Accent"        Color="{DynamicResource X.Color.Accent}" />
+  <SolidColorBrush x:Key="Xrav.Brush.TextPrimary"   Color="{DynamicResource X.Color.Text}" />
+  <SolidColorBrush x:Key="Xrav.Brush.TextSecondary" Color="{DynamicResource X.Color.TextSoft}" />
+  <SolidColorBrush x:Key="Xrav.Brush.TextMuted"     Color="{DynamicResource X.Color.TextMuted}" />
+  <SolidColorBrush x:Key="Xrav.Brush.Outline"       Color="{DynamicResource X.Color.Outline}" />
   <Style x:Key="Xrav.Text.Title"   TargetType="TextBlock" BasedOn="{StaticResource X.Text.H2}" />
   <Style x:Key="Xrav.Text.Body"    TargetType="TextBlock" BasedOn="{StaticResource X.Text.Body}" />
   <Style x:Key="Xrav.Text.Caption" TargetType="TextBlock" BasedOn="{StaticResource X.Text.Caption}" />
@@ -105,7 +105,7 @@
     <Setter Property="Padding" Value="14,8" />
     <Setter Property="Cursor" Value="Hand" />
     <Setter Property="BorderThickness" Value="0" />
-    <Setter Property="Background" Value="{StaticResource X.Brush.AccentGrad}" />
+    <Setter Property="Background" Value="{DynamicResource X.Brush.AccentGrad}" />
     <Setter Property="SnapsToDevicePixels" Value="True" />
     <Setter Property="Template">
       <Setter.Value>
@@ -133,14 +133,14 @@
 
   <!-- Кнопка ghost (контурная, тёмный фон) -->
   <Style x:Key="X.Btn.Ghost" TargetType="Button">
-    <Setter Property="Foreground" Value="{StaticResource X.Brush.Text}" />
+    <Setter Property="Foreground" Value="{DynamicResource X.Brush.Text}" />
     <Setter Property="FontWeight" Value="SemiBold" />
     <Setter Property="FontSize" Value="13" />
     <Setter Property="Padding" Value="12,7" />
     <Setter Property="Cursor" Value="Hand" />
     <Setter Property="BorderThickness" Value="1" />
-    <Setter Property="BorderBrush" Value="{StaticResource X.Brush.Outline}" />
-    <Setter Property="Background" Value="{StaticResource X.Brush.SurfaceHi}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource X.Brush.Outline}" />
+    <Setter Property="Background" Value="{DynamicResource X.Brush.SurfaceHi}" />
     <Setter Property="SnapsToDevicePixels" Value="True" />
     <Setter Property="Template">
       <Setter.Value>
@@ -152,7 +152,7 @@
           </Border>
           <ControlTemplate.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-              <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource X.Brush.Accent}" />
+              <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource X.Brush.Accent}" />
             </Trigger>
             <Trigger Property="IsPressed" Value="True">
               <Setter TargetName="bd" Property="Opacity" Value="0.75" />
@@ -168,12 +168,12 @@
 
   <!-- Кнопка danger -->
   <Style x:Key="X.Btn.Danger" TargetType="Button" BasedOn="{StaticResource X.Btn.Ghost}">
-    <Setter Property="Foreground" Value="{StaticResource X.Brush.Danger}" />
+    <Setter Property="Foreground" Value="{DynamicResource X.Brush.Danger}" />
   </Style>
 
   <!-- Кнопка-ссылка (для About) -->
   <Style x:Key="X.Btn.Link" TargetType="Button">
-    <Setter Property="Foreground" Value="{StaticResource X.Brush.Accent}" />
+    <Setter Property="Foreground" Value="{DynamicResource X.Brush.Accent}" />
     <Setter Property="FontSize" Value="13" />
     <Setter Property="FontWeight" Value="SemiBold" />
     <Setter Property="Cursor" Value="Hand" />
@@ -194,7 +194,7 @@
     </Setter>
     <Style.Triggers>
       <Trigger Property="IsMouseOver" Value="True">
-        <Setter Property="Foreground" Value="{StaticResource X.Brush.Accent2}" />
+        <Setter Property="Foreground" Value="{DynamicResource X.Brush.Accent2}" />
       </Trigger>
     </Style.Triggers>
   </Style>
@@ -204,11 +204,11 @@
 
   <!-- TextBox -->
   <Style x:Key="X.TextBox" TargetType="TextBox">
-    <Setter Property="Foreground" Value="{StaticResource X.Brush.Text}" />
-    <Setter Property="CaretBrush" Value="{StaticResource X.Brush.Accent}" />
-    <Setter Property="SelectionBrush" Value="{StaticResource X.Brush.Accent}" />
-    <Setter Property="Background" Value="{StaticResource X.Brush.CanvasMid}" />
-    <Setter Property="BorderBrush" Value="{StaticResource X.Brush.Outline}" />
+    <Setter Property="Foreground" Value="{DynamicResource X.Brush.Text}" />
+    <Setter Property="CaretBrush" Value="{DynamicResource X.Brush.Accent}" />
+    <Setter Property="SelectionBrush" Value="{DynamicResource X.Brush.Accent}" />
+    <Setter Property="Background" Value="{DynamicResource X.Brush.CanvasMid}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource X.Brush.Outline}" />
     <Setter Property="BorderThickness" Value="1" />
     <Setter Property="Padding" Value="10,8" />
     <Setter Property="FontSize" Value="13" />
@@ -221,7 +221,7 @@
           </Border>
           <ControlTemplate.Triggers>
             <Trigger Property="IsKeyboardFocused" Value="True">
-              <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource X.Brush.Accent}" />
+              <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource X.Brush.Accent}" />
             </Trigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>
@@ -239,18 +239,18 @@
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="ListBoxItem">
-          <Border x:Name="bd" Background="{StaticResource X.Brush.Surface}" CornerRadius="12"
-                  BorderBrush="{StaticResource X.Brush.OutlineSoft}" BorderThickness="1" Padding="12,10">
+          <Border x:Name="bd" Background="{DynamicResource X.Brush.Surface}" CornerRadius="12"
+                  BorderBrush="{DynamicResource X.Brush.OutlineSoft}" BorderThickness="1" Padding="12,10">
             <ContentPresenter />
           </Border>
           <ControlTemplate.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-              <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource X.Brush.Outline}" />
-              <Setter TargetName="bd" Property="Background" Value="{StaticResource X.Brush.SurfaceHi}" />
+              <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource X.Brush.Outline}" />
+              <Setter TargetName="bd" Property="Background" Value="{DynamicResource X.Brush.SurfaceHi}" />
             </Trigger>
             <Trigger Property="IsSelected" Value="True">
-              <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource X.Brush.Accent}" />
-              <Setter TargetName="bd" Property="Background" Value="{StaticResource X.Brush.SurfaceHi}" />
+              <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource X.Brush.Accent}" />
+              <Setter TargetName="bd" Property="Background" Value="{DynamicResource X.Brush.SurfaceHi}" />
             </Trigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>

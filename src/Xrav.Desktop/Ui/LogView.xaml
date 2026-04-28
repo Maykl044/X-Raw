@@ -34,8 +34,8 @@
     </Grid>
 
     <Border Grid.Row="1" Margin="0,12,0,0"
-            Background="{StaticResource X.Brush.CanvasMid}"
-            BorderBrush="{StaticResource X.Brush.OutlineSoft}" BorderThickness="1"
+            Background="{DynamicResource X.Brush.CanvasMid}"
+            BorderBrush="{DynamicResource X.Brush.OutlineSoft}" BorderThickness="1"
             CornerRadius="14" Padding="6">
       <Grid>
         <ListBox ItemsSource="{Binding TunnelLog}"
@@ -65,7 +65,7 @@
             </DataTemplate>
           </ListBox.ItemTemplate>
         </ListBox>
-        <TextBlock Text="{loc:T log.empty}" Foreground="{StaticResource X.Brush.TextMuted}"
+        <TextBlock Text="{loc:T log.empty}" Foreground="{DynamicResource X.Brush.TextMuted}"
                    FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"
                    TextWrapping="Wrap" Margin="20"
                    Visibility="{Binding TunnelLog.Count, Converter={StaticResource ZeroToVisible}}" />

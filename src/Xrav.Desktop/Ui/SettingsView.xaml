@@ -11,10 +11,10 @@
   <UserControl.Resources>
     <!-- Стиль строки меню -->
     <Style x:Key="X.Settings.MenuRow" TargetType="Button">
-      <Setter Property="Background" Value="{StaticResource X.Brush.Surface}" />
-      <Setter Property="BorderBrush" Value="{StaticResource X.Brush.OutlineSoft}" />
+      <Setter Property="Background" Value="{DynamicResource X.Brush.Surface}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource X.Brush.OutlineSoft}" />
       <Setter Property="BorderThickness" Value="1" />
-      <Setter Property="Foreground" Value="{StaticResource X.Brush.Text}" />
+      <Setter Property="Foreground" Value="{DynamicResource X.Brush.Text}" />
       <Setter Property="HorizontalContentAlignment" Value="Stretch" />
       <Setter Property="Padding" Value="14,12" />
       <Setter Property="Margin" Value="0,0,0,8" />
@@ -31,7 +31,7 @@
             </Border>
             <ControlTemplate.Triggers>
               <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="{StaticResource X.Brush.SurfaceHi}" />
+                <Setter Property="Background" Value="{DynamicResource X.Brush.SurfaceHi}" />
               </Trigger>
             </ControlTemplate.Triggers>
           </ControlTemplate>
@@ -70,9 +70,9 @@
             </Grid.ColumnDefinitions>
             <StackPanel Grid.Column="0">
               <TextBlock Text="{loc:T settings.appearance}" FontWeight="SemiBold" FontSize="14" />
-              <TextBlock Text="{loc:T settings.appearance.sub}" Foreground="{StaticResource X.Brush.TextSoft}" FontSize="11" Margin="0,2,0,0" />
+              <TextBlock Text="{loc:T settings.appearance.sub}" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="11" Margin="0,2,0,0" />
             </StackPanel>
-            <TextBlock Grid.Column="1" Text="›" FontSize="22" Foreground="{StaticResource X.Brush.TextSoft}" VerticalAlignment="Center" Margin="8,0,0,0" />
+            <TextBlock Grid.Column="1" Text="›" FontSize="22" Foreground="{DynamicResource X.Brush.TextSoft}" VerticalAlignment="Center" Margin="8,0,0,0" />
           </Grid>
         </Button>
 
@@ -84,9 +84,9 @@
             </Grid.ColumnDefinitions>
             <StackPanel Grid.Column="0">
               <TextBlock Text="{loc:T settings.mode}" FontWeight="SemiBold" FontSize="14" />
-              <TextBlock Text="{loc:T settings.mode.sub}" Foreground="{StaticResource X.Brush.TextSoft}" FontSize="11" Margin="0,2,0,0" />
+              <TextBlock Text="{loc:T settings.mode.sub}" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="11" Margin="0,2,0,0" />
             </StackPanel>
-            <TextBlock Grid.Column="1" Text="›" FontSize="22" Foreground="{StaticResource X.Brush.TextSoft}" VerticalAlignment="Center" Margin="8,0,0,0" />
+            <TextBlock Grid.Column="1" Text="›" FontSize="22" Foreground="{DynamicResource X.Brush.TextSoft}" VerticalAlignment="Center" Margin="8,0,0,0" />
           </Grid>
         </Button>
 
@@ -98,9 +98,9 @@
             </Grid.ColumnDefinitions>
             <StackPanel Grid.Column="0">
               <TextBlock Text="{loc:T settings.url}" FontWeight="SemiBold" FontSize="14" />
-              <TextBlock Text="x-rav://" Foreground="{StaticResource X.Brush.TextSoft}" FontSize="11" Margin="0,2,0,0" />
+              <TextBlock Text="x-rav://" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="11" Margin="0,2,0,0" />
             </StackPanel>
-            <TextBlock Grid.Column="1" Text="›" FontSize="22" Foreground="{StaticResource X.Brush.TextSoft}" VerticalAlignment="Center" Margin="8,0,0,0" />
+            <TextBlock Grid.Column="1" Text="›" FontSize="22" Foreground="{DynamicResource X.Brush.TextSoft}" VerticalAlignment="Center" Margin="8,0,0,0" />
           </Grid>
         </Button>
 
@@ -112,9 +112,9 @@
             </Grid.ColumnDefinitions>
             <StackPanel Grid.Column="0">
               <TextBlock Text="{loc:T settings.tools}" FontWeight="SemiBold" FontSize="14" />
-              <TextBlock Text="xray, sing-box, hev, wintun" Foreground="{StaticResource X.Brush.TextSoft}" FontSize="11" Margin="0,2,0,0" />
+              <TextBlock Text="xray, sing-box, hev, wintun" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="11" Margin="0,2,0,0" />
             </StackPanel>
-            <TextBlock Grid.Column="1" Text="›" FontSize="22" Foreground="{StaticResource X.Brush.TextSoft}" VerticalAlignment="Center" Margin="8,0,0,0" />
+            <TextBlock Grid.Column="1" Text="›" FontSize="22" Foreground="{DynamicResource X.Brush.TextSoft}" VerticalAlignment="Center" Margin="8,0,0,0" />
           </Grid>
         </Button>
 
@@ -126,9 +126,9 @@
             </Grid.ColumnDefinitions>
             <StackPanel Grid.Column="0">
               <TextBlock Text="{loc:T settings.folders}" FontWeight="SemiBold" FontSize="14" />
-              <TextBlock Text="%APPDATA%\X-Rav" Foreground="{StaticResource X.Brush.TextSoft}" FontSize="11" Margin="0,2,0,0" />
+              <TextBlock Text="%APPDATA%\X-Rav" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="11" Margin="0,2,0,0" />
             </StackPanel>
-            <TextBlock Grid.Column="1" Text="›" FontSize="22" Foreground="{StaticResource X.Brush.TextSoft}" VerticalAlignment="Center" Margin="8,0,0,0" />
+            <TextBlock Grid.Column="1" Text="›" FontSize="22" Foreground="{DynamicResource X.Brush.TextSoft}" VerticalAlignment="Center" Margin="8,0,0,0" />
           </Grid>
         </Button>
 
@@ -140,9 +140,9 @@
             </Grid.ColumnDefinitions>
             <StackPanel Grid.Column="0">
               <TextBlock Text="{loc:T settings.faq}" FontWeight="SemiBold" FontSize="14" />
-              <TextBlock Text="{loc:T settings.faq.sub}" Foreground="{StaticResource X.Brush.TextSoft}" FontSize="11" Margin="0,2,0,0" />
+              <TextBlock Text="{loc:T settings.faq.sub}" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="11" Margin="0,2,0,0" />
             </StackPanel>
-            <TextBlock Grid.Column="1" Text="›" FontSize="22" Foreground="{StaticResource X.Brush.TextSoft}" VerticalAlignment="Center" Margin="8,0,0,0" />
+            <TextBlock Grid.Column="1" Text="›" FontSize="22" Foreground="{DynamicResource X.Brush.TextSoft}" VerticalAlignment="Center" Margin="8,0,0,0" />
           </Grid>
         </Button>
 
@@ -154,9 +154,9 @@
             </Grid.ColumnDefinitions>
             <StackPanel Grid.Column="0">
               <TextBlock Text="{loc:T settings.about}" FontWeight="SemiBold" FontSize="14" />
-              <TextBlock Text="X-Rav · rock.rockefellers.store" Foreground="{StaticResource X.Brush.TextSoft}" FontSize="11" Margin="0,2,0,0" />
+              <TextBlock Text="X-Rav · rock.rockefellers.store" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="11" Margin="0,2,0,0" />
             </StackPanel>
-            <TextBlock Grid.Column="1" Text="›" FontSize="22" Foreground="{StaticResource X.Brush.TextSoft}" VerticalAlignment="Center" Margin="8,0,0,0" />
+            <TextBlock Grid.Column="1" Text="›" FontSize="22" Foreground="{DynamicResource X.Brush.TextSoft}" VerticalAlignment="Center" Margin="8,0,0,0" />
           </Grid>
         </Button>
       </StackPanel>
@@ -179,7 +179,7 @@
           <TextBlock Text="{loc:T settings.appearance}" Style="{StaticResource X.Text.H2}" Margin="14,0,0,0" VerticalAlignment="Center" />
         </DockPanel>
 
-        <Border Background="{StaticResource X.Brush.Surface}" BorderBrush="{StaticResource X.Brush.OutlineSoft}"
+        <Border Background="{DynamicResource X.Brush.Surface}" BorderBrush="{DynamicResource X.Brush.OutlineSoft}"
                 BorderThickness="1" CornerRadius="14" Padding="14">
           <StackPanel>
             <TextBlock Style="{StaticResource X.Text.Caption}" Margin="0,0,0,4" Text="{loc:T settings.theme}" />
@@ -217,13 +217,13 @@
           <TextBlock Text="{loc:T settings.mode}" Style="{StaticResource X.Text.H2}" Margin="14,0,0,0" VerticalAlignment="Center" />
         </DockPanel>
 
-        <Border Background="{StaticResource X.Brush.Surface}" BorderBrush="{StaticResource X.Brush.OutlineSoft}"
+        <Border Background="{DynamicResource X.Brush.Surface}" BorderBrush="{DynamicResource X.Brush.OutlineSoft}"
                 BorderThickness="1" CornerRadius="14" Padding="14">
           <StackPanel>
             <TextBlock Style="{StaticResource X.Text.Caption}" TextWrapping="Wrap" Margin="0,0,0,8"
                        Text="{loc:T settings.autoHint}" />
             <RadioButton GroupName="mode_xrav" Content="{loc:T settings.mode.manual}"
-                         IsChecked="{Binding IsManualMode, Mode=OneWay}" Foreground="{StaticResource X.Brush.Text}"
+                         IsChecked="{Binding IsManualMode, Mode=OneWay}" Foreground="{DynamicResource X.Brush.Text}"
                          Margin="0,0,0,4">
               <RadioButton.Style>
                 <Style TargetType="RadioButton">
@@ -232,7 +232,7 @@
               </RadioButton.Style>
             </RadioButton>
             <RadioButton GroupName="mode_xrav" Content="{loc:T settings.mode.auto}"
-                         IsChecked="{Binding AutoSelectMode, Mode=TwoWay}" Foreground="{StaticResource X.Brush.Text}" />
+                         IsChecked="{Binding AutoSelectMode, Mode=TwoWay}" Foreground="{DynamicResource X.Brush.Text}" />
           </StackPanel>
         </Border>
       </StackPanel>
@@ -255,7 +255,7 @@
           <TextBlock Text="{loc:T settings.url}" Style="{StaticResource X.Text.H2}" Margin="14,0,0,0" VerticalAlignment="Center" />
         </DockPanel>
 
-        <Border Background="{StaticResource X.Brush.Surface}" BorderBrush="{StaticResource X.Brush.OutlineSoft}"
+        <Border Background="{DynamicResource X.Brush.Surface}" BorderBrush="{DynamicResource X.Brush.OutlineSoft}"
                 BorderThickness="1" CornerRadius="14" Padding="14">
           <StackPanel>
             <TextBlock Style="{StaticResource X.Text.Caption}" TextWrapping="Wrap" Margin="0,0,0,8"
@@ -269,7 +269,7 @@
                       Style="{StaticResource X.Btn.Primary}" />
               <TextBlock Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center"
                          Text="{loc:T settings.urlRegistered}"
-                         Foreground="{StaticResource X.Brush.Success}" FontWeight="SemiBold" FontSize="12"
+                         Foreground="{DynamicResource X.Brush.Success}" FontWeight="SemiBold" FontSize="12"
                          Visibility="{Binding UrlSchemeRegistered, Converter={StaticResource BoolToVisHelper}}" />
             </Grid>
           </StackPanel>
@@ -294,7 +294,7 @@
           <TextBlock Text="{loc:T settings.tools}" Style="{StaticResource X.Text.H2}" Margin="14,0,0,0" VerticalAlignment="Center" />
         </DockPanel>
 
-        <Border Background="{StaticResource X.Brush.Surface}" BorderBrush="{StaticResource X.Brush.OutlineSoft}"
+        <Border Background="{DynamicResource X.Brush.Surface}" BorderBrush="{DynamicResource X.Brush.OutlineSoft}"
                 BorderThickness="1" CornerRadius="14" Padding="14">
           <StackPanel>
             <TextBlock Style="{StaticResource X.Text.Caption}" TextWrapping="Wrap" Margin="0,0,0,8"
@@ -308,7 +308,7 @@
                       Style="{StaticResource X.Btn.Primary}" />
               <TextBlock Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center"
                          Text="{Binding BootstrapStatus}" TextWrapping="Wrap"
-                         Foreground="{StaticResource X.Brush.TextSoft}" FontSize="12" />
+                         Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="12" />
             </Grid>
           </StackPanel>
         </Border>
@@ -332,14 +332,14 @@
           <TextBlock Text="{loc:T settings.folders}" Style="{StaticResource X.Text.H2}" Margin="14,0,0,0" VerticalAlignment="Center" />
         </DockPanel>
 
-        <Border Background="{StaticResource X.Brush.Surface}" BorderBrush="{StaticResource X.Brush.OutlineSoft}"
+        <Border Background="{DynamicResource X.Brush.Surface}" BorderBrush="{DynamicResource X.Brush.OutlineSoft}"
                 BorderThickness="1" CornerRadius="14" Padding="14">
           <StackPanel>
-            <TextBlock Text="{x:Static storage:AppDataPaths.XravRoot}" Foreground="{StaticResource X.Brush.TextSoft}"
+            <TextBlock Text="{x:Static storage:AppDataPaths.XravRoot}" Foreground="{DynamicResource X.Brush.TextSoft}"
                        FontSize="11" TextWrapping="Wrap" />
-            <TextBlock Text="{x:Static storage:AppDataPaths.ToolsDir}" Foreground="{StaticResource X.Brush.TextSoft}"
+            <TextBlock Text="{x:Static storage:AppDataPaths.ToolsDir}" Foreground="{DynamicResource X.Brush.TextSoft}"
                        FontSize="11" TextWrapping="Wrap" Margin="0,4,0,0" />
-            <TextBlock Text="{x:Static storage:AppDataPaths.XrayAssetDir}" Foreground="{StaticResource X.Brush.TextSoft}"
+            <TextBlock Text="{x:Static storage:AppDataPaths.XrayAssetDir}" Foreground="{DynamicResource X.Brush.TextSoft}"
                        FontSize="11" TextWrapping="Wrap" Margin="0,4,0,0" />
             <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
               <Button Content="{loc:T settings.openData}" Command="{Binding OpenDataFolderCommand}" Style="{StaticResource X.Btn.Ghost}" Margin="0,0,8,0" />
@@ -367,23 +367,23 @@
           <TextBlock Text="{loc:T settings.faq}" Style="{StaticResource X.Text.H2}" Margin="14,0,0,0" VerticalAlignment="Center" />
         </DockPanel>
 
-        <Border Background="{StaticResource X.Brush.Surface}" BorderBrush="{StaticResource X.Brush.OutlineSoft}"
+        <Border Background="{DynamicResource X.Brush.Surface}" BorderBrush="{DynamicResource X.Brush.OutlineSoft}"
                 BorderThickness="1" CornerRadius="14" Padding="14">
           <StackPanel>
-            <Expander Foreground="{StaticResource X.Brush.Text}" Header="{loc:T faq.q1}" Margin="0,2">
-              <TextBlock Text="{loc:T faq.a1}" TextWrapping="Wrap" Foreground="{StaticResource X.Brush.TextSoft}" FontSize="12" Margin="4,4,0,4" />
+            <Expander Foreground="{DynamicResource X.Brush.Text}" Header="{loc:T faq.q1}" Margin="0,2">
+              <TextBlock Text="{loc:T faq.a1}" TextWrapping="Wrap" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="12" Margin="4,4,0,4" />
             </Expander>
-            <Expander Foreground="{StaticResource X.Brush.Text}" Header="{loc:T faq.q2}" Margin="0,2">
-              <TextBlock Text="{loc:T faq.a2}" TextWrapping="Wrap" Foreground="{StaticResource X.Brush.TextSoft}" FontSize="12" Margin="4,4,0,4" />
+            <Expander Foreground="{DynamicResource X.Brush.Text}" Header="{loc:T faq.q2}" Margin="0,2">
+              <TextBlock Text="{loc:T faq.a2}" TextWrapping="Wrap" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="12" Margin="4,4,0,4" />
             </Expander>
-            <Expander Foreground="{StaticResource X.Brush.Text}" Header="{loc:T faq.q3}" Margin="0,2">
-              <TextBlock Text="{loc:T faq.a3}" TextWrapping="Wrap" Foreground="{StaticResource X.Brush.TextSoft}" FontSize="12" Margin="4,4,0,4" />
+            <Expander Foreground="{DynamicResource X.Brush.Text}" Header="{loc:T faq.q3}" Margin="0,2">
+              <TextBlock Text="{loc:T faq.a3}" TextWrapping="Wrap" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="12" Margin="4,4,0,4" />
             </Expander>
-            <Expander Foreground="{StaticResource X.Brush.Text}" Header="{loc:T faq.q4}" Margin="0,2">
-              <TextBlock Text="{loc:T faq.a4}" TextWrapping="Wrap" Foreground="{StaticResource X.Brush.TextSoft}" FontSize="12" Margin="4,4,0,4" />
+            <Expander Foreground="{DynamicResource X.Brush.Text}" Header="{loc:T faq.q4}" Margin="0,2">
+              <TextBlock Text="{loc:T faq.a4}" TextWrapping="Wrap" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="12" Margin="4,4,0,4" />
             </Expander>
-            <Expander Foreground="{StaticResource X.Brush.Text}" Header="{loc:T faq.q5}" Margin="0,2">
-              <TextBlock Text="{loc:T faq.a5}" TextWrapping="Wrap" Foreground="{StaticResource X.Brush.TextSoft}" FontSize="12" Margin="4,4,0,4" />
+            <Expander Foreground="{DynamicResource X.Brush.Text}" Header="{loc:T faq.q5}" Margin="0,2">
+              <TextBlock Text="{loc:T faq.a5}" TextWrapping="Wrap" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="12" Margin="4,4,0,4" />
             </Expander>
           </StackPanel>
         </Border>
@@ -407,7 +407,7 @@
           <TextBlock Text="{loc:T settings.about}" Style="{StaticResource X.Text.H2}" Margin="14,0,0,0" VerticalAlignment="Center" />
         </DockPanel>
 
-        <Border Background="{StaticResource X.Brush.Surface}" BorderBrush="{StaticResource X.Brush.OutlineSoft}"
+        <Border Background="{DynamicResource X.Brush.Surface}" BorderBrush="{DynamicResource X.Brush.OutlineSoft}"
                 BorderThickness="1" CornerRadius="14" Padding="14">
           <StackPanel>
             <Grid>
@@ -415,9 +415,9 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
               </Grid.ColumnDefinitions>
-              <TextBlock Grid.Column="0" Text="{loc:T settings.version}" Foreground="{StaticResource X.Brush.TextSoft}"
+              <TextBlock Grid.Column="0" Text="{loc:T settings.version}" Foreground="{DynamicResource X.Brush.TextSoft}"
                          FontSize="12" Margin="0,0,8,0" />
-              <TextBlock Grid.Column="1" Text="{Binding AppVersion}" Foreground="{StaticResource X.Brush.Text}"
+              <TextBlock Grid.Column="1" Text="{Binding AppVersion}" Foreground="{DynamicResource X.Brush.Text}"
                          FontSize="12" FontWeight="SemiBold" />
             </Grid>
 
@@ -426,9 +426,9 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
               </Grid.ColumnDefinitions>
-              <TextBlock Grid.Column="0" Text="{loc:T settings.license}" Foreground="{StaticResource X.Brush.TextSoft}"
+              <TextBlock Grid.Column="0" Text="{loc:T settings.license}" Foreground="{DynamicResource X.Brush.TextSoft}"
                          FontSize="12" Margin="0,0,8,0" />
-              <TextBlock Grid.Column="1" Text="{loc:T settings.licenseText}" Foreground="{StaticResource X.Brush.Text}"
+              <TextBlock Grid.Column="1" Text="{loc:T settings.licenseText}" Foreground="{DynamicResource X.Brush.Text}"
                          FontSize="12" FontWeight="SemiBold" />
             </Grid>
 

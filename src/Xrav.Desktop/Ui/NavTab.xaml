@@ -11,15 +11,15 @@
           <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
             <TextBlock x:Name="GlyphText" Text="{Binding Glyph, ElementName=Self}"
                        FontSize="18" HorizontalAlignment="Center"
-                       Foreground="{StaticResource X.Brush.TextSoft}" />
+                       Foreground="{DynamicResource X.Brush.TextSoft}" />
             <TextBlock x:Name="TitleText" Text="{Binding Title, ElementName=Self}"
                        FontSize="11" HorizontalAlignment="Center" Margin="0,2,0,0"
-                       Foreground="{StaticResource X.Brush.TextMuted}" />
+                       Foreground="{DynamicResource X.Brush.TextMuted}" />
           </StackPanel>
         </Border>
         <ControlTemplate.Triggers>
           <DataTrigger Binding="{Binding IsActive, ElementName=Self}" Value="True">
-            <Setter TargetName="bd" Property="Background" Value="{StaticResource X.Brush.AccentGrad}" />
+            <Setter TargetName="bd" Property="Background" Value="{DynamicResource X.Brush.AccentGrad}" />
             <Setter TargetName="GlyphText" Property="Foreground" Value="White" />
             <Setter TargetName="TitleText" Property="Foreground" Value="White" />
           </DataTrigger>

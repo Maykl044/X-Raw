@@ -87,7 +87,21 @@ public sealed class MainViewModel : ViewModelBase
         RegisterUrlSchemeCommand = new RelayCommand(RegisterUrlScheme);
         PingSelectedKeyCommand = new RelayCommand(async () => await PingKeyAsync(SelectedKey), () => SelectedKey is not null && !PingBusy);
         PingAllKeysCommand    = new RelayCommand(async () => await PingAllKeysAsync(), () => Keys.Count > 0 && !PingBusy);
-        ShowKeyJsonCommand    = new RelayCommand(ShowKeyJson, () => SelectedKey is not null);
+        CheckHandshakeCommand = new RelayCommand(async () => await CheckHandshakeAsync(SelectedKey), () => SelectedKey is not null && !PingBusy);
+        RefreshSubscriptionByIdCommand = new RelayCommand(async p => {
+            var id = p as string;
+            var entry = Subscriptions.FirstOrDefault(s => s.Id == id);
+            if (entry is not null) await RefreshSubscriptionAsync(entry);
+        });
+        RemoveSubscriptionByIdCommand = new RelayCommand(p => {
+            var id = p as string;
+            var entry = Subscriptions.FirstOrDefault(s => s.Id == id);
+            if (entry is null) return;
+            Subscriptions.Remove(entry);
+            // Удалим связанные ключи.
+            var orphans = Keys.Where(k => k.SubscriptionId == id).ToList();
+            foreach (var k in orphans) Keys.Remove(k);
+        });
         DismissUpdateBannerCommand = new RelayCommand(() => UpdateBanner = null);
         _ = CheckForUpdatesAsync();
         if (tunnel is INotifyPropertyChanged npc)
@@ -160,7 +174,7 @@ public sealed class MainViewModel : ViewModelBase
             _selectedKey = value;
             OnPropertyChanged();
             (RemoveSelectedKeyCommand as RelayCommand)?.RaiseCanExecuteChanged();
-            (ShowKeyJsonCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            (CheckHandshakeCommand as RelayCommand)?.RaiseCanExecuteChanged();
             if (!_persistSuspended) Persist();
         }
     }
@@ -404,7 +418,9 @@ public sealed class MainViewModel : ViewModelBase
     public ICommand OpenLogFileCommand { get; }
     public ICommand PingSelectedKeyCommand { get; }
     public ICommand PingAllKeysCommand { get; }
-    public ICommand ShowKeyJsonCommand { get; }
+    public ICommand CheckHandshakeCommand { get; }
+    public ICommand RefreshSubscriptionByIdCommand { get; }
+    public ICommand RemoveSubscriptionByIdCommand { get; }
     public ICommand DismissUpdateBannerCommand { get; }
 
     private string? _updateBanner;
@@ -588,6 +604,21 @@ public sealed class MainViewModel : ViewModelBase
         }
     }
 
+    private void EmitTunnelLog(string source, string line)
+    {
+        var app = Application.Current;
+        if (app?.Dispatcher is null)
+        {
+            TunnelLog.Add($"[{DateTime.Now:HH:mm:ss}] [{source}] {line}");
+            return;
+        }
+        app.Dispatcher.BeginInvoke(new Action(() =>
+        {
+            TunnelLog.Add($"[{DateTime.Now:HH:mm:ss}] [{source}] {line}");
+            while (TunnelLog.Count > 800) TunnelLog.RemoveAt(0);
+        }));
+    }
+
     private void LoadFromStore()
     {
         _persistSuspended = true;
@@ -732,43 +763,31 @@ public sealed class MainViewModel : ViewModelBase
             SelectedKey = null;
     }
 
-    private void ShowKeyJson()
+    private async Task CheckHandshakeAsync(VpnKey? key)
     {
-        var k = SelectedKey;
-        if (k is null) return;
-        // Если конфиг не построен (старые ключи из state) — построить на лету.
-        var json = k.FullConfig;
-        var kind = k.FullConfigKind;
-        if (string.IsNullOrEmpty(json))
+        if (key is null) return;
+        if (string.IsNullOrEmpty(key.Host) || key.Port is null or <= 0)
         {
-            try
-            {
-                if (k.Protocol == KeyProtocol.Json)
-                {
-                    json = k.Raw;
-                    kind = "json";
-                }
-                else
-                {
-                    var rebuilt = ShareLinkParser.TryBuildVpnKey(k.Raw, k.SubscriptionId, k.Source);
-                    json = rebuilt?.FullConfig;
-                    kind = rebuilt?.FullConfigKind;
-                }
-            }
-            catch { /* ignore */ }
-        }
-        if (string.IsNullOrEmpty(json))
-        {
-            System.Windows.MessageBox.Show(
-                "Не удалось построить конфиг для этого ключа. Проверьте формат ссылки.",
-                "JSON конфиг", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+            EmitTunnelLog("handshake", $"Ключ '{key.Remark}': нет host/port в конфиге.");
             return;
         }
-        var dlg = new Ui.JsonViewerWindow(k.Remark, kind ?? "config", json)
+        PingBusy = true;
+        try
         {
-            Owner = System.Windows.Application.Current?.MainWindow
-        };
-        dlg.ShowDialog();
+            var (ok, ms, detail) = await Services.HandshakeProbe.ProbeAsync(key, TimeSpan.FromSeconds(8));
+            var status = ok ? "✓ OK" : "✗ FAIL";
+            EmitTunnelLog("handshake", $"{status} {ms} мс · {key.Remark}: {detail}");
+            // Покажем результат пользователю кратко в MessageBox.
+            System.Windows.MessageBox.Show(
+                $"{status}  ({ms} мс)\n\n{detail}",
+                $"Рукопожатие · {key.Remark}",
+                System.Windows.MessageBoxButton.OK,
+                ok ? System.Windows.MessageBoxImage.Information : System.Windows.MessageBoxImage.Warning);
+        }
+        finally
+        {
+            PingBusy = false;
+        }
     }
 
     private async Task AddSubscriptionAsync()

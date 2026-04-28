@@ -3,24 +3,37 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="clr-namespace:Xrav.Desktop.Ui"
+             x:Name="rootSubView"
              mc:Ignorable="d"
              d:DesignHeight="600" d:DesignWidth="500">
+  <UserControl.Resources>
+    <ui:SubscriptionKeysConverter x:Key="SubKeys" />
+    <ui:SubscriptionKeyCountConverter x:Key="SubKeysCount" />
+  </UserControl.Resources>
   <Grid Margin="20,4,20,8">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />
-      <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
 
-    <StackPanel Grid.Row="0">
-      <TextBlock Text="Подписка" Style="{StaticResource X.Text.H2}" />
-      <TextBlock Style="{StaticResource X.Text.Caption}" TextWrapping="Wrap" Margin="0,2,0,0"
-                 Text="URL: тело — base64 со списком ссылок или plain. Ключи привязываются к подписке." />
-    </StackPanel>
+    <Grid Grid.Row="0">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+      <StackPanel Grid.Column="0">
+        <TextBlock Text="Подписки" Style="{StaticResource X.Text.H2}" />
+        <TextBlock Style="{StaticResource X.Text.Caption}" TextWrapping="Wrap" Margin="0,2,0,0"
+                   Text="URL: тело — base64 со списком ссылок или plain. Разверните карточку, чтобы увидеть ключи." />
+      </StackPanel>
+      <Button Grid.Column="1" Content="Обновить все" Command="{Binding RefreshAllSubscriptionsCommand}"
+              Style="{StaticResource X.Btn.Ghost}" VerticalAlignment="Top" />
+    </Grid>
 
-    <Border Grid.Row="1" Margin="0,12,0,0" Background="{StaticResource X.Brush.Surface}"
-            BorderBrush="{StaticResource X.Brush.OutlineSoft}" BorderThickness="1" CornerRadius="14" Padding="10">
+    <Border Grid.Row="1" Margin="0,12,0,0" Background="{DynamicResource X.Brush.Surface}"
+            BorderBrush="{DynamicResource X.Brush.OutlineSoft}" BorderThickness="1" CornerRadius="14" Padding="10">
       <Grid>
         <Grid.RowDefinitions>
           <RowDefinition Height="Auto" />
@@ -39,42 +52,109 @@
                  Text="{Binding NewSubscriptionLabel, UpdateSourceTrigger=PropertyChanged}"
                  Style="{StaticResource X.TextBox}"
                  ToolTip="Метка (опционально)" />
-        <Button  Grid.Row="1" Grid.Column="1" Content="Обновить все" Margin="8,8,0,0"
-                 Command="{Binding RefreshAllSubscriptionsCommand}" Style="{StaticResource X.Btn.Ghost}" />
       </Grid>
     </Border>
 
-    <Border Grid.Row="2" Margin="0,12,0,0">
-      <ListBox ItemsSource="{Binding Subscriptions}" SelectedItem="{Binding SelectedSubscription, Mode=TwoWay}" Style="{StaticResource X.ListBox}">
-        <ListBox.ItemTemplate>
+    <ScrollViewer Grid.Row="2" Margin="0,12,0,0" VerticalScrollBarVisibility="Auto">
+      <ItemsControl ItemsSource="{Binding Subscriptions}">
+        <ItemsControl.ItemTemplate>
           <DataTemplate>
-            <Grid>
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-              </Grid.ColumnDefinitions>
-              <Border Grid.Column="0" Width="40" Height="40" CornerRadius="10"
-                      Background="{StaticResource X.Brush.AccentGrad}" VerticalAlignment="Center" Margin="0,0,12,0">
-                <TextBlock Text="🔗" Foreground="White" FontSize="18"
-                           HorizontalAlignment="Center" VerticalAlignment="Center" />
-              </Border>
-              <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                <TextBlock Text="{Binding Label}" Foreground="{StaticResource X.Brush.Text}"
-                           FontWeight="SemiBold" FontSize="14" TextTrimming="CharacterEllipsis" />
-                <TextBlock Text="{Binding Url}" Foreground="{StaticResource X.Brush.TextMuted}"
-                           FontSize="11" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" />
-                <TextBlock Text="{Binding LastStatus}" Foreground="{StaticResource X.Brush.TextSoft}"
-                           FontSize="11" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" />
-              </StackPanel>
-            </Grid>
+            <Border Margin="0,0,0,8" Background="{DynamicResource X.Brush.Surface}"
+                    BorderBrush="{DynamicResource X.Brush.OutlineSoft}" BorderThickness="1" CornerRadius="14">
+              <Expander Background="Transparent" BorderThickness="0" Padding="10,8"
+                        Foreground="{DynamicResource X.Brush.Text}">
+                <Expander.Header>
+                  <Grid Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Expander}}">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="Auto" />
+                      <ColumnDefinition Width="*" />
+                      <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Width="36" Height="36" CornerRadius="10"
+                            Background="{DynamicResource X.Brush.AccentGrad}" VerticalAlignment="Center" Margin="0,0,12,0">
+                      <TextBlock Text="🔗" Foreground="White" FontSize="16"
+                                 FontFamily="Segoe UI Emoji"
+                                 HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                      <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding Label}" Foreground="{DynamicResource X.Brush.Text}"
+                                   FontWeight="SemiBold" FontSize="14" TextTrimming="CharacterEllipsis" />
+                        <Border Margin="8,0,0,0" CornerRadius="8" Padding="6,1"
+                                Background="{DynamicResource X.Brush.CanvasMid}"
+                                BorderBrush="{DynamicResource X.Brush.OutlineSoft}" BorderThickness="1"
+                                VerticalAlignment="Center">
+                          <TextBlock FontSize="11" Foreground="{DynamicResource X.Brush.TextSoft}">
+                            <TextBlock.Text>
+                              <MultiBinding Converter="{StaticResource SubKeysCount}" StringFormat="{}{0} ключей">
+                                <Binding Path="DataContext.Keys" RelativeSource="{RelativeSource AncestorType=UserControl}" />
+                                <Binding Path="Id" />
+                              </MultiBinding>
+                            </TextBlock.Text>
+                          </TextBlock>
+                        </Border>
+                      </StackPanel>
+                      <TextBlock Text="{Binding Url}" Foreground="{DynamicResource X.Brush.TextMuted}"
+                                 FontSize="11" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" />
+                      <TextBlock Text="{Binding LastStatus}" Foreground="{DynamicResource X.Brush.TextSoft}"
+                                 FontSize="11" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                      <Button Content="Обновить"
+                              Command="{Binding DataContext.RefreshSubscriptionByIdCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                              CommandParameter="{Binding Id}"
+                              Style="{StaticResource X.Btn.Ghost}" Margin="0,0,6,0" Padding="10,4" />
+                      <Button Content="Удалить"
+                              Command="{Binding DataContext.RemoveSubscriptionByIdCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                              CommandParameter="{Binding Id}"
+                              Style="{StaticResource X.Btn.Danger}" Padding="10,4" />
+                    </StackPanel>
+                  </Grid>
+                </Expander.Header>
+                <ItemsControl Margin="0,8,0,0">
+                  <ItemsControl.ItemsSource>
+                    <MultiBinding Converter="{StaticResource SubKeys}">
+                      <Binding Path="DataContext.Keys" RelativeSource="{RelativeSource AncestorType=UserControl}" />
+                      <Binding Path="Id" />
+                    </MultiBinding>
+                  </ItemsControl.ItemsSource>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Border Margin="0,2" Padding="8" CornerRadius="10"
+                              Background="{DynamicResource X.Brush.CanvasMid}"
+                              BorderBrush="{DynamicResource X.Brush.OutlineSoft}" BorderThickness="1">
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                          </Grid.ColumnDefinitions>
+                          <Border Grid.Column="0" Width="32" Height="32" CornerRadius="8"
+                                  Background="{DynamicResource X.Brush.AccentGrad}" Margin="0,0,10,0"
+                                  VerticalAlignment="Center">
+                            <TextBlock Text="{Binding ShortProtocolLabel}" Foreground="White"
+                                       FontWeight="Bold" FontSize="10"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                          </Border>
+                          <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Remark}" Foreground="{DynamicResource X.Brush.Text}"
+                                       FontWeight="SemiBold" FontSize="13" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{Binding Subtitle}" Foreground="{DynamicResource X.Brush.TextMuted}"
+                                       FontSize="11" TextTrimming="CharacterEllipsis" Margin="0,1,0,0" />
+                          </StackPanel>
+                          <TextBlock Grid.Column="2" Text="{Binding LatencyDisplay}" FontSize="11"
+                                     Foreground="{DynamicResource X.Brush.TextSoft}"
+                                     VerticalAlignment="Center" Margin="6,0,0,0" />
+                        </Grid>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </Expander>
+            </Border>
           </DataTemplate>
-        </ListBox.ItemTemplate>
-      </ListBox>
-    </Border>
-
-    <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
-      <Button Content="Обновить выбранную" Command="{Binding RefreshSubscriptionCommand}" Style="{StaticResource X.Btn.Ghost}" Margin="0,0,8,0" />
-      <Button Content="Удалить" Command="{Binding RemoveSubscriptionCommand}" Style="{StaticResource X.Btn.Danger}" />
-    </StackPanel>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
   </Grid>
 </UserControl>

@@ -58,15 +58,15 @@
               <ImageBrush ImageSource="Assets/X-Rav.png" Stretch="UniformToFill" />
             </Border.Background>
           </Border>
-          <TextBlock Text="X-Rav" Foreground="{StaticResource X.Brush.Text}" FontWeight="Bold"
+          <TextBlock Text="X-Rav" Foreground="{DynamicResource X.Brush.Text}" FontWeight="Bold"
                      FontSize="20" Margin="10,0,0,0" VerticalAlignment="Center" />
         </StackPanel>
-        <Border Grid.Column="1" Background="{StaticResource X.Brush.Surface}" CornerRadius="14"
-                BorderBrush="{StaticResource X.Brush.OutlineSoft}" BorderThickness="1" Padding="10,5">
+        <Border Grid.Column="1" Background="{DynamicResource X.Brush.Surface}" CornerRadius="14"
+                BorderBrush="{DynamicResource X.Brush.OutlineSoft}" BorderThickness="1" Padding="10,5">
           <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
             <Ellipse Width="8" Height="8" Margin="0,0,8,0" VerticalAlignment="Center"
                      Fill="{Binding TunnelState, Converter={StaticResource StateToColor}}" />
-            <TextBlock Text="{Binding TunnelStateDisplay}" Foreground="{StaticResource X.Brush.Text}"
+            <TextBlock Text="{Binding TunnelStateDisplay}" Foreground="{DynamicResource X.Brush.Text}"
                        FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" />
           </StackPanel>
         </Border>
@@ -77,7 +77,7 @@
         <Border CornerRadius="10" Padding="12,8" Margin="0,0,0,6"
                 Background="{DynamicResource X.Brush.DangerTint}" BorderBrush="{DynamicResource X.Brush.Danger}" BorderThickness="1"
                 Visibility="{Binding TunnelError, Converter={StaticResource StringToVis}}">
-          <TextBlock Text="{Binding TunnelError}" Foreground="{StaticResource X.Brush.Text}"
+          <TextBlock Text="{Binding TunnelError}" Foreground="{DynamicResource X.Brush.Text}"
                      FontSize="12" TextWrapping="Wrap" />
         </Border>
         <Border CornerRadius="10" Padding="12,8"
@@ -88,10 +88,10 @@
               <ColumnDefinition Width="*" />
               <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <TextBlock Text="{Binding UpdateBanner}" Foreground="{StaticResource X.Brush.Text}"
+            <TextBlock Text="{Binding UpdateBanner}" Foreground="{DynamicResource X.Brush.Text}"
                        FontSize="12" TextWrapping="Wrap" VerticalAlignment="Center" />
             <Button Grid.Column="1" Content="✕" Command="{Binding DismissUpdateBannerCommand}"
-                    Background="Transparent" BorderThickness="0" Foreground="{StaticResource X.Brush.TextSoft}"
+                    Background="Transparent" BorderThickness="0" Foreground="{DynamicResource X.Brush.TextSoft}"
                     FontSize="14" Padding="8,2" Cursor="Hand" />
           </Grid>
         </Border>
@@ -107,7 +107,7 @@
                 <Ellipse Width="140" Height="140"
                          Fill="{Binding TunnelState, Converter={StaticResource StateToPowerBrush}}" />
                 <Ellipse Width="118" Height="118" StrokeThickness="2"
-                         Stroke="{StaticResource X.Brush.OutlineSoft}" Fill="{StaticResource X.Brush.CanvasMid}" />
+                         Stroke="{DynamicResource X.Brush.OutlineSoft}" Fill="{DynamicResource X.Brush.CanvasMid}" />
                 <Ellipse Width="116" Height="116" StrokeThickness="1"
                          Stroke="{Binding TunnelState, Converter={StaticResource StateToColor}}" Opacity="0.5" />
                 <Viewbox Width="46" Height="46">
