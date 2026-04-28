@@ -135,7 +135,7 @@ public static class XrayConfigBuilder
                 ["allowInsecure"] = l.AllowInsecure
             };
             if (!string.IsNullOrEmpty(l.Sni)) tls["serverName"] = l.Sni;
-            if (!string.IsNullOrEmpty(l.Fingerprint)) tls["fingerprint"] = l.Fingerprint;
+            tls["fingerprint"] = string.IsNullOrEmpty(l.Fingerprint) ? "chrome" : l.Fingerprint;
             if (!string.IsNullOrEmpty(l.Alpn))
                 tls["alpn"] = new JsonArray(l.Alpn.Split(',').Select(a => (JsonNode)a.Trim()).ToArray());
             ss["tlsSettings"] = tls;
@@ -144,23 +144,42 @@ public static class XrayConfigBuilder
         {
             var reality = new JsonObject();
             if (!string.IsNullOrEmpty(l.Sni)) reality["serverName"] = l.Sni;
-            if (!string.IsNullOrEmpty(l.Fingerprint)) reality["fingerprint"] = l.Fingerprint;
+            reality["fingerprint"] = string.IsNullOrEmpty(l.Fingerprint) ? "chrome" : l.Fingerprint;
             if (!string.IsNullOrEmpty(l.PublicKey)) reality["publicKey"] = l.PublicKey;
             if (!string.IsNullOrEmpty(l.ShortId)) reality["shortId"] = l.ShortId;
             if (!string.IsNullOrEmpty(l.SpiderX)) reality["spiderX"] = l.SpiderX;
             ss["realitySettings"] = reality;
         }
+        else if (sec == "xtls")
+        {
+            // legacy XTLS: маппим как TLS (xray v25 устарел XTLS, но ключ должен подключаться)
+            var tls = new JsonObject
+            {
+                ["allowInsecure"] = l.AllowInsecure
+            };
+            if (!string.IsNullOrEmpty(l.Sni)) tls["serverName"] = l.Sni;
+            tls["fingerprint"] = string.IsNullOrEmpty(l.Fingerprint) ? "chrome" : l.Fingerprint;
+            if (!string.IsNullOrEmpty(l.Alpn))
+                tls["alpn"] = new JsonArray(l.Alpn.Split(',').Select(a => (JsonNode)a.Trim()).ToArray());
+            ss["security"] = "tls";
+            ss["tlsSettings"] = tls;
+        }
 
         switch (net)
         {
             case "ws":
+            case "websocket":
                 {
                     var ws = new JsonObject
                     {
                         ["path"] = string.IsNullOrEmpty(l.Path) ? "/" : l.Path
                     };
                     if (!string.IsNullOrEmpty(l.HttpHost))
+                    {
+                        // xray v25.x принимает оба варианта — пишем оба для совместимости
+                        ws["host"] = l.HttpHost;
                         ws["headers"] = new JsonObject { ["Host"] = l.HttpHost };
+                    }
                     ss["wsSettings"] = ws;
                     break;
                 }
