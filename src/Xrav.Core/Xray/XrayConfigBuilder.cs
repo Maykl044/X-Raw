@@ -170,15 +170,41 @@ public static class XrayConfigBuilder
             case "ws":
             case "websocket":
                 {
+                    // Парсим Early-Data из path: «/jarvic?ed=2048» → path=«/jarvic», maxEarlyData=2048
+                    var path = string.IsNullOrEmpty(l.Path) ? "/" : l.Path;
+                    int maxEarlyData = 0;
+                    var qIdx = path.IndexOf('?');
+                    if (qIdx >= 0)
+                    {
+                        var pathQs = path.Substring(qIdx + 1);
+                        path = path.Substring(0, qIdx);
+                        foreach (var kv in pathQs.Split('&', StringSplitOptions.RemoveEmptyEntries))
+                        {
+                            var eq = kv.IndexOf('=');
+                            if (eq <= 0) continue;
+                            var k = kv.Substring(0, eq);
+                            var v = kv.Substring(eq + 1);
+                            if (k.Equals("ed", StringComparison.OrdinalIgnoreCase) && int.TryParse(v, out var ed))
+                                maxEarlyData = ed;
+                        }
+                    }
+
                     var ws = new JsonObject
                     {
-                        ["path"] = string.IsNullOrEmpty(l.Path) ? "/" : l.Path
+                        ["path"] = path
                     };
                     if (!string.IsNullOrEmpty(l.HttpHost))
                     {
                         // xray v25.x принимает оба варианта — пишем оба для совместимости
                         ws["host"] = l.HttpHost;
                         ws["headers"] = new JsonObject { ["Host"] = l.HttpHost };
+                    }
+                    if (maxEarlyData > 0)
+                    {
+                        // Early-Data: первые N байт payload улетают в Sec-WebSocket-Protocol header.
+                        // Используется для обхода DPI и ускорения handshake.
+                        ws["maxEarlyData"] = maxEarlyData;
+                        ws["earlyDataHeaderName"] = "Sec-WebSocket-Protocol";
                     }
                     ss["wsSettings"] = ws;
                     break;

@@ -132,8 +132,9 @@
                           <Border Grid.Column="0" Width="32" Height="32" CornerRadius="8"
                                   Background="{DynamicResource X.Brush.AccentGrad}" Margin="0,0,10,0"
                                   VerticalAlignment="Center">
-                            <TextBlock Text="{Binding ShortProtocolLabel}" Foreground="White"
-                                       FontWeight="Bold" FontSize="10"
+                            <TextBlock Text="{Binding DisplayBadge}" Foreground="White"
+                                       FontFamily="Segoe UI Emoji, Segoe UI, Segoe UI Symbol"
+                                       FontWeight="Bold" FontSize="16"
                                        HorizontalAlignment="Center" VerticalAlignment="Center" />
                           </Border>
                           <StackPanel Grid.Column="1" VerticalAlignment="Center">

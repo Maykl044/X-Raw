@@ -25,8 +25,49 @@ public sealed record VpnKey(
     public string? FullConfigKind { get; init; }
 
     public string ShortProtocolLabel => Protocol.ShortLabel();
+
+    /// <summary>
+    /// Бейдж слева от имени ключа: если в Remark есть emoji-флаг страны (regional
+    /// indicator pair, U+1F1E6..U+1F1FF), показываем флаг; иначе короткое имя протокола.
+    /// </summary>
+    public string DisplayBadge => FlagExtractor.TryExtract(Remark) ?? Protocol.ShortLabel();
+
+    /// <summary>true если бейдж — это эмодзи-флаг (рендерится крупнее, без фона).</summary>
+    public bool BadgeIsFlag => FlagExtractor.TryExtract(Remark) is not null;
+
     public string Subtitle => $"{ShortProtocolLabel} · {Host ?? "—"}";
     public string LatencyDisplay => LatencyMs is null ? "—" : $"{LatencyMs} мс";
+}
+
+/// <summary>
+/// Достаём emoji-флаг из remark.  Флаг = пара кодпоинтов из диапазона
+/// regional indicator (U+1F1E6..U+1F1FF), напр. 🇫🇮 = U+1F1EB U+1F1EE.
+/// Также распознаём ⚑ (U+2691) и тп.
+/// </summary>
+public static class FlagExtractor
+{
+    public static string? TryExtract(string? text)
+    {
+        if (string.IsNullOrEmpty(text)) return null;
+        int i = 0;
+        while (i + 3 < text.Length)
+        {
+            if (char.IsHighSurrogate(text[i]) && char.IsLowSurrogate(text[i + 1]))
+            {
+                int cp1 = char.ConvertToUtf32(text, i);
+                if (cp1 >= 0x1F1E6 && cp1 <= 0x1F1FF
+                    && char.IsHighSurrogate(text[i + 2]) && char.IsLowSurrogate(text[i + 3]))
+                {
+                    int cp2 = char.ConvertToUtf32(text, i + 2);
+                    if (cp2 >= 0x1F1E6 && cp2 <= 0x1F1FF)
+                        return text.Substring(i, 4);
+                }
+                i += 2;
+            }
+            else i++;
+        }
+        return null;
+    }
 }
 
 public enum KeyProtocol
