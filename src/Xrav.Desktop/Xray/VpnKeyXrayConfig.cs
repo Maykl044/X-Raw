@@ -1,6 +1,7 @@
 using Xrav.Core.Domain;
 using Xrav.Core.SingBox;
 using Xrav.Core.Xray;
+using Xrav.Desktop.Storage;
 using Xrav.Desktop.Tunnel;
 
 namespace Xrav.Desktop.Xray;
@@ -53,7 +54,7 @@ public static class VpnKeyXrayConfig
                         return false;
                     }
                     backend = new BackendConfig(BackendKind.XrayWithHev,
-                        XrayConfigBuilder.BuildFromShareLink(link!, TunnelConstants.SocksInboundPort),
+                        XrayConfigBuilder.BuildFromShareLink(link!, BuildOptionsFromPrefs(), TunnelConstants.SocksInboundPort),
                         link!.Host);
                     error = null;
                     return true;
@@ -84,6 +85,20 @@ public static class VpnKeyXrayConfig
             error = ex.Message;
             return false;
         }
+    }
+
+    /// <summary>Берёт текущие prefs обхода блокировок и собирает <see cref="XrayBuildOptions"/>.</summary>
+    public static XrayBuildOptions BuildOptionsFromPrefs()
+    {
+        var prefs = AppPrefs.Load();
+        return new XrayBuildOptions(
+            EnableFragment: prefs.BypassFragmentEnabled,
+            FragmentLength: prefs.BypassFragmentLength,
+            FragmentInterval: prefs.BypassFragmentInterval,
+            EnableMux: prefs.BypassMuxEnabled,
+            MuxConcurrency: prefs.BypassMuxConcurrency,
+            EnableNoise: prefs.BypassNoiseEnabled
+        );
     }
 
     /// <summary>Совместимость со старым кодом: только xray-конфиг (без sing-box-кейсов).</summary>

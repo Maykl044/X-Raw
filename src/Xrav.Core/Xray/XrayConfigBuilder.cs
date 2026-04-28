@@ -15,28 +15,114 @@ public static class XrayConfigBuilder
     public const string ProxyOutboundTag = "proxy";
     public const string DirectOutboundTag = "direct";
     public const string BlockOutboundTag = "block";
+    public const string FragmentOutboundTag = "fragment";
 
     public static string BuildFromShareLink(ShareLink link, int socksInboundPort = DefaultSocksInboundPort)
+        => BuildFromShareLink(link, XrayBuildOptions.Default, socksInboundPort);
+
+    public static string BuildFromShareLink(ShareLink link, XrayBuildOptions opts, int socksInboundPort = DefaultSocksInboundPort)
     {
+        var sec = (link.Security ?? "").ToLowerInvariant();
+        var hasTls = sec == "tls" || sec == "reality" || sec == "xtls";
+        // Fragment work только с TLS — для plain TCP нечего фрагментировать.
+        var useFragment = opts.EnableFragment && hasTls;
+
+        var proxyOut = BuildOutbound(link, useFragment, opts);
+        var outbounds = new JsonArray();
+        outbounds.Add(proxyOut);
+        if (useFragment) outbounds.Add(BuildFragmentOutbound(opts));
+        outbounds.Add(DirectOutbound());
+        outbounds.Add(BlockOutbound());
+
         var root = new JsonObject
         {
             ["log"] = new JsonObject { ["loglevel"] = "warning" },
             ["dns"] = DefaultDns(),
             ["inbounds"] = new JsonArray(SocksInbound(socksInboundPort)),
-            ["outbounds"] = new JsonArray(BuildOutbound(link), DirectOutbound(), BlockOutbound()),
+            ["outbounds"] = outbounds,
             ["routing"] = DefaultRouting()
         };
         return root.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
     }
 
-    public static JsonObject BuildOutbound(ShareLink link) => link.Kind switch
+    public static JsonObject BuildOutbound(ShareLink link) => BuildOutbound(link, useFragment: false, XrayBuildOptions.Default);
+
+    public static JsonObject BuildOutbound(ShareLink link, bool useFragment, XrayBuildOptions opts)
     {
-        KeyKind.Vless => BuildVlessOutbound(link),
-        KeyKind.VMess => BuildVmessOutbound(link),
-        KeyKind.Trojan => BuildTrojanOutbound(link),
-        KeyKind.Shadowsocks => BuildShadowsocksOutbound(link),
-        _ => throw new NotSupportedException($"xray outbound build not supported: {link.Kind}")
-    };
+        var ob = link.Kind switch
+        {
+            KeyKind.Vless => BuildVlessOutbound(link),
+            KeyKind.VMess => BuildVmessOutbound(link),
+            KeyKind.Trojan => BuildTrojanOutbound(link),
+            KeyKind.Shadowsocks => BuildShadowsocksOutbound(link),
+            _ => throw new NotSupportedException($"xray outbound build not supported: {link.Kind}")
+        };
+
+        if (useFragment)
+        {
+            // Цепляем proxy-outbound через fragment-outbound: все исходящие TCP уходят
+            // сначала в fragment (xray freedom + fragment{tlshello}), который рвёт
+            // TLS-ClientHello на куски — DPI теряет SNI и пропускает пакет.
+            var ss = ob["streamSettings"] as JsonObject;
+            if (ss is not null)
+            {
+                var sockopt = (ss["sockopt"] as JsonObject) ?? new JsonObject();
+                sockopt["dialerProxy"] = FragmentOutboundTag;
+                ss["sockopt"] = sockopt;
+            }
+        }
+
+        // Mux.cool — мультиплексирует несколько TCP-стримов в одном канале. Не работает
+        // для Shadowsocks и для VLESS с xtls-rprx-vision.
+        var canMux = opts.EnableMux
+                     && link.Kind is KeyKind.Vless or KeyKind.VMess or KeyKind.Trojan
+                     && !string.Equals(link.Flow, "xtls-rprx-vision", StringComparison.OrdinalIgnoreCase);
+        if (canMux)
+        {
+            ob["mux"] = new JsonObject
+            {
+                ["enabled"] = true,
+                ["concurrency"] = opts.MuxConcurrency
+            };
+        }
+
+        return ob;
+    }
+
+    private static JsonObject BuildFragmentOutbound(XrayBuildOptions opts)
+    {
+        var settings = new JsonObject
+        {
+            ["domainStrategy"] = "AsIs",
+            ["fragment"] = new JsonObject
+            {
+                ["packets"] = opts.FragmentPackets,
+                ["length"] = opts.FragmentLength,
+                ["interval"] = opts.FragmentInterval
+            }
+        };
+        if (opts.EnableNoise)
+        {
+            // Mihomo/xray noise: рандомные пакеты до handshake. Экспериментально, помогает
+            // когда DPI блокирует по таймингу TLS handshake.
+            settings["noise"] = new JsonObject
+            {
+                ["type"] = "rand",
+                ["packet"] = opts.NoisePacket,
+                ["delay"] = opts.NoiseDelay
+            };
+        }
+        return new JsonObject
+        {
+            ["tag"] = FragmentOutboundTag,
+            ["protocol"] = "freedom",
+            ["settings"] = settings,
+            ["streamSettings"] = new JsonObject
+            {
+                ["sockopt"] = new JsonObject { ["tcpKeepAliveIdle"] = 100 }
+            }
+        };
+    }
 
     private static JsonObject BuildVlessOutbound(ShareLink l) => new()
     {

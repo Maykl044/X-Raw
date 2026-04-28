@@ -10,6 +10,14 @@ public sealed class AppPrefs
     public bool AutoSelect { get; set; } = false;
     public bool UrlSchemeRegistered { get; set; } = false;
 
+    // Универсальный обход блокировок (применяется ко всем TLS/REALITY ключам).
+    public bool BypassFragmentEnabled { get; set; } = true;
+    public string BypassFragmentLength { get; set; } = "10-20";
+    public string BypassFragmentInterval { get; set; } = "10-20";
+    public bool BypassMuxEnabled { get; set; } = true;
+    public int BypassMuxConcurrency { get; set; } = 8;
+    public bool BypassNoiseEnabled { get; set; } = false;
+
     public static string FilePath => Path.Combine(AppDataPaths.XravRoot, "prefs.json");
 
     public static AppPrefs Load()

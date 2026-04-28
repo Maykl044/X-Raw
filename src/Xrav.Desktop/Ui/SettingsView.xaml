@@ -90,6 +90,20 @@
           </Grid>
         </Button>
 
+        <Button Style="{StaticResource X.Settings.MenuRow}" Tag="bypass" Click="OnMenuClick">
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0">
+              <TextBlock Text="Обход блокировок" FontWeight="SemiBold" FontSize="14" />
+              <TextBlock Text="Фрагментация TLS · Mux · шум" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="11" Margin="0,2,0,0" />
+            </StackPanel>
+            <TextBlock Grid.Column="1" Text="›" FontSize="22" Foreground="{DynamicResource X.Brush.TextSoft}" VerticalAlignment="Center" Margin="8,0,0,0" />
+          </Grid>
+        </Button>
+
         <Button Style="{StaticResource X.Settings.MenuRow}" Tag="url" Click="OnMenuClick">
           <Grid>
             <Grid.ColumnDefinitions>
@@ -233,6 +247,69 @@
             </RadioButton>
             <RadioButton GroupName="mode_xrav" Content="{loc:T settings.mode.auto}"
                          IsChecked="{Binding AutoSelectMode, Mode=TwoWay}" Foreground="{DynamicResource X.Brush.Text}" />
+          </StackPanel>
+        </Border>
+      </StackPanel>
+
+      <!-- ======= BYPASS (Обход блокировок) ======= -->
+      <StackPanel x:Name="PageBypass">
+        <StackPanel.Style>
+          <Style TargetType="StackPanel">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+              <DataTrigger Binding="{Binding ElementName=rootView, Path=Page}" Value="bypass">
+                <Setter Property="Visibility" Value="Visible" />
+              </DataTrigger>
+            </Style.Triggers>
+          </Style>
+        </StackPanel.Style>
+
+        <DockPanel Margin="0,0,0,8">
+          <Button DockPanel.Dock="Left" Style="{StaticResource X.Btn.Ghost}" Content="‹  Назад" Click="OnBackClick" />
+          <TextBlock Text="Обход блокировок" Style="{StaticResource X.Text.H2}" Margin="14,0,0,0" VerticalAlignment="Center" />
+        </DockPanel>
+
+        <Border Background="{DynamicResource X.Brush.GlassFill}" BorderBrush="{DynamicResource X.Brush.GlassBorder}"
+                BorderThickness="1" CornerRadius="14" Padding="14" Margin="0,0,0,10">
+          <StackPanel>
+            <TextBlock Style="{StaticResource X.Text.Caption}" TextWrapping="Wrap" Margin="0,0,0,10"
+                       Text="Универсальные настройки для всех TLS/REALITY ключей. Помогают пройти DPI, который блокирует SNI или замедляет handshake. Применяется автоматически после сохранения." />
+
+            <CheckBox x:Name="ChkFragment" Content="Фрагментация TLS-ClientHello (рекомендуется)"
+                      Foreground="{DynamicResource X.Brush.Text}" FontWeight="SemiBold"
+                      Click="OnBypassChanged" Margin="0,0,0,4" />
+            <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="11" Margin="0,0,0,12"
+                       Text="Делит ClientHello на куски длины 10–20 байт с интервалом 10–20 мс. DPI не успевает прочитать SNI и пропускает пакет." />
+
+            <Grid Margin="0,0,0,12">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                <TextBlock Style="{StaticResource X.Text.Caption}" Text="Длина пакета (мин-макс)" />
+                <TextBox x:Name="TxtFragLen" Style="{StaticResource X.TextBox}" TextChanged="OnBypassChanged" />
+              </StackPanel>
+              <StackPanel Grid.Column="1" Margin="6,0,0,0">
+                <TextBlock Style="{StaticResource X.Text.Caption}" Text="Интервал, мс (мин-макс)" />
+                <TextBox x:Name="TxtFragInt" Style="{StaticResource X.TextBox}" TextChanged="OnBypassChanged" />
+              </StackPanel>
+            </Grid>
+
+            <CheckBox x:Name="ChkMux" Content="Mux.cool — мультиплекс соединений"
+                      Foreground="{DynamicResource X.Brush.Text}" FontWeight="SemiBold"
+                      Click="OnBypassChanged" Margin="0,0,0,4" />
+            <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="11" Margin="0,0,0,12"
+                       Text="До 8 одновременных потоков в одном TCP-канале. Ускоряет загрузку и затрудняет DPI-эвристики." />
+
+            <CheckBox x:Name="ChkNoise" Content="Шумовой трафик (экспериментально)"
+                      Foreground="{DynamicResource X.Brush.Text}" FontWeight="SemiBold"
+                      Click="OnBypassChanged" Margin="0,0,0,4" />
+            <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="11" Margin="0,0,0,12"
+                       Text="Случайные пакеты до handshake. Может помочь, когда DPI блокирует по таймингу. Включайте только если базовая фрагментация не работает." />
+
+            <Button Content="Сбросить к рекомендованным"
+                    Style="{StaticResource X.Btn.Ghost}" Click="OnBypassResetClick" HorizontalAlignment="Left" />
           </StackPanel>
         </Border>
       </StackPanel>
