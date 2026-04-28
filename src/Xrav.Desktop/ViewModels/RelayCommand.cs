@@ -1,4 +1,6 @@
+using System.Windows;
 using System.Windows.Input;
+using System.Windows.Threading;
 
 namespace Xrav.Desktop.ViewModels;
 
@@ -22,5 +24,14 @@ public sealed class RelayCommand : ICommand
 
     public void Execute(object? parameter) => _execute(parameter);
 
-    public void RaiseCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+    public void RaiseCanExecuteChanged()
+    {
+        var handler = CanExecuteChanged;
+        if (handler is null) return;
+        var dispatcher = Application.Current?.Dispatcher;
+        if (dispatcher is null || dispatcher.CheckAccess())
+            handler(this, EventArgs.Empty);
+        else
+            dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() => handler(this, EventArgs.Empty)));
+    }
 }
