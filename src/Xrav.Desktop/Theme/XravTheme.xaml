@@ -6,23 +6,7 @@
        X-Rav · современная тёмная тема (purple-cyan accent)
        ========================================================= -->
 
-  <!-- Палитра -->
-  <Color x:Key="X.Color.Canvas">#FF0B0C16</Color>
-  <Color x:Key="X.Color.CanvasMid">#FF12131F</Color>
-  <Color x:Key="X.Color.Surface">#FF181A2B</Color>
-  <Color x:Key="X.Color.SurfaceHi">#FF20243B</Color>
-  <Color x:Key="X.Color.Outline">#22FFFFFF</Color>
-  <Color x:Key="X.Color.OutlineSoft">#11FFFFFF</Color>
-
-  <Color x:Key="X.Color.Accent">#FF7C5CFF</Color>
-  <Color x:Key="X.Color.Accent2">#FF18BFFF</Color>
-  <Color x:Key="X.Color.Success">#FF00D4A0</Color>
-  <Color x:Key="X.Color.Warn">#FFFFB547</Color>
-  <Color x:Key="X.Color.Danger">#FFFF4D6D</Color>
-
-  <Color x:Key="X.Color.Text">#FFEDF0F7</Color>
-  <Color x:Key="X.Color.TextSoft">#CCBFC5D4</Color>
-  <Color x:Key="X.Color.TextMuted">#88AAB0C2</Color>
+  <!-- Палитра загружается из Theme/Colors.Dark.xaml или Colors.Light.xaml в ThemeService -->
 
   <SolidColorBrush x:Key="X.Brush.Canvas"      Color="{StaticResource X.Color.Canvas}" />
   <SolidColorBrush x:Key="X.Brush.CanvasMid"   Color="{StaticResource X.Color.CanvasMid}" />
@@ -38,28 +22,31 @@
   <SolidColorBrush x:Key="X.Brush.Text"        Color="{StaticResource X.Color.Text}" />
   <SolidColorBrush x:Key="X.Brush.TextSoft"    Color="{StaticResource X.Color.TextSoft}" />
   <SolidColorBrush x:Key="X.Brush.TextMuted"   Color="{StaticResource X.Color.TextMuted}" />
+  <SolidColorBrush x:Key="X.Brush.DangerTint"  Color="{StaticResource X.Color.DangerTint}" />
+  <SolidColorBrush x:Key="X.Brush.WarnTint"    Color="{StaticResource X.Color.WarnTint}" />
+  <SolidColorBrush x:Key="X.Brush.AccentTint"  Color="{StaticResource X.Color.AccentTint}" />
 
   <LinearGradientBrush x:Key="X.Brush.Bg" StartPoint="0,0" EndPoint="1,1">
-    <GradientStop Color="#FF0B0C16" Offset="0" />
-    <GradientStop Color="#FF13142A" Offset="0.45" />
-    <GradientStop Color="#FF0B0C16" Offset="1" />
+    <GradientStop Color="{StaticResource X.Color.BgGrad1}" Offset="0" />
+    <GradientStop Color="{StaticResource X.Color.BgGrad2}" Offset="0.45" />
+    <GradientStop Color="{StaticResource X.Color.BgGrad3}" Offset="1" />
   </LinearGradientBrush>
 
   <LinearGradientBrush x:Key="X.Brush.AccentGrad" StartPoint="0,0" EndPoint="1,1">
-    <GradientStop Color="#FF7C5CFF" Offset="0" />
-    <GradientStop Color="#FF18BFFF" Offset="1" />
+    <GradientStop Color="{StaticResource X.Color.Accent}" Offset="0" />
+    <GradientStop Color="{StaticResource X.Color.Accent2}" Offset="1" />
   </LinearGradientBrush>
 
   <RadialGradientBrush x:Key="X.Brush.PowerOff" GradientOrigin="0.4,0.35">
-    <GradientStop Color="#22202A4A" Offset="0" />
-    <GradientStop Color="#0E0E1224" Offset="0.7" />
-    <GradientStop Color="#000B0C16" Offset="1" />
+    <GradientStop Color="{StaticResource X.Color.PowerOff1}" Offset="0" />
+    <GradientStop Color="{StaticResource X.Color.PowerOff2}" Offset="0.7" />
+    <GradientStop Color="{StaticResource X.Color.PowerOff3}" Offset="1" />
   </RadialGradientBrush>
 
   <RadialGradientBrush x:Key="X.Brush.PowerOn" GradientOrigin="0.4,0.35">
-    <GradientStop Color="#557C5CFF" Offset="0" />
-    <GradientStop Color="#3318BFFF" Offset="0.5" />
-    <GradientStop Color="#000B0C16" Offset="1" />
+    <GradientStop Color="{StaticResource X.Color.PowerOn1}" Offset="0" />
+    <GradientStop Color="{StaticResource X.Color.PowerOn2}" Offset="0.5" />
+    <GradientStop Color="{StaticResource X.Color.PowerOn3}" Offset="1" />
   </RadialGradientBrush>
 
   <!-- Типографика -->
@@ -169,6 +156,37 @@
   <Style x:Key="X.Btn.Danger" TargetType="Button" BasedOn="{StaticResource X.Btn.Ghost}">
     <Setter Property="Foreground" Value="{StaticResource X.Brush.Danger}" />
   </Style>
+
+  <!-- Кнопка-ссылка (для About) -->
+  <Style x:Key="X.Btn.Link" TargetType="Button">
+    <Setter Property="Foreground" Value="{StaticResource X.Brush.Accent}" />
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="HorizontalContentAlignment" Value="Left" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <Border Background="Transparent">
+            <TextBlock Text="{TemplateBinding Content}" Foreground="{TemplateBinding Foreground}"
+                       FontSize="{TemplateBinding FontSize}" FontWeight="{TemplateBinding FontWeight}"
+                       TextDecorations="Underline" />
+          </Border>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+    <Style.Triggers>
+      <Trigger Property="IsMouseOver" Value="True">
+        <Setter Property="Foreground" Value="{StaticResource X.Brush.Accent2}" />
+      </Trigger>
+    </Style.Triggers>
+  </Style>
+
+  <!-- Глобальный BooleanToVisibilityConverter -->
+  <BooleanToVisibilityConverter x:Key="BoolToVisHelper" />
 
   <!-- TextBox -->
   <Style x:Key="X.TextBox" TargetType="TextBox">

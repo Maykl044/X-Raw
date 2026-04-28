@@ -117,7 +117,9 @@ public static class XrayConfigBuilder
 
     private static JsonObject BuildStreamSettings(ShareLink l, string defaultSecurity = "none")
     {
-        var net = string.IsNullOrEmpty(l.Network) ? "tcp" : l.Network;
+        // xray-core v24.9.30+ ввёл "raw" как алиас для "tcp"; принимаем оба, нормализуем к "tcp".
+        var net = string.IsNullOrEmpty(l.Network) ? "tcp" : l.Network.ToLowerInvariant();
+        if (net == "raw") net = "tcp";
         var sec = string.IsNullOrEmpty(l.Security) || l.Security == "none" ? defaultSecurity : l.Security;
 
         var ss = new JsonObject
@@ -162,11 +164,45 @@ public static class XrayConfigBuilder
                     ss["wsSettings"] = ws;
                     break;
                 }
+            case "httpupgrade":
+                {
+                    var hu = new JsonObject
+                    {
+                        ["path"] = string.IsNullOrEmpty(l.Path) ? "/" : l.Path
+                    };
+                    if (!string.IsNullOrEmpty(l.HttpHost)) hu["host"] = l.HttpHost;
+                    ss["httpupgradeSettings"] = hu;
+                    break;
+                }
+            case "splithttp":
+            case "xhttp":
+                {
+                    var xh = new JsonObject
+                    {
+                        ["path"] = string.IsNullOrEmpty(l.Path) ? "/" : l.Path
+                    };
+                    if (!string.IsNullOrEmpty(l.HttpHost)) xh["host"] = l.HttpHost;
+                    if (!string.IsNullOrEmpty(l.XhttpMode)) xh["mode"] = l.XhttpMode;
+                    if (!string.IsNullOrEmpty(l.XhttpExtra))
+                    {
+                        try
+                        {
+                            var extra = JsonNode.Parse(l.XhttpExtra);
+                            if (extra is JsonObject obj) xh["extra"] = obj;
+                        }
+                        catch { /* ignore malformed extra */ }
+                    }
+                    // xray-core 25.x понимает оба ключа, делаем оба для совместимости
+                    ss["xhttpSettings"] = xh.DeepClone();
+                    if (net == "splithttp") ss["splithttpSettings"] = xh.DeepClone();
+                    break;
+                }
             case "grpc":
                 {
                     var grpc = new JsonObject
                     {
-                        ["serviceName"] = l.ServiceName ?? l.Path ?? ""
+                        ["serviceName"] = l.ServiceName ?? l.Path ?? "",
+                        ["multiMode"] = false
                     };
                     ss["grpcSettings"] = grpc;
                     break;
@@ -183,7 +219,27 @@ public static class XrayConfigBuilder
                     ss["httpSettings"] = http;
                     break;
                 }
+            case "kcp":
+            case "mkcp":
+                {
+                    var kcp = new JsonObject
+                    {
+                        ["mtu"] = 1350,
+                        ["tti"] = 50,
+                        ["uplinkCapacity"] = 12,
+                        ["downlinkCapacity"] = 100,
+                        ["congestion"] = l.Congestion ?? false,
+                        ["readBufferSize"] = 2,
+                        ["writeBufferSize"] = 2
+                    };
+                    var hdr = new JsonObject { ["type"] = string.IsNullOrEmpty(l.HeaderType) ? "none" : l.HeaderType };
+                    kcp["header"] = hdr;
+                    if (!string.IsNullOrEmpty(l.Seed)) kcp["seed"] = l.Seed;
+                    ss["kcpSettings"] = kcp;
+                    break;
+                }
             case "tcp":
+            default:
                 {
                     if (l.HeaderType == "http")
                     {

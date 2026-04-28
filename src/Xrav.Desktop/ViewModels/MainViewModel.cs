@@ -8,9 +8,11 @@ using Xrav.Core.Domain;
 using Xrav.Core.State;
 using Xrav.Core.Subscription;
 using Xrav.Core.Xray;
+using Xrav.Desktop.Localization;
 using Xrav.Desktop.Logging;
 using Xrav.Desktop.Services;
 using Xrav.Desktop.Storage;
+using Xrav.Desktop.Theme;
 using Xrav.Desktop.Tools;
 
 namespace Xrav.Desktop.ViewModels;
@@ -19,6 +21,7 @@ public enum MainTab
 {
     Servers,
     Subscription,
+    Log,
     Settings
 }
 
@@ -26,6 +29,8 @@ public sealed class MainViewModel : ViewModelBase
 {
     private readonly ITunnelService _tunnel;
     private readonly IUserStateStore _store;
+    private readonly AppPrefs _prefs;
+    private readonly KeyHealthMonitor _health;
     private static readonly HttpClient SharedHttp = ToolBootstrapper.CreateDefaultClient();
     private MainTab _selectedTab = MainTab.Servers;
     private bool _powerBusy;
@@ -38,11 +43,14 @@ public sealed class MainViewModel : ViewModelBase
     private string _bootstrapStatus = "";
     private bool _bootstrapBusy;
     private string _manualKeyText = "";
+    private bool _urlSchemeRegistered;
 
     public MainViewModel(ITunnelService tunnel, IUserStateStore store)
     {
         _tunnel = tunnel;
         _store = store;
+        _prefs = AppPrefs.Load();
+        _urlSchemeRegistered = UrlSchemeRegistrar.IsRegistered();
         if (tunnel is WinTunnelService w)
             w.LogLine += OnTunnelLogLine;
         ConnectCommand = new RelayCommand(Connect, () => !PowerBusy && CanConnect);
@@ -54,8 +62,10 @@ public sealed class MainViewModel : ViewModelBase
                      or TunnelConnectionState.Error);
         GoServersCommand = new RelayCommand(() => SelectedTab = MainTab.Servers);
         GoSubscriptionCommand = new RelayCommand(() => SelectedTab = MainTab.Subscription);
+        GoLogCommand = new RelayCommand(() => SelectedTab = MainTab.Log);
         GoSettingsCommand = new RelayCommand(() => SelectedTab = MainTab.Settings);
         ClearTunnelLogCommand = new RelayCommand(() => TunnelLog.Clear());
+        CopyTunnelLogCommand = new RelayCommand(CopyTunnelLogToClipboard);
         ImportFromClipboardCommand = new RelayCommand(ImportFromClipboard);
         AddManualKeyCommand = new RelayCommand(AddManualKey, () => !string.IsNullOrWhiteSpace(ManualKeyText));
         RemoveSelectedKeyCommand = new RelayCommand(RemoveSelectedKey, () => SelectedKey is not null);
@@ -70,6 +80,11 @@ public sealed class MainViewModel : ViewModelBase
         BootstrapToolsCommand = new RelayCommand(async () => await BootstrapToolsAsync(), () => !BootstrapBusy);
         OpenDataFolderCommand = new RelayCommand(OpenDataFolder);
         OpenLogFileCommand = new RelayCommand(OpenLogFile);
+        OpenWebsiteCommand = new RelayCommand(() => OpenUrl("https://rock.rockefellers.store"));
+        OpenGithubCommand = new RelayCommand(() => OpenUrl("https://github.com/Maykl044/X-Raw"));
+        OpenDeveloper1Command = new RelayCommand(() => OpenUrl("https://t.me/igroutech"));
+        OpenDeveloper2Command = new RelayCommand(() => OpenUrl("https://t.me/BernarAr_no"));
+        RegisterUrlSchemeCommand = new RelayCommand(RegisterUrlScheme);
         PingSelectedKeyCommand = new RelayCommand(async () => await PingKeyAsync(SelectedKey), () => SelectedKey is not null && !PingBusy);
         PingAllKeysCommand    = new RelayCommand(async () => await PingAllKeysAsync(), () => Keys.Count > 0 && !PingBusy);
         DismissUpdateBannerCommand = new RelayCommand(() => UpdateBanner = null);
@@ -85,14 +100,35 @@ public sealed class MainViewModel : ViewModelBase
                     OnPropertyChanged(nameof(PowerHint));
                     OnPropertyChanged(nameof(TunnelError));
                     OnPropertyChanged(nameof(CanConnect));
+                    OnPropertyChanged(nameof(AutoStatusLine));
                     RaiseAllCanExecute();
                 }
             };
         }
 
+        // Реакция на смену языка — перерисовываем локализованные свойства.
+        Localization.LocalizationService.Current.PropertyChanged += (_, a) =>
+        {
+            if (a.PropertyName is "Item[]" or nameof(Localization.LocalizationService.Language))
+            {
+                OnPropertyChanged(nameof(TunnelStateDisplay));
+                OnPropertyChanged(nameof(PowerHint));
+                OnPropertyChanged(nameof(AutoStatusLine));
+                OnPropertyChanged(nameof(KeysCountDisplay));
+            }
+        };
+
         LoadFromStore();
         Keys.CollectionChanged += OnKeysChanged;
         Subscriptions.CollectionChanged += OnSubscriptionsChanged;
+
+        // KeyHealthMonitor: инициализируем после загрузки ключей
+        _health = new KeyHealthMonitor(
+            keys: Keys,
+            getActive: () => SelectedKey,
+            onSwitch: OnAutoSwitchKey,
+            updateLatency: UpdateKeyLatency);
+        if (_prefs.AutoSelect) _health.Start();
     }
 
     public ObservableCollection<VpnKey> Keys { get; } = new();
@@ -203,33 +239,131 @@ public sealed class MainViewModel : ViewModelBase
             OnPropertyChanged();
             OnPropertyChanged(nameof(IsServersTab));
             OnPropertyChanged(nameof(IsSubscriptionTab));
+            OnPropertyChanged(nameof(IsLogTab));
             OnPropertyChanged(nameof(IsSettingsTab));
         }
     }
 
+    // ---------- Theme / Language / Auto-select ----------
+
+    /// <summary>Код текущей темы: "light" / "dark" / "system". Bind из списка выбора.</summary>
+    public string SelectedThemeCode
+    {
+        get => Theme.ThemeService.Code(Theme.ThemeService.Current.Theme);
+        set
+        {
+            var t = Theme.ThemeService.ParseCode(value);
+            if (Theme.ThemeService.Current.Theme == t) return;
+            Theme.ThemeService.Current.Theme = t;
+            _prefs.Theme = Theme.ThemeService.Code(t);
+            _prefs.Save();
+            OnPropertyChanged();
+        }
+    }
+
+    /// <summary>Код языка: "ru" / "en" / "tr".</summary>
+    public string SelectedLanguageCode
+    {
+        get => Localization.LocalizationService.LangCode(Localization.LocalizationService.Current.Language);
+        set
+        {
+            var l = Localization.LocalizationService.ParseCode(value);
+            if (Localization.LocalizationService.Current.Language == l) return;
+            Localization.LocalizationService.Current.Language = l;
+            _prefs.Language = Localization.LocalizationService.LangCode(l);
+            _prefs.Save();
+            OnPropertyChanged();
+        }
+    }
+
+    /// <summary>Авто-выбор лучшего ключа по пингу + автопереключение при сбое.</summary>
+    public bool AutoSelectMode
+    {
+        get => _prefs.AutoSelect;
+        set
+        {
+            if (_prefs.AutoSelect == value) return;
+            _prefs.AutoSelect = value;
+            _prefs.Save();
+            if (value) _health?.Start();
+            else _health?.Stop();
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(IsManualMode));
+            OnPropertyChanged(nameof(AutoStatusLine));
+        }
+    }
+
+    public bool IsManualMode => !AutoSelectMode;
+
+    public string AutoStatusLine
+    {
+        get
+        {
+            var loc = Localization.LocalizationService.Current;
+            if (!AutoSelectMode) return string.Empty;
+            var best = _health?.BestKey ?? Keys.OrderBy(k => k.LatencyMs ?? int.MaxValue).FirstOrDefault();
+            if (best is null || best.LatencyMs is null) return loc["auto.searching"];
+            return string.Format(loc["auto.connectedTo"], best.Remark, best.LatencyMs);
+        }
+    }
+
+    public bool UrlSchemeRegistered
+    {
+        get => _urlSchemeRegistered;
+        private set => Set(ref _urlSchemeRegistered, value);
+    }
+
+    public string KeysCountDisplay
+    {
+        get
+        {
+            var loc = Localization.LocalizationService.Current;
+            return string.Format(loc["servers.count"], Keys.Count);
+        }
+    }
+
+    public string AppVersion => typeof(MainViewModel).Assembly.GetName().Version?.ToString(3) ?? "1.0.0";
+
     public bool IsServersTab => SelectedTab == MainTab.Servers;
     public bool IsSubscriptionTab => SelectedTab == MainTab.Subscription;
+    public bool IsLogTab => SelectedTab == MainTab.Log;
     public bool IsSettingsTab => SelectedTab == MainTab.Settings;
 
     public TunnelConnectionState TunnelState => _tunnel.State;
     public string? TunnelError => _tunnel.LastError;
-    public string TunnelStateDisplay => TunnelState switch
+    public string TunnelStateDisplay
     {
-        TunnelConnectionState.Disconnected => "Отключено",
-        TunnelConnectionState.Connecting => "Подключение…",
-        TunnelConnectionState.Connected => "Подключено",
-        TunnelConnectionState.Reconnecting => "Переподключение…",
-        TunnelConnectionState.Error => "Ошибка",
-        _ => "—"
-    };
-    public string PowerHint => TunnelState switch
+        get
+        {
+            var loc = Localization.LocalizationService.Current;
+            return TunnelState switch
+            {
+                TunnelConnectionState.Disconnected => loc["state.disconnected"],
+                TunnelConnectionState.Connecting => loc["state.connecting"] + "…",
+                TunnelConnectionState.Connected => loc["state.connected"],
+                TunnelConnectionState.Reconnecting => loc["state.reconnecting"] + "…",
+                TunnelConnectionState.Error => loc["state.error"],
+                _ => "—"
+            };
+        }
+    }
+    public string PowerHint
     {
-        TunnelConnectionState.Connected => "Нажмите для отключения",
-        TunnelConnectionState.Connecting => "Подключение…",
-        TunnelConnectionState.Reconnecting => "Переподключение…",
-        TunnelConnectionState.Error => "Ошибка — исправьте и попробуйте снова",
-        _ => "Нажмите для подключения"
-    };
+        get
+        {
+            var loc = Localization.LocalizationService.Current;
+            if (AutoSelectMode && TunnelState == TunnelConnectionState.Disconnected)
+                return loc["power.auto"];
+            return TunnelState switch
+            {
+                TunnelConnectionState.Connected => loc["power.disconnect"],
+                TunnelConnectionState.Connecting => loc["power.connecting"],
+                TunnelConnectionState.Reconnecting => loc["power.reconnecting"],
+                TunnelConnectionState.Error => loc["power.error"],
+                _ => loc["power.connect"]
+            };
+        }
+    }
     public bool CanConnect => _tunnel.State is TunnelConnectionState.Disconnected or TunnelConnectionState.Error;
     public bool PowerBusy
     {
@@ -247,8 +381,15 @@ public sealed class MainViewModel : ViewModelBase
     public ICommand DisconnectCommand { get; }
     public ICommand GoServersCommand { get; }
     public ICommand GoSubscriptionCommand { get; }
+    public ICommand GoLogCommand { get; }
     public ICommand GoSettingsCommand { get; }
     public ICommand ClearTunnelLogCommand { get; }
+    public ICommand CopyTunnelLogCommand { get; }
+    public ICommand OpenWebsiteCommand { get; }
+    public ICommand OpenGithubCommand { get; }
+    public ICommand OpenDeveloper1Command { get; }
+    public ICommand OpenDeveloper2Command { get; }
+    public ICommand RegisterUrlSchemeCommand { get; }
     public ICommand ImportFromClipboardCommand { get; }
     public ICommand AddManualKeyCommand { get; }
     public ICommand RemoveSelectedKeyCommand { get; }
@@ -356,6 +497,79 @@ public sealed class MainViewModel : ViewModelBase
     {
         if (_tunnel is WinTunnelService w)
             w.LogLine -= OnTunnelLogLine;
+        _health?.Dispose();
+    }
+
+    private void OnAutoSwitchKey(VpnKey key)
+    {
+        // Вызывается из фонового потока KeyHealthMonitor
+        var app = System.Windows.Application.Current;
+        if (app is null) return;
+        app.Dispatcher.BeginInvoke(new Action(async () =>
+        {
+            try
+            {
+                var same = SelectedKey?.Id == key.Id
+                    && _tunnel.State is TunnelConnectionState.Connected;
+                if (same) return;
+                SelectedKey = key;
+                if (!AutoSelectMode) return;
+                if (_tunnel.State is TunnelConnectionState.Connected
+                    or TunnelConnectionState.Connecting
+                    or TunnelConnectionState.Reconnecting)
+                {
+                    await _tunnel.DisconnectAsync();
+                }
+                await _tunnel.ConnectAsync(key);
+            }
+            catch (Exception ex)
+            {
+                FileLogger.Error("autoSwitch", ex);
+            }
+            finally
+            {
+                OnPropertyChanged(nameof(AutoStatusLine));
+            }
+        }));
+    }
+
+    private void RegisterUrlScheme()
+    {
+        try
+        {
+            UrlSchemeRegistrar.Register();
+            UrlSchemeRegistered = UrlSchemeRegistrar.IsRegistered();
+        }
+        catch (Exception ex)
+        {
+            FileLogger.Error("urlScheme.user", ex);
+        }
+    }
+
+    private static void OpenUrl(string url)
+    {
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            FileLogger.Error("openUrl", ex);
+        }
+    }
+
+    private void CopyTunnelLogToClipboard()
+    {
+        try
+        {
+            var text = string.Join(Environment.NewLine, TunnelLog);
+            if (!string.IsNullOrEmpty(text))
+                Clipboard.SetText(text);
+        }
+        catch (Exception ex)
+        {
+            FileLogger.Error("clipboard.copy", ex);
+        }
     }
 
     private void OnTunnelLogLine(object? _, TunnelLogEventArgs e)
@@ -410,6 +624,8 @@ public sealed class MainViewModel : ViewModelBase
             SelectedKey = Keys.FirstOrDefault();
             _persistSuspended = false;
         }
+        OnPropertyChanged(nameof(KeysCountDisplay));
+        (PingAllKeysCommand as RelayCommand)?.RaiseCanExecuteChanged();
         Persist();
     }
     private void OnSubscriptionsChanged(object? _, NotifyCollectionChangedEventArgs __) => Persist();

@@ -143,7 +143,11 @@ public static class ShareLinkParser
             ServiceName = q.Get("serviceName") ?? q.Get("path"),
             HeaderType = q.Get("headerType"),
             Encryption = q.Get("encryption") ?? "none",
-            AllowInsecure = ParseBool(q.Get("allowInsecure"))
+            AllowInsecure = ParseBool(q.Get("allowInsecure")),
+            XhttpMode = q.Get("mode"),
+            XhttpExtra = q.Get("extra"),
+            Seed = q.Get("seed"),
+            Congestion = ParseBoolNullable(q.Get("congestion"))
         };
     }
 
@@ -208,7 +212,11 @@ public static class ShareLinkParser
             HttpHost = q.Get("host"),
             ServiceName = q.Get("serviceName") ?? q.Get("path"),
             HeaderType = q.Get("headerType"),
-            AllowInsecure = ParseBool(q.Get("allowInsecure"))
+            AllowInsecure = ParseBool(q.Get("allowInsecure")),
+            XhttpMode = q.Get("mode"),
+            XhttpExtra = q.Get("extra"),
+            Seed = q.Get("seed"),
+            Congestion = ParseBoolNullable(q.Get("congestion"))
         };
     }
 
@@ -426,4 +434,6 @@ public static class ShareLinkParser
     private static string? NullIfEmpty(string? s) => string.IsNullOrWhiteSpace(s) ? null : s;
     private static bool ParseBool(string? s) =>
         s is not null && (s.Equals("true", StringComparison.OrdinalIgnoreCase) || s == "1");
+    private static bool? ParseBoolNullable(string? s) =>
+        s is null ? null : (s.Equals("true", StringComparison.OrdinalIgnoreCase) || s == "1");
 }

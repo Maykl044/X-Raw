@@ -28,6 +28,15 @@ public sealed record ShareLink
     public string? Method { get; init; }
     public bool AllowInsecure { get; init; }
     public string Raw { get; init; } = "";
+
+    /// <summary>XHTTP режим: packet-up / packet-down / stream-one / stream-up / auto.</summary>
+    public string? XhttpMode { get; init; }
+    /// <summary>XHTTP/splithttp дополнительные параметры (extra JSON).</summary>
+    public string? XhttpExtra { get; init; }
+    /// <summary>seed для mKCP transport.</summary>
+    public string? Seed { get; init; }
+    /// <summary>congestion для mKCP (true/false).</summary>
+    public bool? Congestion { get; init; }
 }
 
 public enum KeyKind

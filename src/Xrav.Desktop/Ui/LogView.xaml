@@ -1,0 +1,75 @@
+<UserControl x:Class="Xrav.Desktop.Ui.LogView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:loc="clr-namespace:Xrav.Desktop.Localization"
+             xmlns:ui="clr-namespace:Xrav.Desktop.Ui"
+             mc:Ignorable="d"
+             d:DesignHeight="600" d:DesignWidth="500">
+  <UserControl.Resources>
+    <ui:LogLineToColorConverter x:Key="LogColor" />
+  </UserControl.Resources>
+  <Grid Margin="20,4,20,8">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+
+    <Grid Grid.Row="0">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+      <StackPanel>
+        <TextBlock Style="{StaticResource X.Text.H2}"
+                   Text="{loc:T log.title}" />
+        <TextBlock Style="{StaticResource X.Text.Caption}" Margin="0,2,0,0"
+                   Text="xray · sing-box · hev-socks5-tunnel" />
+      </StackPanel>
+      <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
+        <Button Content="{loc:T log.copy}"  Command="{Binding CopyTunnelLogCommand}"  Style="{StaticResource X.Btn.Ghost}" Margin="0,0,8,0" />
+        <Button Content="{loc:T log.clear}" Command="{Binding ClearTunnelLogCommand}" Style="{StaticResource X.Btn.Ghost}" />
+      </StackPanel>
+    </Grid>
+
+    <Border Grid.Row="1" Margin="0,12,0,0"
+            Background="{StaticResource X.Brush.CanvasMid}"
+            BorderBrush="{StaticResource X.Brush.OutlineSoft}" BorderThickness="1"
+            CornerRadius="14" Padding="6">
+      <Grid>
+        <ListBox ItemsSource="{Binding TunnelLog}"
+                 Background="Transparent" BorderThickness="0"
+                 ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto">
+          <ListBox.ItemContainerStyle>
+            <Style TargetType="ListBoxItem">
+              <Setter Property="Background" Value="Transparent" />
+              <Setter Property="BorderThickness" Value="0" />
+              <Setter Property="Padding" Value="4,1" />
+              <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+              <Setter Property="Template">
+                <Setter.Value>
+                  <ControlTemplate TargetType="ListBoxItem">
+                    <ContentPresenter Margin="{TemplateBinding Padding}" />
+                  </ControlTemplate>
+                </Setter.Value>
+              </Setter>
+            </Style>
+          </ListBox.ItemContainerStyle>
+          <ListBox.ItemTemplate>
+            <DataTemplate>
+              <TextBlock Text="{Binding}" FontFamily="Consolas" FontSize="11"
+                         TextWrapping="Wrap"
+                         Foreground="{Binding Converter={StaticResource LogColor}}" />
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+        <TextBlock Text="{loc:T log.empty}" Foreground="{StaticResource X.Brush.TextMuted}"
+                   FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"
+                   TextWrapping="Wrap" Margin="20"
+                   Visibility="{Binding TunnelLog.Count, Converter={StaticResource ZeroToVisible}}" />
+      </Grid>
+    </Border>
+  </Grid>
+</UserControl>
