@@ -27,28 +27,49 @@ public sealed record VpnKey(
     public string ShortProtocolLabel => Protocol.ShortLabel();
 
     /// <summary>
-    /// Бейдж слева от имени ключа: если в Remark есть emoji-флаг страны (regional
-    /// indicator pair, U+1F1E6..U+1F1FF), показываем флаг; иначе короткое имя протокола.
+    /// Бейдж слева от имени ключа: ISO-2 код страны (FI/RU/DE/…) если в Remark
+    /// найден regional-indicator pair, иначе короткое имя протокола.
     /// </summary>
-    public string DisplayBadge => FlagExtractor.TryExtract(Remark) ?? Protocol.ShortLabel();
+    public string DisplayBadge => FlagExtractor.TryExtractCode(Remark) ?? Protocol.ShortLabel();
 
-    /// <summary>true если бейдж — это эмодзи-флаг (рендерится крупнее, без фона).</summary>
-    public bool BadgeIsFlag => FlagExtractor.TryExtract(Remark) is not null;
+    /// <summary>Сам эмодзи-флаг (для тултипа), null если нет.</summary>
+    public string? FlagEmoji => FlagExtractor.TryExtractEmoji(Remark);
+
+    /// <summary>true если бейдж — это код страны (а не имя протокола).</summary>
+    public bool BadgeIsFlag => FlagExtractor.TryExtractCode(Remark) is not null;
 
     public string Subtitle => $"{ShortProtocolLabel} · {Host ?? "—"}";
     public string LatencyDisplay => LatencyMs is null ? "—" : $"{LatencyMs} мс";
 }
 
 /// <summary>
-/// Достаём emoji-флаг из remark.  Флаг = пара кодпоинтов из диапазона
-/// regional indicator (U+1F1E6..U+1F1FF), напр. 🇫🇮 = U+1F1EB U+1F1EE.
-/// Также распознаём ⚑ (U+2691) и тп.
+/// Достаём флаг-страну из remark. Regional-indicator pair = две буквы из диапазона
+/// U+1F1E6..U+1F1FF (соответствуют 'A'..'Z'). Возвращаем либо ISO-2 код (FI),
+/// либо сам эмодзи (🇫🇮).
 /// </summary>
 public static class FlagExtractor
 {
-    public static string? TryExtract(string? text)
+    public static string? TryExtractEmoji(string? text)
     {
-        if (string.IsNullOrEmpty(text)) return null;
+        var idx = FindFlagIndex(text);
+        return idx >= 0 ? text!.Substring(idx, 4) : null;
+    }
+
+    public static string? TryExtractCode(string? text)
+    {
+        var idx = FindFlagIndex(text);
+        if (idx < 0) return null;
+        int cp1 = char.ConvertToUtf32(text!, idx);
+        int cp2 = char.ConvertToUtf32(text!, idx + 2);
+        return new string(new[] {
+            (char)('A' + (cp1 - 0x1F1E6)),
+            (char)('A' + (cp2 - 0x1F1E6))
+        });
+    }
+
+    private static int FindFlagIndex(string? text)
+    {
+        if (string.IsNullOrEmpty(text)) return -1;
         int i = 0;
         while (i + 3 < text.Length)
         {
@@ -59,14 +80,13 @@ public static class FlagExtractor
                     && char.IsHighSurrogate(text[i + 2]) && char.IsLowSurrogate(text[i + 3]))
                 {
                     int cp2 = char.ConvertToUtf32(text, i + 2);
-                    if (cp2 >= 0x1F1E6 && cp2 <= 0x1F1FF)
-                        return text.Substring(i, 4);
+                    if (cp2 >= 0x1F1E6 && cp2 <= 0x1F1FF) return i;
                 }
                 i += 2;
             }
             else i++;
         }
-        return null;
+        return -1;
     }
 }
 

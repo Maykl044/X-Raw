@@ -133,9 +133,9 @@
                                   Background="{DynamicResource X.Brush.AccentGrad}" Margin="0,0,10,0"
                                   VerticalAlignment="Center">
                             <TextBlock Text="{Binding DisplayBadge}" Foreground="White"
-                                       FontFamily="Segoe UI Emoji, Segoe UI, Segoe UI Symbol"
-                                       FontWeight="Bold" FontSize="16"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                       FontFamily="Segoe UI" FontWeight="Bold" FontSize="13"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       ToolTip="{Binding FlagEmoji}" />
                           </Border>
                           <StackPanel Grid.Column="1" VerticalAlignment="Center">
                             <TextBlock Text="{Binding Remark}" Foreground="{DynamicResource X.Brush.Text}"
