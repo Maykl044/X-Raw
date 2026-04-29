@@ -34,7 +34,7 @@ public static class XrayConfigBuilder
         outbounds.Add(DirectOutbound());
         outbounds.Add(BlockOutbound());
 
-        // Metrics outbound + dokodemo-door inbound для real-time счётчиков (как у v2rayN).
+        // Metrics outbound + dokodemo-door inbound для real-time счётчиков.
         outbounds.Add(new JsonObject
         {
             ["tag"] = "metrics_out",
@@ -76,9 +76,8 @@ public static class XrayConfigBuilder
 
         if (useFragment)
         {
-            // Цепляем proxy-outbound через fragment-outbound: все исходящие TCP уходят
-            // сначала в fragment (xray freedom + fragment{tlshello}), который рвёт
-            // TLS-ClientHello на куски — DPI теряет SNI и пропускает пакет.
+            // Цепляем proxy-outbound через fragment-outbound: исходящие TCP идут сначала
+            // в fragment (xray freedom + fragment{tlshello}), который рвёт TLS-ClientHello.
             var ss = ob["streamSettings"] as JsonObject;
             if (ss is not null)
             {
@@ -88,9 +87,8 @@ public static class XrayConfigBuilder
             }
         }
 
-        // Mux в формате v2rayN: объект всегда присутствует (с enabled=false по умолчанию),
-        // включаем только если явно запрошено и протокол это допускает. xudpConcurrency / xudpProxyUDP443
-        // пишем всегда — xray-core их спокойно принимает без эффекта если mux off.
+        // Mux: блок всегда присутствует (enabled=false по умолчанию), включается только
+        // когда запрошено и протокол это допускает. xudpConcurrency пишем всегда.
         var canMux = opts.EnableMux
                      && link.Kind is KeyKind.Vless or KeyKind.VMess or KeyKind.Trojan
                      && !string.Equals(link.Flow, "xtls-rprx-vision", StringComparison.OrdinalIgnoreCase);
@@ -152,7 +150,6 @@ public static class XrayConfigBuilder
                 ["delay"] = opts.NoiseDelay
             };
         }
-        // Формат v2rayN: streamSettings.network=raw, sockopt.TcpNoDelay=true, sockopt.mark=255.
         return new JsonObject
         {
             ["tag"] = FragmentOutboundTag,
@@ -340,7 +337,7 @@ public static class XrayConfigBuilder
                     };
                     if (!string.IsNullOrEmpty(l.HttpHost))
                     {
-                        // Формат v2rayN: только headers.Host (без дублирования в wsSettings.host — xray-core этого не ждёт).
+                        // Только headers.Host — без дублирования в wsSettings.host.
                         ws["headers"] = new JsonObject { ["Host"] = l.HttpHost };
                     }
                     if (maxEarlyData > 0)

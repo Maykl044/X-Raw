@@ -38,3 +38,23 @@ public sealed class TunnelStateToPowerBrushConverter : IValueConverter
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         => throw new NotSupportedException();
 }
+
+public sealed class TunnelStateMatchConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (value is not TunnelConnectionState st || parameter is not string p) return false;
+        return p switch
+        {
+            "Disconnected" => st == TunnelConnectionState.Disconnected,
+            "Connecting"   => st is TunnelConnectionState.Connecting or TunnelConnectionState.Reconnecting,
+            "Connected"    => st == TunnelConnectionState.Connected,
+            "Error"        => st == TunnelConnectionState.Error,
+            "Idle"         => st is TunnelConnectionState.Disconnected or TunnelConnectionState.Error,
+            _ => false
+        };
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}

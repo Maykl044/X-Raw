@@ -13,7 +13,7 @@ public sealed record XrayBuildOptions(
     string FragmentLength = "3",
     string FragmentInterval = "1",
     string FragmentMaxSplit = "100-200",
-    // Mux по умолчанию ВЫКЛЮЧЕН (как у v2rayN). Включается явно пользователем.
+    // Mux выключен по умолчанию — включается явно через настройки обхода.
     bool EnableMux = false,
     int MuxConcurrency = -1,
     int XudpConcurrency = 8,
