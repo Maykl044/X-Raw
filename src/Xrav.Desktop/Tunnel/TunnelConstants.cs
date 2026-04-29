@@ -7,5 +7,5 @@ public static class TunnelConstants
     public const int TunMtu = 1500;
     public const string TunIpv4Client = "10.10.14.1";
     public const int UserLevel = 8;
-    public const string XraySocksInboundTag = "socks-in";
+    public const string XraySocksInboundTag = "socks";
 }

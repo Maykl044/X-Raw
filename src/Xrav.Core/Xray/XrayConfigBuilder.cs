@@ -11,7 +11,7 @@ namespace Xrav.Core.Xray;
 public static class XrayConfigBuilder
 {
     public const int DefaultSocksInboundPort = 10808;
-    public const string SocksInboundTag = "socks-in";
+    public const string SocksInboundTag = "socks";
     public const string ProxyOutboundTag = "proxy";
     public const string DirectOutboundTag = "direct";
     public const string BlockOutboundTag = "block";
@@ -34,13 +34,29 @@ public static class XrayConfigBuilder
         outbounds.Add(DirectOutbound());
         outbounds.Add(BlockOutbound());
 
+        // Metrics outbound + dokodemo-door inbound для real-time счётчиков (как у v2rayN).
+        outbounds.Add(new JsonObject
+        {
+            ["tag"] = "metrics_out",
+            ["protocol"] = "freedom",
+            ["settings"] = new JsonObject()
+        });
+
+        var inbounds = new JsonArray(
+            SocksInbound(socksInboundPort),
+            HttpInbound(socksInboundPort + 1),
+            MetricsInbound(11111));
+
         var root = new JsonObject
         {
             ["log"] = new JsonObject { ["loglevel"] = "warning" },
             ["dns"] = DefaultDns(),
-            ["inbounds"] = new JsonArray(SocksInbound(socksInboundPort)),
+            ["inbounds"] = inbounds,
             ["outbounds"] = outbounds,
-            ["routing"] = DefaultRouting()
+            ["routing"] = DefaultRouting(),
+            ["policy"] = DefaultPolicy(),
+            ["stats"] = new JsonObject(),
+            ["metrics"] = new JsonObject { ["tag"] = "metrics_out" }
         };
         return root.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
     }
@@ -72,19 +88,19 @@ public static class XrayConfigBuilder
             }
         }
 
-        // Mux.cool — мультиплексирует несколько TCP-стримов в одном канале. Не работает
-        // для Shadowsocks и для VLESS с xtls-rprx-vision.
+        // Mux в формате v2rayN: объект всегда присутствует (с enabled=false по умолчанию),
+        // включаем только если явно запрошено и протокол это допускает. xudpConcurrency / xudpProxyUDP443
+        // пишем всегда — xray-core их спокойно принимает без эффекта если mux off.
         var canMux = opts.EnableMux
                      && link.Kind is KeyKind.Vless or KeyKind.VMess or KeyKind.Trojan
                      && !string.Equals(link.Flow, "xtls-rprx-vision", StringComparison.OrdinalIgnoreCase);
-        if (canMux)
+        ob["mux"] = new JsonObject
         {
-            ob["mux"] = new JsonObject
-            {
-                ["enabled"] = true,
-                ["concurrency"] = opts.MuxConcurrency
-            };
-        }
+            ["enabled"] = canMux,
+            ["concurrency"] = canMux ? opts.MuxConcurrency : -1,
+            ["xudpConcurrency"] = opts.XudpConcurrency,
+            ["xudpProxyUDP443"] = opts.XudpProxyUDP443
+        };
 
         return ob;
     }
@@ -115,20 +131,20 @@ public static class XrayConfigBuilder
 
     private static JsonObject BuildFragmentOutbound(XrayBuildOptions opts)
     {
+        var fragment = new JsonObject
+        {
+            ["packets"] = opts.FragmentPackets,
+            ["length"] = opts.FragmentLength,
+            ["interval"] = opts.FragmentInterval
+        };
+        if (!string.IsNullOrEmpty(opts.FragmentMaxSplit))
+            fragment["maxSplit"] = opts.FragmentMaxSplit;
         var settings = new JsonObject
         {
-            ["domainStrategy"] = "AsIs",
-            ["fragment"] = new JsonObject
-            {
-                ["packets"] = opts.FragmentPackets,
-                ["length"] = opts.FragmentLength,
-                ["interval"] = opts.FragmentInterval
-            }
+            ["fragment"] = fragment
         };
         if (opts.EnableNoise)
         {
-            // Mihomo/xray noise: рандомные пакеты до handshake. Экспериментально, помогает
-            // когда DPI блокирует по таймингу TLS handshake.
             settings["noise"] = new JsonObject
             {
                 ["type"] = "rand",
@@ -136,6 +152,7 @@ public static class XrayConfigBuilder
                 ["delay"] = opts.NoiseDelay
             };
         }
+        // Формат v2rayN: streamSettings.network=raw, sockopt.TcpNoDelay=true, sockopt.mark=255.
         return new JsonObject
         {
             ["tag"] = FragmentOutboundTag,
@@ -143,31 +160,43 @@ public static class XrayConfigBuilder
             ["settings"] = settings,
             ["streamSettings"] = new JsonObject
             {
-                ["sockopt"] = new JsonObject { ["tcpKeepAliveIdle"] = 100 }
+                ["network"] = "raw",
+                ["security"] = "",
+                ["sockopt"] = new JsonObject
+                {
+                    ["TcpNoDelay"] = true,
+                    ["mark"] = 255
+                }
             }
         };
     }
 
-    private static JsonObject BuildVlessOutbound(ShareLink l) => new()
+    private static JsonObject BuildVlessOutbound(ShareLink l)
     {
-        ["tag"] = ProxyOutboundTag,
-        ["protocol"] = "vless",
-        ["settings"] = new JsonObject
+        var user = new JsonObject
         {
-            ["vnext"] = new JsonArray(new JsonObject
+            ["id"] = l.UserId ?? "",
+            ["encryption"] = l.Encryption ?? "none",
+            ["level"] = 8,
+            ["security"] = "auto"
+        };
+        if (!string.IsNullOrEmpty(l.Flow)) user["flow"] = l.Flow!;
+        return new JsonObject
+        {
+            ["tag"] = ProxyOutboundTag,
+            ["protocol"] = "vless",
+            ["settings"] = new JsonObject
             {
-                ["address"] = l.Host,
-                ["port"] = l.Port,
-                ["users"] = new JsonArray(new JsonObject
+                ["vnext"] = new JsonArray(new JsonObject
                 {
-                    ["id"] = l.UserId ?? "",
-                    ["encryption"] = l.Encryption ?? "none",
-                    ["flow"] = l.Flow ?? ""
+                    ["address"] = l.Host,
+                    ["port"] = l.Port,
+                    ["users"] = new JsonArray(user)
                 })
-            })
-        },
-        ["streamSettings"] = BuildStreamSettings(l)
-    };
+            },
+            ["streamSettings"] = BuildStreamSettings(l)
+        };
+    }
 
     private static JsonObject BuildVmessOutbound(ShareLink l) => new()
     {
@@ -183,7 +212,8 @@ public static class XrayConfigBuilder
                 {
                     ["id"] = l.UserId ?? "",
                     ["alterId"] = 0,
-                    ["security"] = string.IsNullOrEmpty(l.Encryption) ? "auto" : l.Encryption
+                    ["security"] = string.IsNullOrEmpty(l.Encryption) ? "auto" : l.Encryption,
+                    ["level"] = 8
                 })
             })
         },
@@ -283,8 +313,10 @@ public static class XrayConfigBuilder
             case "ws":
             case "websocket":
                 {
-                    // Парсим Early-Data из path: «/jarvic?ed=2048» → path=«/jarvic», maxEarlyData=2048
-                    var path = string.IsNullOrEmpty(l.Path) ? "/" : l.Path;
+                    // Сохраняем path КАК ЕСТЬ из share-link (вкл. пустую строку) — некоторые CDN-backendы
+                    // (b-cdn.net, fly.io и др.) требуют пустой path и отвергают Upgrade /. Это поведение
+                    // v2rayN, который референсный клиент для этих ключей.
+                    var path = l.Path ?? "";
                     int maxEarlyData = 0;
                     var qIdx = path.IndexOf('?');
                     if (qIdx >= 0)
@@ -308,14 +340,11 @@ public static class XrayConfigBuilder
                     };
                     if (!string.IsNullOrEmpty(l.HttpHost))
                     {
-                        // xray v25.x принимает оба варианта — пишем оба для совместимости
-                        ws["host"] = l.HttpHost;
+                        // Формат v2rayN: только headers.Host (без дублирования в wsSettings.host — xray-core этого не ждёт).
                         ws["headers"] = new JsonObject { ["Host"] = l.HttpHost };
                     }
                     if (maxEarlyData > 0)
                     {
-                        // Early-Data: первые N байт payload улетают в Sec-WebSocket-Protocol header.
-                        // Используется для обхода DPI и ускорения handshake.
                         ws["maxEarlyData"] = maxEarlyData;
                         ws["earlyDataHeaderName"] = "Sec-WebSocket-Protocol";
                     }
@@ -440,10 +469,58 @@ public static class XrayConfigBuilder
         },
         ["sniffing"] = new JsonObject
         {
-            ["enabled"] = true,
-            ["destOverride"] = new JsonArray("http", "tls", "quic"),
-            ["metadataOnly"] = false,
-            ["routeOnly"] = false
+            ["enabled"] = false,
+            ["destOverride"] = new JsonArray()
+        }
+    };
+
+    public static JsonObject HttpInbound(int port) => new()
+    {
+        ["tag"] = "http",
+        ["listen"] = "127.0.0.1",
+        ["port"] = port,
+        ["protocol"] = "http",
+        ["settings"] = new JsonObject { ["userLevel"] = 8 },
+        ["sniffing"] = new JsonObject
+        {
+            ["enabled"] = false,
+            ["destOverride"] = new JsonArray()
+        }
+    };
+
+    public static JsonObject MetricsInbound(int port) => new()
+    {
+        ["tag"] = "metrics_in",
+        ["listen"] = "127.0.0.1",
+        ["port"] = port,
+        ["protocol"] = "dokodemo-door",
+        ["settings"] = new JsonObject { ["address"] = "127.0.0.1" }
+    };
+
+    /// <summary>Политика handshake/idle (в формате v2rayN).</summary>
+    public static JsonObject DefaultPolicy() => new()
+    {
+        ["levels"] = new JsonObject
+        {
+            ["0"] = new JsonObject
+            {
+                ["statsUserDownlink"] = true,
+                ["statsUserUplink"] = true
+            },
+            ["8"] = new JsonObject
+            {
+                ["connIdle"] = 300,
+                ["downlinkOnly"] = 1,
+                ["handshake"] = 4,
+                ["uplinkOnly"] = 1
+            }
+        },
+        ["system"] = new JsonObject
+        {
+            ["statsInboundDownlink"] = true,
+            ["statsInboundUplink"] = true,
+            ["statsOutboundDownlink"] = true,
+            ["statsOutboundUplink"] = true
         }
     };
 
@@ -462,18 +539,30 @@ public static class XrayConfigBuilder
     };
 
     /// <summary>
-    /// DNS: DoH (1.1.1.1) + DoT (8.8.8.8) + plain UDP fallback. Обходит подмену DNS у провайдеров,
-    /// при этом структурно совместим с любой версией geosite.dat (без фильтров domains/expectIPs).
+    /// DNS в формате v2rayN: 1.1.1.1 как основной + 8.8.8.8 как fallback, с queryStrategy=UseIP
+    /// и hosts-маппингом googleapis.cn → googleapis.com (стандартный bypass для китайских доменов).
     /// </summary>
     public static JsonObject DefaultDns() => new()
     {
+        ["hosts"] = new JsonObject
+        {
+            ["domain:googleapis.cn"] = "googleapis.com"
+        },
+        ["queryStrategy"] = "UseIP",
         ["servers"] = new JsonArray(
-            "https://1.1.1.1/dns-query",
-            "https://dns.google/dns-query",
             "1.1.1.1",
-            "8.8.8.8"
-        ),
-        ["queryStrategy"] = "UseIP"
+            new JsonObject
+            {
+                ["address"] = "1.1.1.1",
+                ["domains"] = new JsonArray(),
+                ["port"] = 53
+            },
+            new JsonObject
+            {
+                ["address"] = "8.8.8.8",
+                ["domains"] = new JsonArray(),
+                ["port"] = 53
+            })
     };
 
     public static JsonObject DefaultRouting() => new()
@@ -482,18 +571,26 @@ public static class XrayConfigBuilder
         ["rules"] = new JsonArray(
             new JsonObject
             {
-                ["type"] = "field",
-                ["ip"] = new JsonArray(
-                    "127.0.0.0/8", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16",
-                    "::1/128", "fc00::/7", "fe80::/10"),
-                ["outboundTag"] = DirectOutboundTag
+                ["inboundTag"] = new JsonArray("metrics_in"),
+                ["outboundTag"] = "metrics_out"
             },
             new JsonObject
             {
-                ["type"] = "field",
                 ["inboundTag"] = new JsonArray(SocksInboundTag),
                 ["outboundTag"] = ProxyOutboundTag,
-                ["network"] = "tcp,udp"
+                ["port"] = "53"
+            },
+            new JsonObject
+            {
+                ["ip"] = new JsonArray("1.1.1.1"),
+                ["outboundTag"] = ProxyOutboundTag,
+                ["port"] = "53"
+            },
+            new JsonObject
+            {
+                ["ip"] = new JsonArray("8.8.8.8"),
+                ["outboundTag"] = DirectOutboundTag,
+                ["port"] = "53"
             })
     };
 }

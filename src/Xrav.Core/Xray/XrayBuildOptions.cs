@@ -8,10 +8,16 @@ namespace Xrav.Core.Xray;
 public sealed record XrayBuildOptions(
     bool EnableFragment = true,
     string FragmentPackets = "tlshello",
-    string FragmentLength = "10-20",
-    string FragmentInterval = "10-20",
-    bool EnableMux = true,
-    int MuxConcurrency = 8,
+    // Дефолты подобраны под v2rayN: 3 фрагмента по 100-200 байт с интервалом 1мс — рвём
+    // ClientHello достаточно мелко для DPI, но без существенного оверхеда.
+    string FragmentLength = "3",
+    string FragmentInterval = "1",
+    string FragmentMaxSplit = "100-200",
+    // Mux по умолчанию ВЫКЛЮЧЕН (как у v2rayN). Включается явно пользователем.
+    bool EnableMux = false,
+    int MuxConcurrency = -1,
+    int XudpConcurrency = 8,
+    string XudpProxyUDP443 = "",
     bool EnableNoise = false,
     string NoisePacket = "10-20",
     string NoiseDelay = "10-20"
