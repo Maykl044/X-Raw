@@ -89,6 +89,30 @@ public static class XrayConfigBuilder
         return ob;
     }
 
+    /// <summary>
+    /// Нормализует ALPN-список из share-link: lower-case, trim, отбрасываем пустые и неизвестные;
+    /// если передан h3 для не-QUIC транспорта (xhttp/ws/tcp/h2/grpc) — пишем warning в лог
+    /// (h3 = QUIC = UDP, xray client transport идёт поверх TCP, сервер должен поддерживать h2/h1).
+    /// </summary>
+    private static JsonArray? NormalizeAlpn(string? raw, string network)
+    {
+        if (string.IsNullOrWhiteSpace(raw)) return null;
+        var allowed = new HashSet<string> { "h2", "http/1.1", "h3" };
+        var items = raw.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                       .Select(s => s.Trim().ToLowerInvariant())
+                       .Where(s => allowed.Contains(s))
+                       .Distinct()
+                       .ToArray();
+        if (items.Length == 0) return null;
+        bool isQuicTransport = network == "quic";
+        if (!isQuicTransport && items.Contains("h3"))
+        {
+            try { Console.Error.WriteLine("[xray-config] warning: ALPN h3 указан для не-QUIC транспорта (" + network + ") — сервер должен также поддерживать h2/http1.1, иначе TLS handshake провалится."); }
+            catch { }
+        }
+        return new JsonArray(items.Select(a => (JsonNode)a).ToArray());
+    }
+
     private static JsonObject BuildFragmentOutbound(XrayBuildOptions opts)
     {
         var settings = new JsonObject
@@ -222,8 +246,8 @@ public static class XrayConfigBuilder
             };
             if (!string.IsNullOrEmpty(l.Sni)) tls["serverName"] = l.Sni;
             tls["fingerprint"] = string.IsNullOrEmpty(l.Fingerprint) ? "chrome" : l.Fingerprint;
-            if (!string.IsNullOrEmpty(l.Alpn))
-                tls["alpn"] = new JsonArray(l.Alpn.Split(',').Select(a => (JsonNode)a.Trim()).ToArray());
+            var alpnArr = NormalizeAlpn(l.Alpn, net);
+            if (alpnArr is not null) tls["alpn"] = alpnArr;
             ss["tlsSettings"] = tls;
         }
         else if (sec == "reality")
@@ -234,6 +258,9 @@ public static class XrayConfigBuilder
             if (!string.IsNullOrEmpty(l.PublicKey)) reality["publicKey"] = l.PublicKey;
             if (!string.IsNullOrEmpty(l.ShortId)) reality["shortId"] = l.ShortId;
             if (!string.IsNullOrEmpty(l.SpiderX)) reality["spiderX"] = l.SpiderX;
+            // xray-core REALITY поддерживает alpn — кладём если задан в ссылке.
+            var alpnArr = NormalizeAlpn(l.Alpn, net);
+            if (alpnArr is not null) reality["alpn"] = alpnArr;
             ss["realitySettings"] = reality;
         }
         else if (sec == "xtls")
@@ -245,8 +272,8 @@ public static class XrayConfigBuilder
             };
             if (!string.IsNullOrEmpty(l.Sni)) tls["serverName"] = l.Sni;
             tls["fingerprint"] = string.IsNullOrEmpty(l.Fingerprint) ? "chrome" : l.Fingerprint;
-            if (!string.IsNullOrEmpty(l.Alpn))
-                tls["alpn"] = new JsonArray(l.Alpn.Split(',').Select(a => (JsonNode)a.Trim()).ToArray());
+            var alpnArr = NormalizeAlpn(l.Alpn, net);
+            if (alpnArr is not null) tls["alpn"] = alpnArr;
             ss["security"] = "tls";
             ss["tlsSettings"] = tls;
         }

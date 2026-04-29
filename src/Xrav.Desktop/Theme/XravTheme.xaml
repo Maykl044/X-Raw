@@ -1,6 +1,7 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib"
+                    xmlns:ui="clr-namespace:Xrav.Desktop.Ui">
 
   <!-- =========================================================
        X-Rav · современная тёмная тема (purple-cyan accent)
@@ -234,6 +235,7 @@
 
   <!-- Глобальный BooleanToVisibilityConverter -->
   <BooleanToVisibilityConverter x:Key="BoolToVisHelper" />
+  <ui:InverseBoolToVisibilityConverter x:Key="InverseBoolToVis" />
 
   <!-- TextBox -->
   <Style x:Key="X.TextBox" TargetType="TextBox">

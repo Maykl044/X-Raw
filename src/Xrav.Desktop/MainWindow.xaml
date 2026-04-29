@@ -143,29 +143,97 @@
         </Border>
       </StackPanel>
 
-      <!-- Большая кнопка питания -->
+      <!-- Большая кнопка питания (с Orbot-style анимациями в Smart-режиме) -->
       <StackPanel Grid.Row="2" HorizontalAlignment="Center" Margin="0,14,0,12">
-        <Button Width="140" Height="140" Click="OnPowerClick" ToolTip="{Binding PowerHint}"
-                Background="Transparent" BorderThickness="0" Cursor="Hand">
-          <Button.Template>
-            <ControlTemplate TargetType="Button">
-              <Grid>
-                <Ellipse Width="140" Height="140"
-                         Fill="{Binding TunnelState, Converter={StaticResource StateToPowerBrush}}" />
-                <Ellipse Width="118" Height="118" StrokeThickness="2"
-                         Stroke="{DynamicResource X.Brush.GlassBorder}" Fill="{DynamicResource X.Brush.GlassFill}" />
-                <Ellipse Width="116" Height="116" StrokeThickness="1"
-                         Stroke="{Binding TunnelState, Converter={StaticResource StateToColor}}" Opacity="0.5" />
-                <Viewbox Width="46" Height="46">
-                  <Path Stretch="Uniform"
-                        Stroke="{Binding TunnelState, Converter={StaticResource StateToColor}}"
-                        StrokeThickness="2.4" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
-                        Data="M 12 4 L 12 12 M 6 7 A 8 8 0 1 0 18 7" />
-                </Viewbox>
-              </Grid>
-            </ControlTemplate>
-          </Button.Template>
-        </Button>
+        <Grid Width="200" Height="200" HorizontalAlignment="Center">
+          <!-- Внешний пульсирующий ореол: виден в Smart-режиме когда отключено -->
+          <Ellipse x:Name="SmartIdleAura" Width="180" Height="180" Opacity="0" RenderTransformOrigin="0.5,0.5">
+            <Ellipse.Fill>
+              <RadialGradientBrush>
+                <GradientStop Color="{DynamicResource X.Color.Accent}" Offset="0.55" />
+                <GradientStop Color="#00000000" Offset="1" />
+              </RadialGradientBrush>
+            </Ellipse.Fill>
+            <Ellipse.RenderTransform>
+              <ScaleTransform ScaleX="1" ScaleY="1" />
+            </Ellipse.RenderTransform>
+            <Ellipse.Style>
+              <Style TargetType="Ellipse">
+                <Style.Triggers>
+                  <DataTrigger Binding="{Binding ShowSmartIdleAura}" Value="True">
+                    <DataTrigger.EnterActions>
+                      <BeginStoryboard Name="SmartIdleSb">
+                        <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                          <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                           From="0.10" To="0.55" Duration="0:0:1.6" />
+                          <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                           From="0.85" To="1.05" Duration="0:0:1.6" />
+                          <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                           From="0.85" To="1.05" Duration="0:0:1.6" />
+                        </Storyboard>
+                      </BeginStoryboard>
+                    </DataTrigger.EnterActions>
+                    <DataTrigger.ExitActions>
+                      <StopStoryboard BeginStoryboardName="SmartIdleSb" />
+                    </DataTrigger.ExitActions>
+                  </DataTrigger>
+                </Style.Triggers>
+              </Style>
+            </Ellipse.Style>
+          </Ellipse>
+          <!-- Вращающееся пунктирное кольцо: видно в Smart-режиме когда подключено -->
+          <Ellipse x:Name="SmartActiveRing" Width="172" Height="172" StrokeThickness="2.5"
+                   Stroke="{DynamicResource X.Brush.Accent}"
+                   StrokeDashArray="2 4" Opacity="0" RenderTransformOrigin="0.5,0.5">
+            <Ellipse.RenderTransform>
+              <RotateTransform Angle="0" />
+            </Ellipse.RenderTransform>
+            <Ellipse.Style>
+              <Style TargetType="Ellipse">
+                <Style.Triggers>
+                  <DataTrigger Binding="{Binding ShowSmartActiveRing}" Value="True">
+                    <DataTrigger.EnterActions>
+                      <BeginStoryboard Name="SmartRingSb">
+                        <Storyboard RepeatBehavior="Forever">
+                          <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
+                                           From="0" To="360" Duration="0:0:6" />
+                          <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                           From="0.55" To="0.85" Duration="0:0:2" AutoReverse="True"
+                                           RepeatBehavior="Forever" />
+                        </Storyboard>
+                      </BeginStoryboard>
+                    </DataTrigger.EnterActions>
+                    <DataTrigger.ExitActions>
+                      <StopStoryboard BeginStoryboardName="SmartRingSb" />
+                    </DataTrigger.ExitActions>
+                  </DataTrigger>
+                </Style.Triggers>
+              </Style>
+            </Ellipse.Style>
+          </Ellipse>
+          <!-- Сама кнопка -->
+          <Button Width="140" Height="140" Click="OnPowerClick" ToolTip="{Binding PowerHint}"
+                  Background="Transparent" BorderThickness="0" Cursor="Hand">
+            <Button.Template>
+              <ControlTemplate TargetType="Button">
+                <Grid>
+                  <Ellipse Width="140" Height="140"
+                           Fill="{Binding TunnelState, Converter={StaticResource StateToPowerBrush}}" />
+                  <Ellipse Width="118" Height="118" StrokeThickness="2"
+                           Stroke="{DynamicResource X.Brush.GlassBorder}" Fill="{DynamicResource X.Brush.GlassFill}" />
+                  <Ellipse Width="116" Height="116" StrokeThickness="1"
+                           Stroke="{Binding TunnelState, Converter={StaticResource StateToColor}}" Opacity="0.5" />
+                  <Viewbox Width="46" Height="46">
+                    <Path Stretch="Uniform"
+                          Stroke="{Binding TunnelState, Converter={StaticResource StateToColor}}"
+                          StrokeThickness="2.4" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                          Data="M 12 4 L 12 12 M 6 7 A 8 8 0 1 0 18 7" />
+                  </Viewbox>
+                </Grid>
+              </ControlTemplate>
+            </Button.Template>
+          </Button>
+        </Grid>
         <TextBlock Text="{Binding PowerHint}" Foreground="{DynamicResource X.Brush.TextSoft}"
                    FontSize="12" HorizontalAlignment="Center" Margin="0,8,0,0" TextAlignment="Center" TextWrapping="Wrap" />
         <TextBlock Text="{Binding AutoStatusLine}" Foreground="{DynamicResource X.Brush.Accent2}"

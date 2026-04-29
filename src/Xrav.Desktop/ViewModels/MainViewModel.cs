@@ -116,6 +116,9 @@ public sealed class MainViewModel : ViewModelBase
                     OnPropertyChanged(nameof(TunnelError));
                     OnPropertyChanged(nameof(CanConnect));
                     OnPropertyChanged(nameof(AutoStatusLine));
+                    OnPropertyChanged(nameof(ShowSmartIdleAura));
+                    OnPropertyChanged(nameof(ShowSmartActiveRing));
+                    OnPropertyChanged(nameof(SmartOnly));
                     RaiseAllCanExecute();
                 }
             };
@@ -306,10 +309,28 @@ public sealed class MainViewModel : ViewModelBase
             OnPropertyChanged();
             OnPropertyChanged(nameof(IsManualMode));
             OnPropertyChanged(nameof(AutoStatusLine));
+            OnPropertyChanged(nameof(ShowSmartIdleAura));
+            OnPropertyChanged(nameof(ShowSmartActiveRing));
+            OnPropertyChanged(nameof(SmartOnly));
         }
     }
 
     public bool IsManualMode => !AutoSelectMode;
+
+    /// <summary>В Smart-режиме скрываем список ключей и ввод — главный экран сводится к одной кнопке.</summary>
+    public bool SmartOnly => AutoSelectMode;
+
+    /// <summary>Пульсирующий ореол вокруг кнопки в Smart-режиме когда туннель не активен.</summary>
+    public bool ShowSmartIdleAura =>
+        AutoSelectMode &&
+        TunnelState is TunnelConnectionState.Disconnected or TunnelConnectionState.Error;
+
+    /// <summary>Вращающееся пунктирное кольцо в Smart-режиме когда туннель активен/подключается.</summary>
+    public bool ShowSmartActiveRing =>
+        AutoSelectMode &&
+        TunnelState is TunnelConnectionState.Connecting
+                    or TunnelConnectionState.Connected
+                    or TunnelConnectionState.Reconnecting;
 
     public string AutoStatusLine
     {
@@ -675,12 +696,67 @@ public sealed class MainViewModel : ViewModelBase
         try
         {
             PowerBusy = true;
-            await _tunnel.ConnectAsync(SelectedKey ?? Keys.FirstOrDefault());
+            VpnKey? target = SelectedKey ?? Keys.FirstOrDefault();
+            if (AutoSelectMode && Keys.Count > 0)
+            {
+                target = await PickSmartKeyAsync().ConfigureAwait(true) ?? target;
+                if (target is not null) SelectedKey = target;
+            }
+            await _tunnel.ConnectAsync(target);
         }
         finally
         {
             PowerBusy = false;
         }
+    }
+
+    /// <summary>
+    /// Smart-выбор: предпочитаем ключи импортированные из подписок,
+    /// сортируем по latency (если уже измерен), и выбираем первый с успешным TCP+TLS handshake.
+    /// Если живых нет — возвращаем лучший по latency без handshake.
+    /// </summary>
+    private async Task<VpnKey?> PickSmartKeyAsync()
+    {
+        VpnKey[] candidates;
+        candidates = Keys
+            .OrderBy(k => string.IsNullOrEmpty(k.SubscriptionId) ? 1 : 0) // сначала из подписки
+            .ThenBy(k => k.LatencyMs ?? int.MaxValue)
+            .ToArray();
+        if (candidates.Length == 0) return null;
+
+        // Если латентности нет ни у кого — быстрый параллельный пинг top-N=8
+        bool noLatencies = candidates.All(k => k.LatencyMs is null);
+        if (noLatencies)
+        {
+            var top = candidates.Take(8).ToArray();
+            await Task.WhenAll(top.Select(async k =>
+            {
+                try
+                {
+                    var ms = await Tools.PingTester.MeasureAsync(k).ConfigureAwait(false);
+                    UpdateKeyLatency(k, ms);
+                }
+                catch { /* ignore */ }
+            })).ConfigureAwait(false);
+            candidates = candidates
+                .OrderBy(k => string.IsNullOrEmpty(k.SubscriptionId) ? 1 : 0)
+                .ThenBy(k => k.LatencyMs ?? int.MaxValue)
+                .ToArray();
+        }
+
+        // Пробуем TCP+TLS handshake для топ-3 — берём первый успешный
+        foreach (var k in candidates.Take(3))
+        {
+            try
+            {
+                var (ok, _, _) = await Services.HandshakeProbe.ProbeAsync(k, TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+                if (ok) return k;
+            }
+            catch { /* пропускаем */ }
+        }
+
+        // Fallback — лучший по latency
+        return candidates.FirstOrDefault();
     }
 
     private async void Disconnect()
