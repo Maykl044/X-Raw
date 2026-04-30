@@ -118,6 +118,7 @@ public sealed class MainViewModel : ViewModelBase
                     OnPropertyChanged(nameof(PowerHint));
                     OnPropertyChanged(nameof(TunnelError));
                     OnPropertyChanged(nameof(CanConnect));
+                    OnPropertyChanged(nameof(IsConnected));
                     OnPropertyChanged(nameof(AutoStatusLine));
                     OnPropertyChanged(nameof(ShowSmartIdleAura));
                     OnPropertyChanged(nameof(ShowSmartActiveRing));
@@ -416,6 +417,7 @@ public sealed class MainViewModel : ViewModelBase
         }
     }
     public bool CanConnect => _tunnel.State is TunnelConnectionState.Disconnected or TunnelConnectionState.Error;
+    public bool IsConnected => _tunnel.State is TunnelConnectionState.Connected;
     public bool PowerBusy
     {
         get => _powerBusy;
@@ -908,24 +910,27 @@ public sealed class MainViewModel : ViewModelBase
 
     private async Task CheckHandshakeAsync(VpnKey? key)
     {
-        if (key is null) return;
+        if (key is null)
+        {
+            ShowToast("Не выбран ключ для проверки", "error");
+            return;
+        }
         if (string.IsNullOrEmpty(key.Host) || key.Port is null or <= 0)
         {
-            EmitTunnelLog("handshake", $"Ключ '{key.Remark}': нет host/port в конфиге.");
+            ShowToast($"Ключ «{key.Remark}»: нет host/port в конфиге", "error");
             return;
         }
         PingBusy = true;
+        ShowToast($"Проверяю «{key.Remark}»…", "info", 30);
         try
         {
             var (ok, ms, detail) = await Services.HandshakeProbe.ProbeAsync(key, TimeSpan.FromSeconds(8));
             var status = ok ? "✓ OK" : "✗ FAIL";
             EmitTunnelLog("handshake", $"{status} {ms} мс · {key.Remark}: {detail}");
-            // Покажем результат пользователю кратко в MessageBox.
-            System.Windows.MessageBox.Show(
-                $"{status}  ({ms} мс)\n\n{detail}",
-                $"Рукопожатие · {key.Remark}",
-                System.Windows.MessageBoxButton.OK,
-                ok ? System.Windows.MessageBoxImage.Information : System.Windows.MessageBoxImage.Warning);
+            if (ok)
+                ShowToast($"Соединение работает · {ms} мс · {key.Remark}", "success", 5);
+            else
+                ShowToast($"Handshake не прошёл ({ms} мс): {detail}", "error", 7);
         }
         finally
         {

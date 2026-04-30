@@ -127,8 +127,6 @@
                 Visibility="{Binding SmartOnly, Converter={StaticResource InverseBoolToVis}}">
       <Button Content="Пинг" Command="{Binding PingSelectedKeyCommand}" Style="{StaticResource X.Btn.Ghost}" Margin="0,0,8,0"
               ToolTip="TCP-проверка доступности сервера" />
-      <Button Content="Рукопожатие" Command="{Binding CheckHandshakeCommand}" Style="{StaticResource X.Btn.Ghost}" Margin="0,0,8,0"
-              ToolTip="Реальная проверка TLS / Reality / SNI рукопожатия с сервером ключа" />
       <Button Content="Удалить" Command="{Binding RemoveSelectedKeyCommand}" Style="{StaticResource X.Btn.Danger}" />
     </StackPanel>
   </Grid>
