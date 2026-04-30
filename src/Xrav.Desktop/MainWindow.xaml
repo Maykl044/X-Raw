@@ -5,7 +5,7 @@
         xmlns:loc="clr-namespace:Xrav.Desktop.Localization"
         Title="X-Rav"
         Icon="Assets/X-Rav.ico"
-        Height="820" Width="500" MinWidth="440" MinHeight="640"
+        Height="760" Width="500" MinWidth="380" MinHeight="560"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource X.Brush.Bg}"
         TextOptions.TextFormattingMode="Display">
@@ -108,15 +108,23 @@
           <TextBlock Text="X-Rav" Foreground="{DynamicResource X.Brush.Text}" FontWeight="Bold"
                      FontSize="20" Margin="10,0,0,0" VerticalAlignment="Center" />
         </StackPanel>
-        <Border Grid.Column="1" Background="{DynamicResource X.Brush.GlassFill}" CornerRadius="14"
-                BorderBrush="{DynamicResource X.Brush.GlassBorder}" BorderThickness="1" Padding="10,5">
-          <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-            <Ellipse Width="8" Height="8" Margin="0,0,8,0" VerticalAlignment="Center"
-                     Fill="{Binding TunnelState, Converter={StaticResource StateToColor}}" />
-            <TextBlock Text="{Binding TunnelStateDisplay}" Foreground="{DynamicResource X.Brush.Text}"
-                       FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" />
-          </StackPanel>
-        </Border>
+        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+          <Button x:Name="RefreshSubBtn" Command="{Binding RefreshActiveSubscriptionCommand}"
+                  Style="{StaticResource X.Btn.Ghost}" Padding="10,6" Margin="0,0,8,0"
+                  ToolTip="Обновить текущую подписку"
+                  Visibility="{Binding HasSubscriptions, Converter={StaticResource BoolToVisHelper}}">
+            <TextBlock Text="↻" FontSize="15" FontWeight="Bold" />
+          </Button>
+          <Border Background="{DynamicResource X.Brush.GlassFill}" CornerRadius="14"
+                  BorderBrush="{DynamicResource X.Brush.GlassBorder}" BorderThickness="1" Padding="10,5">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+              <Ellipse Width="8" Height="8" Margin="0,0,8,0" VerticalAlignment="Center"
+                       Fill="{Binding TunnelState, Converter={StaticResource StateToColor}}" />
+              <TextBlock Text="{Binding TunnelStateDisplay}" Foreground="{DynamicResource X.Brush.Text}"
+                         FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" />
+            </StackPanel>
+          </Border>
+        </StackPanel>
       </Grid>
 
       <!-- Сообщение об ошибке + баннер обновления -->

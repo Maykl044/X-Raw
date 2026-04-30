@@ -16,7 +16,7 @@
 
   <Color x:Key="X.Color.Text">#FF1A1B26</Color>
   <Color x:Key="X.Color.TextSoft">#CC4A4F62</Color>
-  <Color x:Key="X.Color.TextMuted">#884A4F62</Color>
+  <Color x:Key="X.Color.TextMuted">#B04A4F62</Color>
 
   <Color x:Key="X.Color.BgGlow1">#FF6747FF</Color>
   <Color x:Key="X.Color.BgGlow2">#FF008CD9</Color>

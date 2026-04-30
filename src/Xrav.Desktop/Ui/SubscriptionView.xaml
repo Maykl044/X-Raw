@@ -26,7 +26,7 @@
       <StackPanel Grid.Column="0">
         <TextBlock Text="Подписки" Style="{StaticResource X.Text.H2}" />
         <TextBlock Style="{StaticResource X.Text.Caption}" TextWrapping="Wrap" Margin="0,2,0,0"
-                   Text="URL: тело — base64 со списком ссылок или plain. Разверните карточку, чтобы увидеть ключи." />
+                   Text="Вставьте URL подписки (base64 или plain). Разверните карточку, чтобы увидеть ключи внутри." />
       </StackPanel>
       <Button Grid.Column="1" Content="Обновить все" Command="{Binding RefreshAllSubscriptionsCommand}"
               Style="{StaticResource X.Btn.Ghost}" VerticalAlignment="Top" />

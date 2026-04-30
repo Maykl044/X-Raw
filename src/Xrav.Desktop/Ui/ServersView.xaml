@@ -3,13 +3,16 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="clr-namespace:Xrav.Desktop.Ui"
              mc:Ignorable="d"
              d:DesignHeight="600" d:DesignWidth="500">
   <UserControl.Resources>
     <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    <ui:SubscriptionFilterMatchConverter x:Key="FilterMatch" />
   </UserControl.Resources>
   <Grid Margin="20,4,20,8">
     <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />
@@ -24,25 +27,44 @@
       <StackPanel>
         <TextBlock Text="Серверы" Style="{StaticResource X.Text.H2}" />
         <TextBlock Style="{StaticResource X.Text.Caption}" TextWrapping="Wrap" Margin="0,2,0,0"
-                   Text="Один ключ: vless:// / vmess:// / trojan:// / ss:// / hy2:// / tuic://. Подписки управляются на вкладке «Подписка»."
-                   Visibility="{Binding SmartOnly, Converter={StaticResource InverseBoolToVis}}" />
-        <TextBlock Style="{StaticResource X.Text.Caption}" TextWrapping="Wrap" Margin="0,2,0,0"
                    Text="Smart-режим включён: приложение само подбирает оптимальный ключ из подписок и автоматически переключается при сбое сети."
                    Visibility="{Binding SmartOnly, Converter={StaticResource BoolToVisHelper}}" />
       </StackPanel>
       <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
-        <Button Content="Пинг всех" Command="{Binding PingAllKeysCommand}" Style="{StaticResource X.Btn.Ghost}" Margin="0,0,8,0" />
-        <Border Background="{DynamicResource X.Brush.GlassFill}" CornerRadius="10"
-                BorderBrush="{DynamicResource X.Brush.GlassBorder}" BorderThickness="1" Padding="10,4" VerticalAlignment="Center">
-          <TextBlock Text="{Binding Keys.Count, StringFormat={}{0} ключей}" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="11" />
+        <Button Content="Пинг всех" Command="{Binding PingAllKeysCommand}" Style="{StaticResource X.Btn.Ghost}" Margin="0,0,8,0"
+                Visibility="{Binding SmartOnly, Converter={StaticResource InverseBoolToVis}}" />
+        <Border Style="{StaticResource X.Badge.Pill}">
+          <TextBlock Text="{Binding FilteredKeys.Count, StringFormat={}{0} ключей}" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="11" />
         </Border>
       </StackPanel>
     </Grid>
 
+    <!-- Фильтр-пилюли по подпискам -->
+    <Border Grid.Row="1" Margin="0,12,0,0"
+            Visibility="{Binding HasSubscriptions, Converter={StaticResource BoolToVisHelper}}">
+      <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+        <StackPanel Orientation="Horizontal">
+          <ui:FilterPill Label="Все" FilterValue="@all"
+                         Active="{Binding SubscriptionFilterEncoded}"
+                         Command="{Binding SetSubscriptionFilterCommand}" />
+          <ItemsControl ItemsSource="{Binding Subscriptions}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <ui:FilterPill Label="{Binding Label}" FilterValue="{Binding Id}"
+                               Active="{Binding DataContext.SubscriptionFilterEncoded, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                               Command="{Binding DataContext.SetSubscriptionFilterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </ScrollViewer>
+    </Border>
+
     <!-- Smart-режим: компактная карточка с информацией о выбранном ключе -->
-    <Border Grid.Row="1" Margin="0,12,0,0" Padding="14,12" CornerRadius="14"
-            Background="{DynamicResource X.Brush.GlassFill}"
-            BorderBrush="{DynamicResource X.Brush.GlassBorder}" BorderThickness="1"
+    <Border Grid.Row="2" Margin="0,12,0,0" Style="{StaticResource X.Card}"
             Visibility="{Binding SmartOnly, Converter={StaticResource BoolToVisHelper}}">
       <StackPanel>
         <StackPanel Orientation="Horizontal">
@@ -58,29 +80,9 @@
       </StackPanel>
     </Border>
 
-    <Border Grid.Row="1" Margin="0,12,0,0" Background="{DynamicResource X.Brush.GlassFill}"
-            BorderBrush="{DynamicResource X.Brush.GlassBorder}" BorderThickness="1" CornerRadius="14" Padding="10"
+    <Border Grid.Row="3" Margin="0,12,0,0"
             Visibility="{Binding SmartOnly, Converter={StaticResource InverseBoolToVis}}">
-      <Grid>
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="*" />
-          <ColumnDefinition Width="Auto" />
-        </Grid.ColumnDefinitions>
-        <TextBox Grid.Column="0" Text="{Binding ManualKeyText, UpdateSourceTrigger=PropertyChanged}"
-                 Style="{StaticResource X.TextBox}"
-                 TextWrapping="Wrap" AcceptsReturn="True" MinHeight="40" MaxHeight="100"
-                 VerticalScrollBarVisibility="Auto"
-                 ToolTip="vless://… или vmess://… (поддерживается несколько строк сразу)" />
-        <StackPanel Grid.Column="1" Margin="8,0,0,0" Orientation="Vertical">
-          <Button Content="Добавить" Command="{Binding AddManualKeyCommand}" Style="{StaticResource X.Btn.Primary}" Margin="0,0,0,6" />
-          <Button Content="Из буфера" Command="{Binding ImportFromClipboardCommand}" Style="{StaticResource X.Btn.Ghost}" />
-        </StackPanel>
-      </Grid>
-    </Border>
-
-    <Border Grid.Row="2" Margin="0,12,0,0"
-            Visibility="{Binding SmartOnly, Converter={StaticResource InverseBoolToVis}}">
-      <ListBox ItemsSource="{Binding Keys}" SelectedItem="{Binding SelectedKey, Mode=TwoWay}" Style="{StaticResource X.ListBox}">
+      <ListBox ItemsSource="{Binding FilteredKeys}" SelectedItem="{Binding SelectedKey, Mode=TwoWay}" Style="{StaticResource X.ListBox}">
         <ListBox.ItemTemplate>
           <DataTemplate>
             <Grid>
@@ -103,9 +105,7 @@
                            FontSize="11" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" />
               </StackPanel>
               <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                <Border CornerRadius="8" Padding="8,3" Margin="6,0"
-                        Background="{DynamicResource X.Brush.GlassFill}"
-                        BorderBrush="{DynamicResource X.Brush.GlassBorder}" BorderThickness="1">
+                <Border Style="{StaticResource X.Badge.Pill}" Margin="6,0">
                   <TextBlock Text="{Binding LatencyDisplay}" FontSize="11"
                              Foreground="{DynamicResource X.Brush.TextSoft}" />
                 </Border>
@@ -119,13 +119,13 @@
       </ListBox>
     </Border>
 
-    <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0"
+    <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0"
                 Visibility="{Binding SmartOnly, Converter={StaticResource InverseBoolToVis}}">
       <Button Content="Пинг" Command="{Binding PingSelectedKeyCommand}" Style="{StaticResource X.Btn.Ghost}" Margin="0,0,8,0"
               ToolTip="TCP-проверка доступности сервера" />
       <Button Content="Рукопожатие" Command="{Binding CheckHandshakeCommand}" Style="{StaticResource X.Btn.Ghost}" Margin="0,0,8,0"
               ToolTip="Реальная проверка TLS / Reality / SNI рукопожатия с сервером ключа" />
-      <Button Content="Удалить выбранный" Command="{Binding RemoveSelectedKeyCommand}" Style="{StaticResource X.Btn.Danger}" />
+      <Button Content="Удалить" Command="{Binding RemoveSelectedKeyCommand}" Style="{StaticResource X.Btn.Danger}" />
     </StackPanel>
   </Grid>
 </UserControl>

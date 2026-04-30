@@ -16,7 +16,7 @@
 
   <Color x:Key="X.Color.Text">#FFEDF0F7</Color>
   <Color x:Key="X.Color.TextSoft">#CCBFC5D4</Color>
-  <Color x:Key="X.Color.TextMuted">#88AAB0C2</Color>
+  <Color x:Key="X.Color.TextMuted">#B0BAC0D2</Color>
 
   <!-- Декоративные цвета фона -->
   <Color x:Key="X.Color.BgGlow1">#FF7C5CFF</Color>
@@ -31,9 +31,9 @@
   <Color x:Key="X.Color.AccentTint">#227C5CFF</Color>
 
   <!-- Liquid Glass (iOS 26 / Vision Pro): полупрозрачные слои -->
-  <Color x:Key="X.Color.GlassFill">#26FFFFFF</Color>
-  <Color x:Key="X.Color.GlassFillStrong">#3DFFFFFF</Color>
-  <Color x:Key="X.Color.GlassBorder">#33FFFFFF</Color>
+  <Color x:Key="X.Color.GlassFill">#33FFFFFF</Color>
+  <Color x:Key="X.Color.GlassFillStrong">#4DFFFFFF</Color>
+  <Color x:Key="X.Color.GlassBorder">#55FFFFFF</Color>
   <Color x:Key="X.Color.GlassHighlight">#1FFFFFFF</Color>
   <Color x:Key="X.Color.GlassShadow">#80000000</Color>
 

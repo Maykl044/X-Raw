@@ -111,8 +111,8 @@
   </Style>
   <Style x:Key="X.Text.Caption" TargetType="TextBlock">
     <Setter Property="FontFamily" Value="{StaticResource X.Font.Ui}" />
-    <Setter Property="Foreground" Value="{DynamicResource X.Brush.TextMuted}" />
-    <Setter Property="FontSize" Value="11" />
+    <Setter Property="Foreground" Value="{DynamicResource X.Brush.TextSoft}" />
+    <Setter Property="FontSize" Value="12" />
   </Style>
 
   <!-- Backwards-compat aliases (старые имена в существующих view) -->

@@ -77,6 +77,9 @@ public sealed class MainViewModel : ViewModelBase
             async () => await RefreshSubscriptionAsync(SelectedSubscription),
             () => SelectedSubscription is not null);
         RefreshAllSubscriptionsCommand = new RelayCommand(async () => await RefreshAllSubscriptionsAsync());
+        RefreshActiveSubscriptionCommand = new RelayCommand(
+            async () => await RefreshActiveSubscriptionAsync(),
+            () => Subscriptions.Count > 0);
         BootstrapToolsCommand = new RelayCommand(async () => await BootstrapToolsAsync(), () => !BootstrapBusy);
         OpenDataFolderCommand = new RelayCommand(OpenDataFolder);
         OpenLogFileCommand = new RelayCommand(OpenLogFile);
@@ -137,6 +140,7 @@ public sealed class MainViewModel : ViewModelBase
         };
 
         LoadFromStore();
+        RecomputeFilteredKeys();
         Keys.CollectionChanged += OnKeysChanged;
         Subscriptions.CollectionChanged += OnSubscriptionsChanged;
 
@@ -150,8 +154,11 @@ public sealed class MainViewModel : ViewModelBase
     }
 
     public ObservableCollection<VpnKey> Keys { get; } = new();
+    public ObservableCollection<VpnKey> FilteredKeys { get; } = new();
     public ObservableCollection<SubscriptionEntry> Subscriptions { get; } = new();
     public ObservableCollection<string> TunnelLog { get; } = new();
+
+    public bool HasSubscriptions => Subscriptions.Count > 0;
 
     public string SubscriptionFilterEncoded
     {
@@ -162,9 +169,16 @@ public sealed class MainViewModel : ViewModelBase
             _subscriptionFilterEncoded = value;
             OnPropertyChanged();
             OnPropertyChanged(nameof(ActiveSubscriptionFilter));
+            RecomputeFilteredKeys();
             Persist();
         }
     }
+
+    public ICommand SetSubscriptionFilterCommand => _setSubscriptionFilterCommand ??= new RelayCommand(p =>
+    {
+        if (p is string s && !string.IsNullOrEmpty(s)) SubscriptionFilterEncoded = s;
+    });
+    private ICommand? _setSubscriptionFilterCommand;
 
     public SubscriptionFilter ActiveSubscriptionFilter => SubscriptionFilter.Decode(SubscriptionFilterEncoded);
 
@@ -434,6 +448,7 @@ public sealed class MainViewModel : ViewModelBase
     public ICommand RemoveSubscriptionCommand { get; }
     public ICommand RefreshSubscriptionCommand { get; }
     public ICommand RefreshAllSubscriptionsCommand { get; }
+    public ICommand RefreshActiveSubscriptionCommand { get; }
     public ICommand BootstrapToolsCommand { get; }
     public ICommand OpenDataFolderCommand { get; }
     public ICommand OpenLogFileCommand { get; }
@@ -679,11 +694,24 @@ public sealed class MainViewModel : ViewModelBase
             SelectedKey = Keys.FirstOrDefault();
             _persistSuspended = false;
         }
+        RecomputeFilteredKeys();
         OnPropertyChanged(nameof(KeysCountDisplay));
         (PingAllKeysCommand as RelayCommand)?.RaiseCanExecuteChanged();
         Persist();
     }
-    private void OnSubscriptionsChanged(object? _, NotifyCollectionChangedEventArgs __) => Persist();
+    private void OnSubscriptionsChanged(object? _, NotifyCollectionChangedEventArgs __)
+    {
+        OnPropertyChanged(nameof(HasSubscriptions));
+        (RefreshActiveSubscriptionCommand as RelayCommand)?.RaiseCanExecuteChanged();
+        Persist();
+    }
+
+    private void RecomputeFilteredKeys()
+    {
+        var filtered = Keys.ToList().ApplyFilter(ActiveSubscriptionFilter);
+        FilteredKeys.Clear();
+        foreach (var k in filtered) FilteredKeys.Add(k);
+    }
 
     private void Persist()
     {
@@ -927,6 +955,15 @@ public sealed class MainViewModel : ViewModelBase
     {
         foreach (var s in Subscriptions.ToList())
             await RefreshSubscriptionAsync(s).ConfigureAwait(false);
+    }
+
+    private async Task RefreshActiveSubscriptionAsync()
+    {
+        SubscriptionEntry? entry = null;
+        if (ActiveSubscriptionFilter is SubscriptionFilter.Specific spec)
+            entry = Subscriptions.FirstOrDefault(s => s.Id == spec.SubscriptionId);
+        entry ??= Subscriptions.FirstOrDefault();
+        if (entry is not null) await RefreshSubscriptionAsync(entry).ConfigureAwait(false);
     }
 
     private void ReplaceSubscription(SubscriptionEntry old, string status)

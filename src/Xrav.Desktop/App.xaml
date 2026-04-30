@@ -10,6 +10,7 @@
         <ResourceDictionary Source="Theme/XravTheme.xaml" />
       </ResourceDictionary.MergedDictionaries>
       <ui:ZeroToVisibleConverter x:Key="ZeroToVisible" />
+      <ui:StrEqualsConverter x:Key="StrEqualsConverter" />
     </ResourceDictionary>
   </Application.Resources>
 </Application>
