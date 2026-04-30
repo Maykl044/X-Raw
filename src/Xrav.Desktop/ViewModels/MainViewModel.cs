@@ -471,6 +471,48 @@ public sealed class MainViewModel : ViewModelBase
         }
     }
 
+    private string? _toastText;
+    public string? ToastText
+    {
+        get => _toastText;
+        private set { if (_toastText == value) return; _toastText = value; OnPropertyChanged(); OnPropertyChanged(nameof(ToastVisible)); }
+    }
+
+    private string _toastKind = "info";
+    public string ToastKind
+    {
+        get => _toastKind;
+        private set { if (_toastKind == value) return; _toastKind = value; OnPropertyChanged(); }
+    }
+
+    public bool ToastVisible => !string.IsNullOrEmpty(_toastText);
+
+    private System.Threading.CancellationTokenSource? _toastCts;
+    public void ShowToast(string text, string kind = "info", int seconds = 4)
+    {
+        _toastCts?.Cancel();
+        _toastCts = new System.Threading.CancellationTokenSource();
+        var ct = _toastCts.Token;
+        Application.Current?.Dispatcher.InvokeAsync(() =>
+        {
+            ToastKind = kind;
+            ToastText = text;
+        });
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(TimeSpan.FromSeconds(seconds), ct).ConfigureAwait(false);
+                if (ct.IsCancellationRequested) return;
+                Application.Current?.Dispatcher.InvokeAsync(() => { if (ToastText == text) ToastText = null; });
+            }
+            catch (OperationCanceledException) { }
+        });
+    }
+
+    public ICommand DismissToastCommand => _dismissToastCommand ??= new RelayCommand(() => ToastText = null);
+    private ICommand? _dismissToastCommand;
+
     private bool _pingBusy;
     public bool PingBusy
     {
@@ -839,20 +881,17 @@ public sealed class MainViewModel : ViewModelBase
             }
             if (added == 0)
             {
-                MessageBox.Show(
-                    "Не удалось распознать ни одной ссылки. Поддерживаются: vless://, vmess://, trojan://, ss://, hysteria2://, tuic://, JSON конфиг.",
-                    "Импорт",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                ShowToast("Не удалось распознать ссылку. Поддерживаются vless://, vmess://, trojan://, ss://, hysteria2://, tuic://", "error", 6);
                 return;
             }
             ManualKeyText = "";
             SelectedKey ??= Keys.LastOrDefault();
+            ShowToast($"Добавлено {added} {Plural(added, "ключ", "ключа", "ключей")}", "success");
         }
         catch (Exception ex)
         {
             FileLogger.Error("addKey", ex);
-            MessageBox.Show("Импорт не удался: " + ex.Message, "Импорт", MessageBoxButton.OK, MessageBoxImage.Error);
+            ShowToast("Импорт не удался: " + ex.Message, "error", 6);
         }
     }
 
@@ -898,9 +937,18 @@ public sealed class MainViewModel : ViewModelBase
     {
         var url = (NewSubscriptionUrl ?? "").Trim();
         if (string.IsNullOrEmpty(url)) return;
-        var label = string.IsNullOrWhiteSpace(NewSubscriptionLabel)
-            ? new Uri(url, UriKind.Absolute).Host
-            : NewSubscriptionLabel.Trim();
+        string label;
+        try
+        {
+            label = string.IsNullOrWhiteSpace(NewSubscriptionLabel)
+                ? new Uri(url, UriKind.Absolute).Host
+                : NewSubscriptionLabel.Trim();
+        }
+        catch
+        {
+            ShowToast("Некорректный URL подписки", "error");
+            return;
+        }
         var entry = new SubscriptionEntry(
             Id: Guid.NewGuid().ToString("N"),
             Url: url,
@@ -909,6 +957,7 @@ public sealed class MainViewModel : ViewModelBase
         Subscriptions.Add(entry);
         NewSubscriptionUrl = "";
         NewSubscriptionLabel = "";
+        ShowToast($"Загружаю подписку «{label}»…", "info", 30);
         await RefreshSubscriptionAsync(entry).ConfigureAwait(false);
     }
 
@@ -930,7 +979,6 @@ public sealed class MainViewModel : ViewModelBase
         {
             FileLogger.Log("subscription", $"refreshing {entry.Url}");
             var fetched = await SubscriptionFetcher.FetchAsync(SharedHttp, entry.Url, entry.Id).ConfigureAwait(false);
-            // replace keys belonging to this subscription
             await Application.Current.Dispatcher.InvokeAsync(() =>
             {
                 var staleIds = Keys.Where(k => k.SubscriptionId == entry.Id).Select(k => k.Id).ToHashSet();
@@ -939,6 +987,7 @@ public sealed class MainViewModel : ViewModelBase
                 foreach (var k in fetched) Keys.Add(k);
                 ReplaceSubscription(entry, status: $"OK · {fetched.Count} ключей");
             });
+            ShowToast($"«{entry.Label}» обновлена · {fetched.Count} {Plural(fetched.Count, "ключ", "ключа", "ключей")}", "success");
         }
         catch (Exception ex)
         {
@@ -946,9 +995,18 @@ public sealed class MainViewModel : ViewModelBase
             await Application.Current.Dispatcher.InvokeAsync(() =>
             {
                 ReplaceSubscription(entry, status: "Ошибка: " + ex.Message);
-                MessageBox.Show("Не удалось обновить подписку: " + ex.Message, "Подписка", MessageBoxButton.OK, MessageBoxImage.Warning);
             });
+            ShowToast($"Не удалось обновить «{entry.Label}»: {ex.Message}", "error", 6);
         }
+    }
+
+    private static string Plural(int n, string one, string few, string many)
+    {
+        var mod10 = n % 10;
+        var mod100 = n % 100;
+        if (mod10 == 1 && mod100 != 11) return one;
+        if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
+        return many;
     }
 
     private async Task RefreshAllSubscriptionsAsync()

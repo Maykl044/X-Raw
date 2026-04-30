@@ -38,6 +38,12 @@ public partial class MainWindow : Window
         AcrylicBackdrop.Apply(this, AcrylicBackdrop.Backdrop.Auto, dark: ThemeService.Current.EffectiveIsDark);
     }
 
+    private void OnToastClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (DataContext is MainViewModel vm)
+            vm.DismissToastCommand.Execute(null);
+    }
+
     private void OnPowerClick(object sender, RoutedEventArgs e)
     {
         if (DataContext is not MainViewModel vm) return;

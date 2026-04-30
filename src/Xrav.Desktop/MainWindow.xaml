@@ -153,9 +153,89 @@
       </StackPanel>
 
       <!-- Кнопка питания: Orbot-style стеклянный купол.
-           Слои: idle-pulse halo / connected-aurora / connecting-ring / glass orb / power glyph. -->
+           Слои: smart-radar / idle-pulse halo / connected-aurora / connecting-ring / glass orb / power glyph. -->
       <StackPanel Grid.Row="2" HorizontalAlignment="Center" Margin="0,14,0,12">
-        <Grid Width="220" Height="220" HorizontalAlignment="Center">
+        <Grid Width="260" Height="260" HorizontalAlignment="Center">
+
+          <!-- 0. SMART-RADAR: три расходящиеся волны от центра + scanning arc.
+               Активны когда AutoSelectMode=True (умный режим) — антенна "ищет" сервер. -->
+          <Grid Visibility="{Binding AutoSelectMode, Converter={StaticResource BoolToVisHelper}}">
+            <Grid.Resources>
+              <Style x:Key="RadarRing" TargetType="Ellipse">
+                <Setter Property="Stroke" Value="{DynamicResource X.Brush.Accent}" />
+                <Setter Property="StrokeThickness" Value="2" />
+                <Setter Property="Opacity" Value="0" />
+                <Setter Property="RenderTransformOrigin" Value="0.5,0.5" />
+              </Style>
+            </Grid.Resources>
+            <Grid.Triggers>
+              <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                <BeginStoryboard>
+                  <Storyboard RepeatBehavior="Forever" Duration="0:0:2.4">
+                    <!-- Wave 1 -->
+                    <DoubleAnimation Storyboard.TargetName="RadarA" Storyboard.TargetProperty="Opacity"
+                                     From="0.75" To="0" Duration="0:0:2.4" BeginTime="0:0:0" />
+                    <DoubleAnimation Storyboard.TargetName="RadarA" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                     From="0.30" To="1.10" Duration="0:0:2.4" BeginTime="0:0:0" />
+                    <DoubleAnimation Storyboard.TargetName="RadarA" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                     From="0.30" To="1.10" Duration="0:0:2.4" BeginTime="0:0:0" />
+                    <!-- Wave 2 -->
+                    <DoubleAnimation Storyboard.TargetName="RadarB" Storyboard.TargetProperty="Opacity"
+                                     From="0.75" To="0" Duration="0:0:2.4" BeginTime="0:0:0.8" />
+                    <DoubleAnimation Storyboard.TargetName="RadarB" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                     From="0.30" To="1.10" Duration="0:0:2.4" BeginTime="0:0:0.8" />
+                    <DoubleAnimation Storyboard.TargetName="RadarB" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                     From="0.30" To="1.10" Duration="0:0:2.4" BeginTime="0:0:0.8" />
+                    <!-- Wave 3 -->
+                    <DoubleAnimation Storyboard.TargetName="RadarC" Storyboard.TargetProperty="Opacity"
+                                     From="0.75" To="0" Duration="0:0:2.4" BeginTime="0:0:1.6" />
+                    <DoubleAnimation Storyboard.TargetName="RadarC" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                     From="0.30" To="1.10" Duration="0:0:2.4" BeginTime="0:0:1.6" />
+                    <DoubleAnimation Storyboard.TargetName="RadarC" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                     From="0.30" To="1.10" Duration="0:0:2.4" BeginTime="0:0:1.6" />
+                  </Storyboard>
+                </BeginStoryboard>
+              </EventTrigger>
+            </Grid.Triggers>
+            <Ellipse x:Name="RadarA" Width="240" Height="240" Style="{StaticResource RadarRing}">
+              <Ellipse.RenderTransform><ScaleTransform ScaleX="0.30" ScaleY="0.30" /></Ellipse.RenderTransform>
+            </Ellipse>
+            <Ellipse x:Name="RadarB" Width="240" Height="240" Style="{StaticResource RadarRing}">
+              <Ellipse.RenderTransform><ScaleTransform ScaleX="0.30" ScaleY="0.30" /></Ellipse.RenderTransform>
+            </Ellipse>
+            <Ellipse x:Name="RadarC" Width="240" Height="240" Style="{StaticResource RadarRing}">
+              <Ellipse.RenderTransform><ScaleTransform ScaleX="0.30" ScaleY="0.30" /></Ellipse.RenderTransform>
+            </Ellipse>
+            <!-- Сканирующая дуга поверх — вращается, имитирует радар-стрелку -->
+            <Path Width="240" Height="240" StrokeThickness="2.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                  Opacity="0.55" RenderTransformOrigin="0.5,0.5"
+                  Data="M 120 8 A 112 112 0 0 1 215 70">
+              <Path.Stroke>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                  <GradientStop Color="{DynamicResource X.Color.Accent}" Offset="0" />
+                  <GradientStop Color="{DynamicResource X.Color.Accent2}" Offset="1" />
+                </LinearGradientBrush>
+              </Path.Stroke>
+              <Path.RenderTransform><RotateTransform Angle="0" /></Path.RenderTransform>
+              <Path.Triggers>
+                <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                  <BeginStoryboard>
+                    <Storyboard RepeatBehavior="Forever">
+                      <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
+                                       From="0" To="360" Duration="0:0:3.2" />
+                    </Storyboard>
+                  </BeginStoryboard>
+                </EventTrigger>
+              </Path.Triggers>
+            </Path>
+            <!-- Маленькие точки-узлы на расстоянии (визуализация "найденных серверов") -->
+            <Canvas Width="240" Height="240">
+              <Ellipse Canvas.Left="40"  Canvas.Top="60"  Width="6" Height="6" Fill="{DynamicResource X.Brush.Accent}"  Opacity="0.8" />
+              <Ellipse Canvas.Left="190" Canvas.Top="110" Width="6" Height="6" Fill="{DynamicResource X.Brush.Accent2}" Opacity="0.7" />
+              <Ellipse Canvas.Left="76"  Canvas.Top="200" Width="6" Height="6" Fill="{DynamicResource X.Brush.Accent}"  Opacity="0.6" />
+              <Ellipse Canvas.Left="160" Canvas.Top="40"  Width="5" Height="5" Fill="{DynamicResource X.Brush.Accent2}" Opacity="0.5" />
+            </Canvas>
+          </Grid>
 
           <!-- 1. IDLE: мягкая пульсация акцентного ореола -->
           <Ellipse Width="200" Height="200" Opacity="0" RenderTransformOrigin="0.5,0.5">
@@ -393,5 +473,75 @@
         </Grid>
       </Border>
     </Grid>
+
+    <!-- Toast-уведомление: всплывает сверху при успешном/ошибочном обновлении подписки -->
+    <Border x:Name="Toast" VerticalAlignment="Top" HorizontalAlignment="Center"
+            Margin="0,18,0,0" CornerRadius="14" Padding="14,10" MaxWidth="440"
+            BorderThickness="1" Cursor="Hand"
+            MouseLeftButtonUp="OnToastClick"
+            Visibility="{Binding ToastVisible, Converter={StaticResource BoolToVis}}"
+            RenderTransformOrigin="0.5,0">
+      <Border.RenderTransform>
+        <TranslateTransform X="0" Y="-30" />
+      </Border.RenderTransform>
+      <Border.Style>
+        <Style TargetType="Border">
+          <Setter Property="Background" Value="{DynamicResource X.Brush.GlassFillStrong}" />
+          <Setter Property="BorderBrush" Value="{DynamicResource X.Brush.Accent}" />
+          <Setter Property="Effect">
+            <Setter.Value>
+              <DropShadowEffect Color="{DynamicResource X.Color.GlassShadow}" BlurRadius="20" ShadowDepth="0" Opacity="0.55" />
+            </Setter.Value>
+          </Setter>
+          <Style.Triggers>
+            <DataTrigger Binding="{Binding ToastKind}" Value="success">
+              <Setter Property="BorderBrush" Value="{DynamicResource X.Brush.Success}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding ToastKind}" Value="error">
+              <Setter Property="BorderBrush" Value="{DynamicResource X.Brush.Danger}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding ToastVisible}" Value="True">
+              <DataTrigger.EnterActions>
+                <BeginStoryboard>
+                  <Storyboard>
+                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                     From="0" To="1" Duration="0:0:0.30" />
+                    <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
+                                     From="-30" To="0" Duration="0:0:0.30">
+                      <DoubleAnimation.EasingFunction>
+                        <CubicEase EasingMode="EaseOut" />
+                      </DoubleAnimation.EasingFunction>
+                    </DoubleAnimation>
+                  </Storyboard>
+                </BeginStoryboard>
+              </DataTrigger.EnterActions>
+            </DataTrigger>
+          </Style.Triggers>
+        </Style>
+      </Border.Style>
+      <StackPanel Orientation="Horizontal">
+        <TextBlock VerticalAlignment="Center" FontSize="16" Margin="0,0,8,0">
+          <TextBlock.Style>
+            <Style TargetType="TextBlock">
+              <Setter Property="Text" Value="ⓘ" />
+              <Setter Property="Foreground" Value="{DynamicResource X.Brush.Accent2}" />
+              <Style.Triggers>
+                <DataTrigger Binding="{Binding ToastKind}" Value="success">
+                  <Setter Property="Text" Value="✓" />
+                  <Setter Property="Foreground" Value="{DynamicResource X.Brush.Success}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding ToastKind}" Value="error">
+                  <Setter Property="Text" Value="✕" />
+                  <Setter Property="Foreground" Value="{DynamicResource X.Brush.Danger}" />
+                </DataTrigger>
+              </Style.Triggers>
+            </Style>
+          </TextBlock.Style>
+        </TextBlock>
+        <TextBlock Text="{Binding ToastText}" Foreground="{DynamicResource X.Brush.Text}"
+                   FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"
+                   TextWrapping="Wrap" MaxWidth="380" />
+      </StackPanel>
+    </Border>
   </Grid>
 </Window>

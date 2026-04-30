@@ -40,6 +40,7 @@
     <None Include="Assets\app.ico" Condition="Exists('Assets\app.ico')" />
     <Resource Include="Assets\X-Rav.ico" Condition="Exists('Assets\X-Rav.ico')" />
     <Resource Include="Assets\X-Rav.png" Condition="Exists('Assets\X-Rav.png')" />
+    <Resource Include="Assets\Flags\*.png" />
   </ItemGroup>
 
   <!--

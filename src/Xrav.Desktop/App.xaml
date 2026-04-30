@@ -11,6 +11,7 @@
       </ResourceDictionary.MergedDictionaries>
       <ui:ZeroToVisibleConverter x:Key="ZeroToVisible" />
       <ui:StrEqualsConverter x:Key="StrEqualsConverter" />
+      <ui:CountryFlagImageConverter x:Key="FlagImage" />
     </ResourceDictionary>
   </Application.Resources>
 </Application>
