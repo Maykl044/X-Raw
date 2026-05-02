@@ -129,7 +129,7 @@
   <Style x:Key="Xrav.Text.Body"    TargetType="TextBlock" BasedOn="{StaticResource X.Text.Body}" />
   <Style x:Key="Xrav.Text.Caption" TargetType="TextBlock" BasedOn="{StaticResource X.Text.Caption}" />
 
-  <!-- Кнопка primary: акцент-градиент. -->
+  <!-- Кнопка primary: акцент-градиент + dynamic cursor lighting. -->
   <Style x:Key="X.Btn.Primary" TargetType="Button">
     <Setter Property="Foreground" Value="White" />
     <Setter Property="FontWeight" Value="SemiBold" />
@@ -139,6 +139,7 @@
     <Setter Property="BorderThickness" Value="0" />
     <Setter Property="Background" Value="{DynamicResource X.Brush.AccentGrad}" />
     <Setter Property="SnapsToDevicePixels" Value="True" />
+    <Setter Property="ui:CursorLight.Enabled" Value="True" />
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="Button">
@@ -163,7 +164,7 @@
     </Setter>
   </Style>
 
-  <!-- Кнопка ghost: стеклянная, контурная. -->
+  <!-- Кнопка ghost: стеклянная, контурная + dynamic cursor lighting. -->
   <Style x:Key="X.Btn.Ghost" TargetType="Button">
     <Setter Property="Foreground" Value="{DynamicResource X.Brush.Text}" />
     <Setter Property="FontWeight" Value="SemiBold" />
@@ -174,6 +175,7 @@
     <Setter Property="BorderBrush" Value="{DynamicResource X.Brush.GlassBorder}" />
     <Setter Property="Background" Value="{DynamicResource X.Brush.GlassFill}" />
     <Setter Property="SnapsToDevicePixels" Value="True" />
+    <Setter Property="ui:CursorLight.Enabled" Value="True" />
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="Button">
@@ -482,4 +484,134 @@
     <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
     <Setter Property="ItemContainerStyle" Value="{StaticResource X.ListBoxItem}" />
   </Style>
+
+  <!-- ============================================================
+       Neo-morphism / Brushed-metal / Grain / Ray-traced shadows.
+       ============================================================ -->
+
+  <!-- Процедурный тайл-шум поверх поверхностей: убирает бандинг в градиентах,
+       даёт "аналоговый" look. Tileable 128×128 RGBA (белый RGB + переменная alpha). -->
+  <ImageBrush x:Key="X.Brush.GrainOverlay"
+              ImageSource="pack://application:,,,/Assets/Textures/Noise.png"
+              TileMode="Tile" ViewportUnits="Absolute" Viewport="0,0,128,128"
+              Stretch="None" Opacity="0.06" />
+
+  <!-- Шлифованный алюминий: анизотропный горизонтальный градиент + шум поверх.
+       Используется для sidebar-rail / Settings-панелей. -->
+  <LinearGradientBrush x:Key="X.Brush.BrushedMetal" StartPoint="0,0" EndPoint="0,1">
+    <GradientStop Color="{DynamicResource X.Color.Surface}"    Offset="0" />
+    <GradientStop Color="{DynamicResource X.Color.CanvasMid}"  Offset="0.18" />
+    <GradientStop Color="{DynamicResource X.Color.Surface}"    Offset="0.38" />
+    <GradientStop Color="{DynamicResource X.Color.SurfaceHi}"  Offset="0.62" />
+    <GradientStop Color="{DynamicResource X.Color.Surface}"    Offset="0.82" />
+    <GradientStop Color="{DynamicResource X.Color.CanvasMid}"  Offset="1" />
+  </LinearGradientBrush>
+
+  <!-- Горизонтальные царапины-штрихи (imagine brushed-metal finish). -->
+  <ImageBrush x:Key="X.Brush.BrushedScratches"
+              ImageSource="pack://application:,,,/Assets/Textures/BrushedMetal.png"
+              TileMode="Tile" ViewportUnits="Absolute" Viewport="0,0,128,16"
+              Stretch="None" Opacity="0.55" />
+
+  <!-- Sidebar-rail: стекл комбинация — metal gradient + горизонт штрихи + шум. -->
+  <Style x:Key="X.Panel.BrushedMetal" TargetType="Border">
+    <Setter Property="Background" Value="{DynamicResource X.Brush.BrushedMetal}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource X.Brush.GlassBorder}" />
+    <Setter Property="BorderThickness" Value="0,0,1,0" />
+    <Setter Property="SnapsToDevicePixels" Value="True" />
+  </Style>
+
+  <!-- Матовое стекло контент-панели (использует системный Acrylic/Mica под собой +
+       локальный frost слой). 30px blur — системный; локально добавляем lighter fill. -->
+  <Style x:Key="X.Panel.FrostedGlass" TargetType="Border">
+    <Setter Property="Background" Value="{DynamicResource X.Brush.GlassFill}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource X.Brush.GlassBorder}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="16" />
+    <Setter Property="SnapsToDevicePixels" Value="True" />
+  </Style>
+
+  <!-- Неоморфная карточка: Inner sheen (верх-лево белый) + ambient shadow (низ-право тёмный)
+       имитирует "приподнятый" элемент. Два встречных DropShadowEffect нельзя, но можно
+       через Border+Border стек: первый — тёмная тень, второй — светлый блик. -->
+  <Style x:Key="X.Card.Neuro" TargetType="Border" BasedOn="{StaticResource X.Card}">
+    <Setter Property="Background" Value="{DynamicResource X.Brush.GlassFillStrong}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource X.Brush.GlassBorder}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="16" />
+    <Setter Property="Effect">
+      <Setter.Value>
+        <DropShadowEffect Color="{DynamicResource X.Color.GlassShadow}"
+                          BlurRadius="24" ShadowDepth="6" Direction="270" Opacity="0.55" />
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- ============================================================
+       Custom ScrollBar — стеклянный, без стрелок.
+       ============================================================ -->
+  <Style x:Key="X.ScrollBarThumb" TargetType="Thumb">
+    <Setter Property="SnapsToDevicePixels" Value="True" />
+    <Setter Property="OverridesDefaultStyle" Value="True" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Thumb">
+          <Border CornerRadius="4" Margin="2"
+                  Background="{DynamicResource X.Brush.GlassFillStrong}"
+                  BorderBrush="{DynamicResource X.Brush.GlassBorder}" BorderThickness="1" />
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style TargetType="ScrollBar">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="SnapsToDevicePixels" Value="True" />
+    <Setter Property="OverridesDefaultStyle" Value="True" />
+    <Style.Triggers>
+      <Trigger Property="Orientation" Value="Vertical">
+        <Setter Property="Width" Value="10" />
+        <Setter Property="Template">
+          <Setter.Value>
+            <ControlTemplate TargetType="ScrollBar">
+              <Grid Background="Transparent">
+                <Track Name="PART_Track" IsDirectionReversed="True">
+                  <Track.Thumb>
+                    <Thumb Style="{StaticResource X.ScrollBarThumb}" />
+                  </Track.Thumb>
+                </Track>
+              </Grid>
+            </ControlTemplate>
+          </Setter.Value>
+        </Setter>
+      </Trigger>
+      <Trigger Property="Orientation" Value="Horizontal">
+        <Setter Property="Height" Value="10" />
+        <Setter Property="Template">
+          <Setter.Value>
+            <ControlTemplate TargetType="ScrollBar">
+              <Grid Background="Transparent">
+                <Track Name="PART_Track">
+                  <Track.Thumb>
+                    <Thumb Style="{StaticResource X.ScrollBarThumb}" />
+                  </Track.Thumb>
+                </Track>
+              </Grid>
+            </ControlTemplate>
+          </Setter.Value>
+        </Setter>
+      </Trigger>
+    </Style.Triggers>
+  </Style>
+
+  <!-- ============================================================
+       Enhanced Ghost button с внутренним highlight на hover.
+       Применяется поверх базового X.Btn.Ghost через attached CursorLight
+       behavior (см. Ui/CursorLight.cs).
+       ============================================================ -->
+  <Style x:Key="X.Btn.Ghost.Neo" TargetType="Button" BasedOn="{StaticResource X.Btn.Ghost}">
+    <Setter Property="ui:CursorLight.Enabled" Value="True" />
+  </Style>
+
 </ResourceDictionary>

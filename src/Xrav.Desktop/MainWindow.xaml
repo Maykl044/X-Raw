@@ -42,9 +42,14 @@
   </Window.Triggers>
 
   <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="Auto" />
+      <ColumnDefinition Width="*" />
+    </Grid.ColumnDefinitions>
+
     <!-- Анимированная подсветка фона (iOS 26 / Liquid Glass) — два «солнца» из акцентных
          цветов с медленным дрейфом + слой частиц. Тонкая, не отвлекающая. -->
-    <Grid x:Name="BgLayer" IsHitTestVisible="False">
+    <Grid x:Name="BgLayer" Grid.ColumnSpan="2" IsHitTestVisible="False">
       <Ellipse x:Name="GlowA" Width="640" Height="640" HorizontalAlignment="Right" VerticalAlignment="Top"
                Margin="0,-220,-220,0" Opacity="0.30">
         <Ellipse.RenderTransform>
@@ -82,9 +87,35 @@
         </Ellipse.Fill>
       </Ellipse>
     </Grid>
-    <ui:ParticleField IsHitTestVisible="False" />
+    <ui:ParticleField Grid.ColumnSpan="2" IsHitTestVisible="False" />
 
-    <Grid Margin="0,0,0,8">
+    <!-- Brushed-metal sidebar: появляется при ActualWidth >= 900 (adaptive layout).
+         Внутри — вертикальная навигация по тем же 4 вкладкам что и в нижнем баре. -->
+    <Border Grid.Column="0" Width="220" Style="{StaticResource X.Panel.BrushedMetal}"
+            Visibility="{Binding IsWideLayout, Converter={StaticResource BoolToVisHelper}}">
+      <Grid>
+        <!-- Шлифовка поверх (тонкие горизонтальные штрихи + шум) -->
+        <Rectangle Fill="{DynamicResource X.Brush.BrushedScratches}" IsHitTestVisible="False" />
+        <Rectangle Fill="{DynamicResource X.Brush.GrainOverlay}" IsHitTestVisible="False" />
+        <StackPanel Margin="10,20,10,20">
+          <StackPanel Orientation="Horizontal" Margin="6,0,0,24">
+            <Border Width="34" Height="34" CornerRadius="10" ClipToBounds="True">
+              <Border.Background>
+                <ImageBrush ImageSource="Assets/X-Rav.png" Stretch="UniformToFill" />
+              </Border.Background>
+            </Border>
+            <TextBlock Text="X-Rav" Foreground="{DynamicResource X.Brush.Text}" FontWeight="Bold"
+                       FontSize="18" Margin="10,0,0,0" VerticalAlignment="Center" />
+          </StackPanel>
+          <ui:NavTab Glyph="🌐" Title="{loc:T nav.servers}"      IsActive="{Binding IsServersTab}"      Command="{Binding GoServersCommand}"      Margin="0,2" />
+          <ui:NavTab Glyph="🔗" Title="{loc:T nav.subscription}" IsActive="{Binding IsSubscriptionTab}" Command="{Binding GoSubscriptionCommand}" Margin="0,2" />
+          <ui:NavTab Glyph="📜" Title="{loc:T nav.log}"          IsActive="{Binding IsLogTab}"          Command="{Binding GoLogCommand}"          Margin="0,2" />
+          <ui:NavTab Glyph="⚙"  Title="{loc:T nav.settings}"     IsActive="{Binding IsSettingsTab}"     Command="{Binding GoSettingsCommand}"     Margin="0,2" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <Grid Grid.Column="1" Margin="0,0,0,8">
       <Grid.RowDefinitions>
         <RowDefinition Height="Auto" />
         <RowDefinition Height="Auto" />
@@ -468,9 +499,10 @@
         <ui:SettingsView DataContext="{Binding}" Visibility="{Binding IsSettingsTab, Converter={StaticResource BoolToVis}}" />
       </Grid>
 
-      <!-- Нижняя навигация -->
+      <!-- Нижняя навигация (скрывается когда доступен sidebar) -->
       <Border Grid.Row="4" Margin="14,8,14,4" Background="{DynamicResource X.Brush.GlassFill}"
-              BorderBrush="{DynamicResource X.Brush.GlassBorder}" BorderThickness="1" CornerRadius="22" Padding="6">
+              BorderBrush="{DynamicResource X.Brush.GlassBorder}" BorderThickness="1" CornerRadius="22" Padding="6"
+              Visibility="{Binding IsNarrowLayout, Converter={StaticResource BoolToVisHelper}}">
         <Grid>
           <Grid.ColumnDefinitions>
             <ColumnDefinition />
@@ -487,7 +519,7 @@
     </Grid>
 
     <!-- Toast-уведомление: всплывает сверху при успешном/ошибочном обновлении подписки -->
-    <Border x:Name="Toast" VerticalAlignment="Top" HorizontalAlignment="Center"
+    <Border x:Name="Toast" Grid.ColumnSpan="2" VerticalAlignment="Top" HorizontalAlignment="Center"
             Margin="0,18,0,0" CornerRadius="14" Padding="14,10" MaxWidth="440"
             BorderThickness="1" Cursor="Hand"
             MouseLeftButtonUp="OnToastClick"

@@ -332,6 +332,17 @@ public sealed class MainViewModel : ViewModelBase
 
     public bool IsManualMode => !AutoSelectMode;
 
+    /// <summary>Adaptive layout: true когда окно >= 900 px — показываем боковой sidebar.
+    /// Устанавливается из MainWindow.xaml.cs через SizeChanged. Меняет видимость
+    /// bottom nav и sidebar одновременно. </summary>
+    private bool _isWideLayout;
+    public bool IsWideLayout
+    {
+        get => _isWideLayout;
+        set { if (_isWideLayout == value) return; _isWideLayout = value; OnPropertyChanged(); OnPropertyChanged(nameof(IsNarrowLayout)); }
+    }
+    public bool IsNarrowLayout => !IsWideLayout;
+
     /// <summary>В Smart-режиме скрываем список ключей и ввод — главный экран сводится к одной кнопке.</summary>
     public bool SmartOnly => AutoSelectMode;
 
