@@ -125,7 +125,7 @@
       </Grid.RowDefinitions>
 
       <!-- Шапка: лого + статус-пилюля -->
-      <Grid Grid.Row="0" Margin="20,18,20,0">
+      <Grid Grid.Row="0" Margin="20,10,20,0">
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="*" />
           <ColumnDefinition Width="Auto" />
@@ -159,7 +159,7 @@
       </Grid>
 
       <!-- Сообщение об ошибке + баннер обновления -->
-      <StackPanel Grid.Row="1" Margin="20,12,20,0">
+      <StackPanel Grid.Row="1" Margin="20,6,20,0">
         <Border CornerRadius="10" Padding="12,8" Margin="0,0,0,6"
                 Background="{DynamicResource X.Brush.DangerTint}" BorderBrush="{DynamicResource X.Brush.Danger}" BorderThickness="1"
                 Visibility="{Binding TunnelError, Converter={StaticResource StringToVis}}">
@@ -184,8 +184,11 @@
       </StackPanel>
 
       <!-- Кнопка питания: Orbot-style стеклянный купол.
-           Слои: smart-radar / idle-pulse halo / connected-aurora / connecting-ring / glass orb / power glyph. -->
-      <StackPanel Grid.Row="2" HorizontalAlignment="Center" Margin="0,14,0,12">
+           Слои: smart-radar / idle-pulse halo / connected-aurora / connecting-ring / glass orb / power glyph.
+           Весь блок обёрнут Viewbox 190×190 — все слои и анимации пропорционально
+           сжаты, чтобы экономить вертикальное место для списка ключей. -->
+      <StackPanel Grid.Row="2" HorizontalAlignment="Center" Margin="0,2,0,2">
+        <Viewbox Width="170" Height="170" Stretch="Uniform" HorizontalAlignment="Center">
         <Grid Width="260" Height="260" HorizontalAlignment="Center">
 
           <!-- 0. SMART-RADAR: три расходящиеся волны от центра + scanning arc.
@@ -471,16 +474,17 @@
             </Button.Template>
           </Button>
         </Grid>
+        </Viewbox>
         <TextBlock Text="{Binding PowerHint}" Foreground="{DynamicResource X.Brush.TextSoft}"
-                   FontSize="12" HorizontalAlignment="Center" Margin="0,8,0,0" TextAlignment="Center" TextWrapping="Wrap" />
+                   FontSize="11" HorizontalAlignment="Center" Margin="0,4,0,0" TextAlignment="Center" TextWrapping="Wrap" />
         <TextBlock Text="{Binding AutoStatusLine}" Foreground="{DynamicResource X.Brush.Accent2}"
-                   FontSize="12" HorizontalAlignment="Center" Margin="0,4,0,0" TextAlignment="Center"
+                   FontSize="11" HorizontalAlignment="Center" Margin="0,2,0,0" TextAlignment="Center"
                    FontWeight="SemiBold" TextWrapping="Wrap"
                    Visibility="{Binding AutoSelectMode, Converter={StaticResource BoolToVisHelper}}" />
         <!-- Проверка текущего подключения: видна только при Connected; жмёт TLS/Reality handshake к активному ключу -->
         <Button Command="{Binding CheckHandshakeCommand}"
                 Style="{StaticResource X.Btn.Ghost}"
-                HorizontalAlignment="Center" Margin="0,12,0,0" Padding="14,8"
+                HorizontalAlignment="Center" Margin="0,6,0,0" Padding="12,5"
                 ToolTip="Проверить, действительно ли активный сервер отвечает на TLS/Reality рукопожатие"
                 Visibility="{Binding IsConnected, Converter={StaticResource BoolToVisHelper}}">
           <StackPanel Orientation="Horizontal">

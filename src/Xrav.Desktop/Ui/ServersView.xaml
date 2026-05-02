@@ -10,7 +10,7 @@
     <BooleanToVisibilityConverter x:Key="BoolToVis" />
     <ui:SubscriptionFilterMatchConverter x:Key="FilterMatch" />
   </UserControl.Resources>
-  <Grid Margin="20,4,20,8">
+  <Grid Margin="20,0,20,6">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />

@@ -33,3 +33,5 @@ dist-tools/
 src/Xrav.Desktop/Bundled/x64/
 src/Xrav.Desktop/Bundled/x86/
 src/Xrav.Desktop/Bundled/common/
+publish-x64/
+publish-x86/
