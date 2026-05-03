@@ -30,12 +30,12 @@
                    Text="Smart-режим включён: приложение само подбирает оптимальный ключ из подписок и автоматически переключается при сбое сети."
                    Visibility="{Binding SmartOnly, Converter={StaticResource BoolToVisHelper}}" />
       </StackPanel>
-      <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
+      <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top"
+                  Visibility="{Binding SmartOnly, Converter={StaticResource InverseBoolToVis}}">
         <Button Content="Пинг всех" Command="{Binding PingAllKeysCommand}" Style="{StaticResource X.Btn.Ghost}" Margin="0,0,8,0"
-                Visibility="{Binding SmartOnly, Converter={StaticResource InverseBoolToVis}}" />
-        <Border Style="{StaticResource X.Badge.Pill}">
-          <TextBlock Text="{Binding FilteredKeys.Count, StringFormat={}{0} ключей}" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="11" />
-        </Border>
+                ToolTip="TCP-проверка доступности всех серверов из списка" />
+        <Button Content="Удалить" Command="{Binding RemoveSelectedKeyCommand}" Style="{StaticResource X.Btn.Danger}"
+                ToolTip="Удалить выбранный ключ из списка" />
       </StackPanel>
     </Grid>
 
@@ -123,11 +123,6 @@
       </ListBox>
     </Border>
 
-    <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0"
-                Visibility="{Binding SmartOnly, Converter={StaticResource InverseBoolToVis}}">
-      <Button Content="Пинг" Command="{Binding PingSelectedKeyCommand}" Style="{StaticResource X.Btn.Ghost}" Margin="0,0,8,0"
-              ToolTip="TCP-проверка доступности сервера" />
-      <Button Content="Удалить" Command="{Binding RemoveSelectedKeyCommand}" Style="{StaticResource X.Btn.Danger}" />
-    </StackPanel>
+
   </Grid>
 </UserControl>

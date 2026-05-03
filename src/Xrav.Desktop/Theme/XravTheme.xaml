@@ -69,6 +69,23 @@
     <GradientStop Color="{DynamicResource X.Color.Accent2}" Offset="1" />
   </LinearGradientBrush>
 
+  <!-- Цветные градиентные бейджи для иконок секций настроек.
+       Используются как Background у X.Settings.IconBadge. -->
+  <LinearGradientBrush x:Key="X.Brush.GreenGrad" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#FF22C55E" Offset="0" />
+    <GradientStop Color="#FF16A34A" Offset="1" />
+  </LinearGradientBrush>
+
+  <LinearGradientBrush x:Key="X.Brush.AmberGrad" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#FFF59E0B" Offset="0" />
+    <GradientStop Color="#FFD97706" Offset="1" />
+  </LinearGradientBrush>
+
+  <LinearGradientBrush x:Key="X.Brush.PurpleGrad" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#FF8B5CF6" Offset="0" />
+    <GradientStop Color="#FF6D28D9" Offset="1" />
+  </LinearGradientBrush>
+
   <RadialGradientBrush x:Key="X.Brush.PowerOff" GradientOrigin="0.4,0.35">
     <GradientStop Color="{DynamicResource X.Color.PowerOff1}" Offset="0" />
     <GradientStop Color="{DynamicResource X.Color.PowerOff2}" Offset="0.7" />

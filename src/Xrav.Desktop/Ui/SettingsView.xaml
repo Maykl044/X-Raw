@@ -9,21 +9,23 @@
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="500">
   <UserControl.Resources>
-    <!-- Стиль строки меню -->
+    <!-- Settings menu row: компактный desktop-бар. Слева — цветная иконка,
+         центр — заголовок + подзаголовок, справа — chevron. На hover —
+         плавная подсветка фона + лёгкое смещение chevron вправо. -->
     <Style x:Key="X.Settings.MenuRow" TargetType="Button">
-      <Setter Property="Background" Value="{DynamicResource X.Brush.Surface}" />
-      <Setter Property="BorderBrush" Value="{DynamicResource X.Brush.OutlineSoft}" />
+      <Setter Property="Background" Value="{DynamicResource X.Brush.GlassFill}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource X.Brush.GlassBorder}" />
       <Setter Property="BorderThickness" Value="1" />
       <Setter Property="Foreground" Value="{DynamicResource X.Brush.Text}" />
       <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-      <Setter Property="Padding" Value="14,12" />
+      <Setter Property="Padding" Value="12,10" />
       <Setter Property="Margin" Value="0,0,0,8" />
       <Setter Property="Cursor" Value="Hand" />
       <Setter Property="FontFamily" Value="Segoe UI, Segoe UI Emoji, Segoe UI Symbol" />
       <Setter Property="Template">
         <Setter.Value>
           <ControlTemplate TargetType="Button">
-            <Border Background="{TemplateBinding Background}"
+            <Border x:Name="bd" Background="{TemplateBinding Background}"
                     BorderBrush="{TemplateBinding BorderBrush}"
                     BorderThickness="{TemplateBinding BorderThickness}"
                     CornerRadius="14" Padding="{TemplateBinding Padding}">
@@ -31,12 +33,34 @@
             </Border>
             <ControlTemplate.Triggers>
               <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="{DynamicResource X.Brush.SurfaceHi}" />
+                <Setter TargetName="bd" Property="Background" Value="{DynamicResource X.Brush.GlassFillStrong}" />
+                <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource X.Brush.Accent}" />
+              </Trigger>
+              <Trigger Property="IsPressed" Value="True">
+                <Setter TargetName="bd" Property="Background" Value="{DynamicResource X.Brush.SurfaceHi}" />
               </Trigger>
             </ControlTemplate.Triggers>
           </ControlTemplate>
         </Setter.Value>
       </Setter>
+    </Style>
+
+    <!-- Иконка-бейдж в начале строки меню (мини-аватар секции) -->
+    <Style x:Key="X.Settings.IconBadge" TargetType="Border">
+      <Setter Property="Width" Value="32" />
+      <Setter Property="Height" Value="32" />
+      <Setter Property="CornerRadius" Value="9" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="Margin" Value="0,0,12,0" />
+      <Setter Property="BorderBrush" Value="{DynamicResource X.Brush.GlassBorder}" />
+      <Setter Property="BorderThickness" Value="1" />
+    </Style>
+
+    <Style x:Key="X.Settings.IconGlyph" TargetType="TextBlock">
+      <Setter Property="HorizontalAlignment" Value="Center" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="FontSize" Value="15" />
+      <Setter Property="FontFamily" Value="Segoe UI Emoji, Segoe UI Symbol, Segoe UI" />
     </Style>
   </UserControl.Resources>
   <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -65,112 +89,90 @@
         <Button Style="{StaticResource X.Settings.MenuRow}" Tag="appearance" Click="OnMenuClick">
           <Grid>
             <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
               <ColumnDefinition Width="*" />
               <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <StackPanel Grid.Column="0">
-              <TextBlock Text="{loc:T settings.appearance}" FontWeight="SemiBold" FontSize="14" />
-              <TextBlock Text="{loc:T settings.appearance.sub}" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="11" Margin="0,2,0,0" />
+            <Border Grid.Column="0" Style="{StaticResource X.Settings.IconBadge}" Background="{DynamicResource X.Brush.AccentGrad}">
+              <TextBlock Text="🎨" Style="{StaticResource X.Settings.IconGlyph}" />
+            </Border>
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+              <TextBlock Text="Внешний вид" FontWeight="SemiBold" FontSize="14" />
+              <TextBlock Text="Тема оформления, язык интерфейса" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="11" Margin="0,2,0,0" TextTrimming="CharacterEllipsis" />
             </StackPanel>
-            <TextBlock Grid.Column="1" Text="›" FontSize="22" Foreground="{DynamicResource X.Brush.TextSoft}" VerticalAlignment="Center" Margin="8,0,0,0" />
+            <TextBlock Grid.Column="2" Text="›" FontSize="22" Foreground="{DynamicResource X.Brush.TextSoft}" VerticalAlignment="Center" Margin="8,0,0,0" />
           </Grid>
         </Button>
 
         <Button Style="{StaticResource X.Settings.MenuRow}" Tag="mode" Click="OnMenuClick">
           <Grid>
             <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
               <ColumnDefinition Width="*" />
               <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <StackPanel Grid.Column="0">
-              <TextBlock Text="{loc:T settings.mode}" FontWeight="SemiBold" FontSize="14" />
-              <TextBlock Text="{loc:T settings.mode.sub}" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="11" Margin="0,2,0,0" />
+            <Border Grid.Column="0" Style="{StaticResource X.Settings.IconBadge}" Background="{DynamicResource X.Brush.GreenGrad}">
+              <TextBlock Text="✨" Style="{StaticResource X.Settings.IconGlyph}" />
+            </Border>
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+              <TextBlock Text="Режим подключения" FontWeight="SemiBold" FontSize="14" />
+              <TextBlock Text="Smart-режим и ручной выбор ключей" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="11" Margin="0,2,0,0" TextTrimming="CharacterEllipsis" />
             </StackPanel>
-            <TextBlock Grid.Column="1" Text="›" FontSize="22" Foreground="{DynamicResource X.Brush.TextSoft}" VerticalAlignment="Center" Margin="8,0,0,0" />
+            <TextBlock Grid.Column="2" Text="›" FontSize="22" Foreground="{DynamicResource X.Brush.TextSoft}" VerticalAlignment="Center" Margin="8,0,0,0" />
           </Grid>
         </Button>
 
         <Button Style="{StaticResource X.Settings.MenuRow}" Tag="bypass" Click="OnMenuClick">
           <Grid>
             <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
               <ColumnDefinition Width="*" />
               <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <StackPanel Grid.Column="0">
+            <Border Grid.Column="0" Style="{StaticResource X.Settings.IconBadge}" Background="{DynamicResource X.Brush.AmberGrad}">
+              <TextBlock Text="🛡" Style="{StaticResource X.Settings.IconGlyph}" />
+            </Border>
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
               <TextBlock Text="Обход блокировок" FontWeight="SemiBold" FontSize="14" />
-              <TextBlock Text="Фрагментация TLS · Mux · шум" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="11" Margin="0,2,0,0" />
+              <TextBlock Text="Фрагментация TLS, mux-конвейер, шумовые пакеты" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="11" Margin="0,2,0,0" TextTrimming="CharacterEllipsis" />
             </StackPanel>
-            <TextBlock Grid.Column="1" Text="›" FontSize="22" Foreground="{DynamicResource X.Brush.TextSoft}" VerticalAlignment="Center" Margin="8,0,0,0" />
-          </Grid>
-        </Button>
-
-        <Button Style="{StaticResource X.Settings.MenuRow}" Tag="url" Click="OnMenuClick">
-          <Grid>
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <StackPanel Grid.Column="0">
-              <TextBlock Text="{loc:T settings.url}" FontWeight="SemiBold" FontSize="14" />
-              <TextBlock Text="x-rav://" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="11" Margin="0,2,0,0" />
-            </StackPanel>
-            <TextBlock Grid.Column="1" Text="›" FontSize="22" Foreground="{DynamicResource X.Brush.TextSoft}" VerticalAlignment="Center" Margin="8,0,0,0" />
-          </Grid>
-        </Button>
-
-        <Button Style="{StaticResource X.Settings.MenuRow}" Tag="tools" Click="OnMenuClick">
-          <Grid>
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <StackPanel Grid.Column="0">
-              <TextBlock Text="{loc:T settings.tools}" FontWeight="SemiBold" FontSize="14" />
-              <TextBlock Text="xray, sing-box, hev, wintun" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="11" Margin="0,2,0,0" />
-            </StackPanel>
-            <TextBlock Grid.Column="1" Text="›" FontSize="22" Foreground="{DynamicResource X.Brush.TextSoft}" VerticalAlignment="Center" Margin="8,0,0,0" />
-          </Grid>
-        </Button>
-
-        <Button Style="{StaticResource X.Settings.MenuRow}" Tag="folders" Click="OnMenuClick">
-          <Grid>
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <StackPanel Grid.Column="0">
-              <TextBlock Text="{loc:T settings.folders}" FontWeight="SemiBold" FontSize="14" />
-              <TextBlock Text="%APPDATA%\X-Rav" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="11" Margin="0,2,0,0" />
-            </StackPanel>
-            <TextBlock Grid.Column="1" Text="›" FontSize="22" Foreground="{DynamicResource X.Brush.TextSoft}" VerticalAlignment="Center" Margin="8,0,0,0" />
+            <TextBlock Grid.Column="2" Text="›" FontSize="22" Foreground="{DynamicResource X.Brush.TextSoft}" VerticalAlignment="Center" Margin="8,0,0,0" />
           </Grid>
         </Button>
 
         <Button Style="{StaticResource X.Settings.MenuRow}" Tag="faq" Click="OnMenuClick">
           <Grid>
             <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
               <ColumnDefinition Width="*" />
               <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <StackPanel Grid.Column="0">
-              <TextBlock Text="{loc:T settings.faq}" FontWeight="SemiBold" FontSize="14" />
-              <TextBlock Text="{loc:T settings.faq.sub}" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="11" Margin="0,2,0,0" />
+            <Border Grid.Column="0" Style="{StaticResource X.Settings.IconBadge}" Background="{DynamicResource X.Brush.GlassFillStrong}">
+              <TextBlock Text="❔" Style="{StaticResource X.Settings.IconGlyph}" />
+            </Border>
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+              <TextBlock Text="Справка и FAQ" FontWeight="SemiBold" FontSize="14" />
+              <TextBlock Text="Ответы на частые вопросы о работе клиента" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="11" Margin="0,2,0,0" TextTrimming="CharacterEllipsis" />
             </StackPanel>
-            <TextBlock Grid.Column="1" Text="›" FontSize="22" Foreground="{DynamicResource X.Brush.TextSoft}" VerticalAlignment="Center" Margin="8,0,0,0" />
+            <TextBlock Grid.Column="2" Text="›" FontSize="22" Foreground="{DynamicResource X.Brush.TextSoft}" VerticalAlignment="Center" Margin="8,0,0,0" />
           </Grid>
         </Button>
 
         <Button Style="{StaticResource X.Settings.MenuRow}" Tag="about" Click="OnMenuClick">
           <Grid>
             <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
               <ColumnDefinition Width="*" />
               <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <StackPanel Grid.Column="0">
-              <TextBlock Text="{loc:T settings.about}" FontWeight="SemiBold" FontSize="14" />
-              <TextBlock Text="X-Rav · rock.rockefellers.store" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="11" Margin="0,2,0,0" />
+            <Border Grid.Column="0" Style="{StaticResource X.Settings.IconBadge}" Background="{DynamicResource X.Brush.PurpleGrad}">
+              <TextBlock Text="ℹ" Style="{StaticResource X.Settings.IconGlyph}" />
+            </Border>
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+              <TextBlock Text="О приложении" FontWeight="SemiBold" FontSize="14" />
+              <TextBlock Text="Версия, лицензия, контакты проекта" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="11" Margin="0,2,0,0" TextTrimming="CharacterEllipsis" />
             </StackPanel>
-            <TextBlock Grid.Column="1" Text="›" FontSize="22" Foreground="{DynamicResource X.Brush.TextSoft}" VerticalAlignment="Center" Margin="8,0,0,0" />
+            <TextBlock Grid.Column="2" Text="›" FontSize="22" Foreground="{DynamicResource X.Brush.TextSoft}" VerticalAlignment="Center" Margin="8,0,0,0" />
           </Grid>
         </Button>
       </StackPanel>
