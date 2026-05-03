@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using Xrav.Desktop.Services;
@@ -9,12 +10,18 @@ namespace Xrav.Desktop;
 
 public partial class MainWindow : Window
 {
+    private TrayIconManager? _tray;
+
     public MainWindow()
     {
         InitializeComponent();
         var tunnel = new WinTunnelService();
         var store = new JsonFileUserStateStore();
         DataContext = new MainViewModel(tunnel, store);
+
+        // Системный трей: при закрытии окна сворачиваемся в трей вместо
+        // полного выхода. Реальный exit — только из контекст-меню "Выйти".
+        Loaded += (_, _) => _tray ??= new TrayIconManager(this);
 
         // Активируем системный backdrop (Mica/Acrylic) на Windows 11+.
         SourceInitialized += (_, _) => ApplyBackdrop();
@@ -34,14 +41,26 @@ public partial class MainWindow : Window
             if (e.PropertyName == nameof(ThemeService.EffectiveIsDark)) ApplyBackdrop();
         };
 
+        Closing += OnWindowClosing;
+
         Closed += (_, _) =>
         {
+            _tray?.Dispose();
             if (DataContext is MainViewModel vm)
             {
                 vm.Teardown();
                 if (vm.Tunnel is IDisposable d) d.Dispose();
             }
         };
+    }
+
+    private void OnWindowClosing(object? sender, CancelEventArgs e)
+    {
+        // Если пользователь явно нажал "Выйти" в контекстном меню трея —
+        // позволяем закрытию пройти. Иначе сворачиваемся в трей.
+        if (_tray is null || _tray.UserExitRequested) return;
+        e.Cancel = true;
+        _tray.Hide();
     }
 
     private void ApplyBackdrop()

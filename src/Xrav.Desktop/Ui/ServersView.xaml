@@ -78,28 +78,10 @@
       </StackPanel>
     </Grid>
 
-    <!-- ROW 1: поле поиска (стиль Happ — pill-input с лупой) -->
-    <Border Grid.Row="1" Margin="0,12,0,0"
-            Background="{DynamicResource X.Brush.GlassFill}"
-            BorderBrush="{DynamicResource X.Brush.GlassBorder}" BorderThickness="1"
-            CornerRadius="14" Padding="12,8"
-            Visibility="{Binding SmartOnly, Converter={StaticResource InverseBoolToVis}}">
-      <Grid>
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="Auto" />
-          <ColumnDefinition Width="*" />
-          <ColumnDefinition Width="Auto" />
-        </Grid.ColumnDefinitions>
-        <TextBox Grid.Column="0" Grid.ColumnSpan="2"
-                 Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=120}"
-                 Style="{StaticResource X.SearchBox}" />
-        <TextBlock Grid.Column="2" Text="🔍" FontSize="14" VerticalAlignment="Center"
-                   Foreground="{DynamicResource X.Brush.TextSoft}" Margin="6,0,0,0" />
-      </Grid>
-    </Border>
+    <!-- ROW 1 (раньше тут было поле поиска — убрано по запросу) -->
 
     <!-- ROW 2: фильтр-пилюли по подпискам -->
-    <Border Grid.Row="2" Margin="0,8,0,0"
+    <Border Grid.Row="2" Margin="0,12,0,0"
             Visibility="{Binding HasSubscriptions, Converter={StaticResource BoolToVisHelper}}">
       <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
         <StackPanel Orientation="Horizontal">
@@ -176,11 +158,20 @@
                 <!-- Тонкий разделитель header / body -->
                 <Border Height="1" Background="{DynamicResource X.Brush.GlassBorder}" />
 
-                <!-- Список ключей внутри группы -->
+                <!-- Список ключей внутри группы. ScrollViewer.CanContentScroll=False
+                     отключает виртуализацию — высота каждого ключа невелика и список
+                     короткий, виртуализация не нужна, зато снимаем перехват MouseWheel
+                     внутренним ScrollViewer'ом ListBox'а. Дополнительно прокидываем
+                     PreviewMouseWheel в code-behind, чтобы внешний ScrollViewer всегда
+                     получал событие колеса. -->
                 <ListBox ItemsSource="{Binding Keys}"
                          SelectedItem="{Binding DataContext.SelectedKey, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay}"
                          Style="{StaticResource X.ListBox}"
                          BorderThickness="0" Background="Transparent"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                         ScrollViewer.CanContentScroll="False"
+                         PreviewMouseWheel="GroupListBox_PreviewMouseWheel"
                          ItemTemplate="{StaticResource X.KeyItem.Template}" />
               </StackPanel>
             </Border>

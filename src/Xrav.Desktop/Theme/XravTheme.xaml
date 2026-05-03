@@ -725,6 +725,101 @@
   </Style>
 
   <!-- ============================================================
+       FAQ-card Expander (стиль iOS-карточки как в Happ 2.9.0):
+       вопрос — закруглённая карточка 14px с chevron ⌄ справа,
+       по клику раскрывается ответ внутри (Margin=14,0,14,12).
+       ============================================================ -->
+  <Style x:Key="X.Expander.FaqCard" TargetType="Expander">
+    <Setter Property="Margin" Value="0,0,0,8" />
+    <Setter Property="Foreground" Value="{DynamicResource X.Brush.Text}" />
+    <Setter Property="Background" Value="{DynamicResource X.Brush.GlassFill}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource X.Brush.GlassBorder}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Expander">
+          <Border x:Name="card" Background="{TemplateBinding Background}"
+                  BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+                  CornerRadius="14">
+            <Grid>
+              <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+              </Grid.RowDefinitions>
+
+              <!-- Header: question + chevron -->
+              <ToggleButton x:Name="HeaderSite" Grid.Row="0"
+                            IsChecked="{Binding IsExpanded, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                            Background="Transparent" BorderThickness="0" Padding="14,12"
+                            HorizontalContentAlignment="Stretch" Cursor="Hand"
+                            Focusable="False">
+                <ToggleButton.Template>
+                  <ControlTemplate TargetType="ToggleButton">
+                    <Grid Background="Transparent">
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                      </Grid.ColumnDefinitions>
+                      <ContentPresenter Grid.Column="0" Content="{TemplateBinding Content}"
+                                        VerticalAlignment="Center"
+                                        TextBlock.Foreground="{DynamicResource X.Brush.Text}"
+                                        TextBlock.FontSize="13"
+                                        TextBlock.FontWeight="Medium" />
+                      <TextBlock x:Name="chev" Grid.Column="1" Text="⌄"
+                                 FontSize="18" Foreground="{DynamicResource X.Brush.TextSoft}"
+                                 VerticalAlignment="Center" Margin="10,0,2,0">
+                        <TextBlock.RenderTransform>
+                          <RotateTransform Angle="0" CenterX="6" CenterY="9" />
+                        </TextBlock.RenderTransform>
+                      </TextBlock>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                      <Trigger Property="IsChecked" Value="True">
+                        <Trigger.EnterActions>
+                          <BeginStoryboard>
+                            <Storyboard>
+                              <DoubleAnimation Storyboard.TargetName="chev"
+                                               Storyboard.TargetProperty="(TextBlock.RenderTransform).(RotateTransform.Angle)"
+                                               To="180" Duration="0:0:0.18" />
+                            </Storyboard>
+                          </BeginStoryboard>
+                        </Trigger.EnterActions>
+                        <Trigger.ExitActions>
+                          <BeginStoryboard>
+                            <Storyboard>
+                              <DoubleAnimation Storyboard.TargetName="chev"
+                                               Storyboard.TargetProperty="(TextBlock.RenderTransform).(RotateTransform.Angle)"
+                                               To="0" Duration="0:0:0.18" />
+                            </Storyboard>
+                          </BeginStoryboard>
+                        </Trigger.ExitActions>
+                      </Trigger>
+                    </ControlTemplate.Triggers>
+                  </ControlTemplate>
+                </ToggleButton.Template>
+                <ContentPresenter ContentSource="Header" RecognizesAccessKey="True" />
+              </ToggleButton>
+
+              <!-- Body -->
+              <ContentPresenter x:Name="ExpandSite" Grid.Row="1" Margin="14,0,14,12"
+                                Visibility="Collapsed" />
+            </Grid>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsExpanded" Value="True">
+              <Setter TargetName="ExpandSite" Property="Visibility" Value="Visible" />
+              <Setter TargetName="card" Property="BorderBrush" Value="{DynamicResource X.Brush.Accent}" />
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="card" Property="Background" Value="{DynamicResource X.Brush.GlassFillStrong}" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- ============================================================
        Enhanced Ghost button с внутренним highlight на hover.
        Применяется поверх базового X.Btn.Ghost через attached CursorLight
        behavior (см. Ui/CursorLight.cs).

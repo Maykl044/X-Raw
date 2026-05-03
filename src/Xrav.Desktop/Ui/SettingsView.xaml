@@ -446,26 +446,23 @@
           <TextBlock Text="{loc:T settings.faq}" Style="{StaticResource X.Text.H2}" Margin="14,0,0,0" VerticalAlignment="Center" />
         </DockPanel>
 
-        <Border Background="{DynamicResource X.Brush.GlassFill}" BorderBrush="{DynamicResource X.Brush.GlassBorder}"
-                BorderThickness="1" CornerRadius="14" Padding="14">
-          <StackPanel>
-            <Expander Foreground="{DynamicResource X.Brush.Text}" Header="{loc:T faq.q1}" Margin="0,2">
-              <TextBlock Text="{loc:T faq.a1}" TextWrapping="Wrap" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="12" Margin="4,4,0,4" />
-            </Expander>
-            <Expander Foreground="{DynamicResource X.Brush.Text}" Header="{loc:T faq.q2}" Margin="0,2">
-              <TextBlock Text="{loc:T faq.a2}" TextWrapping="Wrap" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="12" Margin="4,4,0,4" />
-            </Expander>
-            <Expander Foreground="{DynamicResource X.Brush.Text}" Header="{loc:T faq.q3}" Margin="0,2">
-              <TextBlock Text="{loc:T faq.a3}" TextWrapping="Wrap" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="12" Margin="4,4,0,4" />
-            </Expander>
-            <Expander Foreground="{DynamicResource X.Brush.Text}" Header="{loc:T faq.q4}" Margin="0,2">
-              <TextBlock Text="{loc:T faq.a4}" TextWrapping="Wrap" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="12" Margin="4,4,0,4" />
-            </Expander>
-            <Expander Foreground="{DynamicResource X.Brush.Text}" Header="{loc:T faq.q5}" Margin="0,2">
-              <TextBlock Text="{loc:T faq.a5}" TextWrapping="Wrap" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="12" Margin="4,4,0,4" />
-            </Expander>
-          </StackPanel>
-        </Border>
+        <StackPanel>
+          <Expander Style="{StaticResource X.Expander.FaqCard}" Header="{loc:T faq.q1}">
+            <TextBlock Text="{loc:T faq.a1}" TextWrapping="Wrap" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="12" />
+          </Expander>
+          <Expander Style="{StaticResource X.Expander.FaqCard}" Header="{loc:T faq.q2}">
+            <TextBlock Text="{loc:T faq.a2}" TextWrapping="Wrap" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="12" />
+          </Expander>
+          <Expander Style="{StaticResource X.Expander.FaqCard}" Header="{loc:T faq.q3}">
+            <TextBlock Text="{loc:T faq.a3}" TextWrapping="Wrap" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="12" />
+          </Expander>
+          <Expander Style="{StaticResource X.Expander.FaqCard}" Header="{loc:T faq.q4}">
+            <TextBlock Text="{loc:T faq.a4}" TextWrapping="Wrap" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="12" />
+          </Expander>
+          <Expander Style="{StaticResource X.Expander.FaqCard}" Header="{loc:T faq.q5}">
+            <TextBlock Text="{loc:T faq.a5}" TextWrapping="Wrap" Foreground="{DynamicResource X.Brush.TextSoft}" FontSize="12" />
+          </Expander>
+        </StackPanel>
       </StackPanel>
 
       <!-- ======= ABOUT ======= -->
@@ -486,46 +483,122 @@
           <TextBlock Text="{loc:T settings.about}" Style="{StaticResource X.Text.H2}" Margin="14,0,0,0" VerticalAlignment="Center" />
         </DockPanel>
 
+        <!-- Hero-карточка: круглый логотип + название + версия. -->
         <Border Background="{DynamicResource X.Brush.GlassFill}" BorderBrush="{DynamicResource X.Brush.GlassBorder}"
-                BorderThickness="1" CornerRadius="14" Padding="14">
-          <StackPanel>
-            <Grid>
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-              </Grid.ColumnDefinitions>
-              <TextBlock Grid.Column="0" Text="{loc:T settings.version}" Foreground="{DynamicResource X.Brush.TextSoft}"
-                         FontSize="12" Margin="0,0,8,0" />
-              <TextBlock Grid.Column="1" Text="{Binding AppVersion}" Foreground="{DynamicResource X.Brush.Text}"
-                         FontSize="12" FontWeight="SemiBold" />
-            </Grid>
-
-            <Grid Margin="0,6,0,0">
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-              </Grid.ColumnDefinitions>
-              <TextBlock Grid.Column="0" Text="{loc:T settings.license}" Foreground="{DynamicResource X.Brush.TextSoft}"
-                         FontSize="12" Margin="0,0,8,0" />
-              <TextBlock Grid.Column="1" Text="{loc:T settings.licenseText}" Foreground="{DynamicResource X.Brush.Text}"
-                         FontSize="12" FontWeight="SemiBold" />
-            </Grid>
-
-            <TextBlock Style="{StaticResource X.Text.Caption}" Margin="0,12,0,4" Text="{loc:T settings.website}" />
-            <Button Content="rock.rockefellers.store" Command="{Binding OpenWebsiteCommand}"
-                    HorizontalAlignment="Left" Style="{StaticResource X.Btn.Link}" />
-
-            <TextBlock Style="{StaticResource X.Text.Caption}" Margin="0,10,0,4" Text="{loc:T settings.github}" />
-            <Button Content="github.com/Maykl044/X-Raw" Command="{Binding OpenGithubCommand}"
-                    HorizontalAlignment="Left" Style="{StaticResource X.Btn.Link}" />
-
-            <TextBlock Style="{StaticResource X.Text.Caption}" Margin="0,10,0,4" Text="{loc:T settings.developers}" />
-            <StackPanel Orientation="Horizontal">
-              <Button Content="@igroutech" Command="{Binding OpenDeveloper1Command}" Style="{StaticResource X.Btn.Link}" Margin="0,0,12,0" />
-              <Button Content="@BernarAr_no" Command="{Binding OpenDeveloper2Command}" Style="{StaticResource X.Btn.Link}" />
-            </StackPanel>
+                BorderThickness="1" CornerRadius="16" Padding="20,24" Margin="0,0,0,12">
+          <StackPanel HorizontalAlignment="Center">
+            <Border Width="84" Height="84" CornerRadius="42"
+                    Background="{DynamicResource X.Brush.GlassFillStrong}"
+                    BorderBrush="{DynamicResource X.Brush.GlassBorder}" BorderThickness="1">
+              <TextBlock Text="⚡" FontSize="42" HorizontalAlignment="Center" VerticalAlignment="Center"
+                         Foreground="#FFF59E0B" />
+            </Border>
+            <TextBlock Text="X-Rav" FontSize="22" FontWeight="Bold" Margin="0,12,0,0"
+                       HorizontalAlignment="Center"
+                       Foreground="{DynamicResource X.Brush.Text}" />
+            <TextBlock HorizontalAlignment="Center" Margin="0,4,0,0" FontSize="12"
+                       Foreground="{DynamicResource X.Brush.TextSoft}">
+              <Run Text="Версия " /><Run Text="{Binding AppVersion, Mode=OneWay}" />
+            </TextBlock>
           </StackPanel>
         </Border>
+
+        <!-- Карточка контактов: сайт + Telegram. -->
+        <Border Background="{DynamicResource X.Brush.GlassFill}" BorderBrush="{DynamicResource X.Brush.GlassBorder}"
+                BorderThickness="1" CornerRadius="14" Padding="16,12" Margin="0,0,0,12">
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="100" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto" />
+              <RowDefinition Height="Auto" />
+              <RowDefinition Height="Auto" />
+              <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Сайт" FontSize="12"
+                       Foreground="{DynamicResource X.Brush.TextSoft}" VerticalAlignment="Top" Margin="0,4,8,8" />
+            <Button Grid.Row="0" Grid.Column="1" Content="rock.rockefellers.store" Margin="0,0,0,8"
+                    Command="{Binding OpenWebsiteCommand}" Style="{StaticResource X.Btn.Link}"
+                    HorizontalAlignment="Left" />
+
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="Telegram" FontSize="12"
+                       Foreground="{DynamicResource X.Brush.TextSoft}" VerticalAlignment="Top" Margin="0,4,8,0" />
+            <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal">
+              <Button Content="@igroutech" Command="{Binding OpenDeveloper1Command}"
+                      Style="{StaticResource X.Btn.Link}" Margin="0,0,12,0" />
+              <Button Content="@BernarAr_no" Command="{Binding OpenDeveloper2Command}"
+                      Style="{StaticResource X.Btn.Link}" />
+            </StackPanel>
+          </Grid>
+        </Border>
+
+        <!-- Тех-карточка: AppId / Xray engine / TUN-мост. -->
+        <Border Background="{DynamicResource X.Brush.GlassFill}" BorderBrush="{DynamicResource X.Brush.GlassBorder}"
+                BorderThickness="1" CornerRadius="14" Padding="16,12" Margin="0,0,0,12">
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="120" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto" />
+              <RowDefinition Height="Auto" />
+              <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Application ID" FontSize="12"
+                       Foreground="{DynamicResource X.Brush.TextSoft}" Margin="0,0,8,8" />
+            <TextBlock Grid.Row="0" Grid.Column="1" Text="com.xrav.vpn" FontSize="12" FontWeight="SemiBold"
+                       Foreground="{DynamicResource X.Brush.Text}" Margin="0,0,0,8" />
+
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="Xray engine" FontSize="12"
+                       Foreground="{DynamicResource X.Brush.TextSoft}" Margin="0,0,8,8" />
+            <TextBlock Grid.Row="1" Grid.Column="1" Text="подключён" FontSize="12" FontWeight="SemiBold"
+                       Foreground="{DynamicResource X.Brush.Text}" Margin="0,0,0,8" />
+
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="TUN-мост" FontSize="12"
+                       Foreground="{DynamicResource X.Brush.TextSoft}" Margin="0,0,8,0" />
+            <TextBlock Grid.Row="2" Grid.Column="1" Text="hev-socks5-tunnel" FontSize="12" FontWeight="SemiBold"
+                       Foreground="{DynamicResource X.Brush.Text}" />
+          </Grid>
+        </Border>
+
+        <!-- Карточка возможностей: протоколы / роутинг / TLS-фрагментация. -->
+        <Border Background="{DynamicResource X.Brush.GlassFill}" BorderBrush="{DynamicResource X.Brush.GlassBorder}"
+                BorderThickness="1" CornerRadius="14" Padding="16,12" Margin="0,0,0,12">
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="120" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto" />
+              <RowDefinition Height="Auto" />
+              <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Протоколы" FontSize="12"
+                       Foreground="{DynamicResource X.Brush.TextSoft}" Margin="0,0,8,8" VerticalAlignment="Top" />
+            <TextBlock Grid.Row="0" Grid.Column="1" FontSize="12" FontWeight="SemiBold"
+                       Foreground="{DynamicResource X.Brush.Text}" Margin="0,0,0,8" TextWrapping="Wrap"
+                       Text="VLESS · VMess · Shadowsocks · Trojan · Hysteria2 · TUIC · REALITY" />
+
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="Роутинг" FontSize="12"
+                       Foreground="{DynamicResource X.Brush.TextSoft}" Margin="0,0,8,8" VerticalAlignment="Top" />
+            <TextBlock Grid.Row="1" Grid.Column="1" FontSize="12" FontWeight="SemiBold"
+                       Foreground="{DynamicResource X.Brush.Text}" Margin="0,0,0,8" TextWrapping="Wrap"
+                       Text="rule-based · bypass LAN · global proxy" />
+
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="Фрагментация TLS" FontSize="12"
+                       Foreground="{DynamicResource X.Brush.TextSoft}" Margin="0,0,8,0" VerticalAlignment="Top" />
+            <TextBlock Grid.Row="2" Grid.Column="1" FontSize="12" FontWeight="SemiBold"
+                       Foreground="{DynamicResource X.Brush.Text}" TextWrapping="Wrap"
+                       Text="ручная, настраивается в Подписке" />
+          </Grid>
+        </Border>
+
+        <TextBlock Text="{loc:T settings.licenseText}" FontSize="11" HorizontalAlignment="Center"
+                   Foreground="{DynamicResource X.Brush.TextSoft}" Margin="0,4,0,0" />
       </StackPanel>
     </Grid>
   </ScrollViewer>

@@ -3,6 +3,10 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <!-- WinForms жалуется что в нашем app.manifest есть DPI-настройки,
+         но мы — WPF, манифест нужен для UAC, не для WinForms. Глушим. -->
+    <NoWarn>$(NoWarn);WFAC010</NoWarn>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>Xrav.Desktop</RootNamespace>
@@ -30,6 +34,11 @@
     <Using Include="System.Threading" />
     <Using Include="System.Threading.Tasks" />
     <Using Include="System.Collections.Generic" />
+    <!-- UseWindowsForms=true сам добавляет 'using System.Windows.Forms', что
+         конфликтует с WPF-типами (UserControl, Application, Button, Brush,
+         MouseEventArgs). Снимаем — TrayIconManager использует alias. -->
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
   </ItemGroup>
 
   <ItemGroup>
