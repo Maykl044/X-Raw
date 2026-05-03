@@ -122,8 +122,15 @@ public sealed class WinTunnelService : ITunnelService, INotifyPropertyChanged, I
                 _router.Log = msg => EmitLog("router", msg);
                 if (!string.IsNullOrEmpty(backend.ServerHost))
                 {
-                    // Даём hev ~1с на подъём интерфейса.
-                    await Task.Delay(1500, cancellationToken).ConfigureAwait(false);
+                    // Ждём пока wintun-адаптер реально поднимется (max 10s).
+                    // Идея из happ-daemon: "Waiting for interface to be UP (max 10000 ms)".
+                    var upMs = await TunnelInterfaceWaiter.WaitForUpAsync(
+                        "X-RavWintun", TimeSpan.FromSeconds(10), cancellationToken).ConfigureAwait(false);
+                    if (upMs >= 0)
+                        EmitLog("router", $"wintun-интерфейс X-RavWintun поднят за {upMs} мс");
+                    else
+                        EmitLog("router", "wintun-интерфейс не поднялся за 10s — пробую применить маршруты вслепую");
+
                     _routerSnapshot = await _router.ApplyAsync(
                         backend.ServerHost!,
                         "X-RavWintun",

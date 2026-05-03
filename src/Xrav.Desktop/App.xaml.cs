@@ -47,6 +47,20 @@ public partial class App : Application
 
         FileLogger.Log("app", "X-Rav started");
 
+        // Сканируем процессы туннеля, оставшиеся от прошлой сессии (если приложение
+        // упало — xray/hev/sing-box могут продолжать жить, держать SOCKS-порт и tun).
+        // Идея из happ-daemon: проверяем "stale processes" и грохаем перед стартом.
+        try
+        {
+            int killed = Services.StaleProcessCleanup.KillStale();
+            if (killed > 0)
+                FileLogger.Log("app", $"Stale tunnel processes killed: {killed}");
+        }
+        catch (Exception ex)
+        {
+            FileLogger.Error("staleCleanup", ex);
+        }
+
         try
         {
             int extracted = BundledTools.ExtractMissing();

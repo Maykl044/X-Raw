@@ -156,8 +156,25 @@ public sealed class MainViewModel : ViewModelBase
 
     public ObservableCollection<VpnKey> Keys { get; } = new();
     public ObservableCollection<VpnKey> FilteredKeys { get; } = new();
+    public ObservableCollection<KeyGroup> KeyGroups { get; } = new();
     public ObservableCollection<SubscriptionEntry> Subscriptions { get; } = new();
     public ObservableCollection<string> TunnelLog { get; } = new();
+
+    private string _searchText = string.Empty;
+
+    /// <summary>Текст из поля поиска в ServersView. Применяется поверх фильтра подписки.</summary>
+    public string SearchText
+    {
+        get => _searchText;
+        set
+        {
+            value ??= string.Empty;
+            if (_searchText == value) return;
+            _searchText = value;
+            OnPropertyChanged();
+            RecomputeFilteredKeys();
+        }
+    }
 
     public bool HasSubscriptions => Subscriptions.Count > 0;
 
@@ -757,15 +774,59 @@ public sealed class MainViewModel : ViewModelBase
     private void OnSubscriptionsChanged(object? _, NotifyCollectionChangedEventArgs __)
     {
         OnPropertyChanged(nameof(HasSubscriptions));
+        // Перестраиваем группы — лейблы/timestamp могли поменяться.
+        RecomputeFilteredKeys();
         (RefreshActiveSubscriptionCommand as RelayCommand)?.RaiseCanExecuteChanged();
         Persist();
     }
 
     private void RecomputeFilteredKeys()
     {
-        var filtered = Keys.ToList().ApplyFilter(ActiveSubscriptionFilter);
+        var subFiltered = Keys.ToList().ApplyFilter(ActiveSubscriptionFilter);
+        var search = (SearchText ?? string.Empty).Trim();
+        IReadOnlyList<VpnKey> filtered = string.IsNullOrEmpty(search)
+            ? subFiltered
+            : subFiltered.Where(k => MatchesSearch(k, search)).ToList();
+
         FilteredKeys.Clear();
         foreach (var k in filtered) FilteredKeys.Add(k);
+
+        RebuildKeyGroups(filtered);
+    }
+
+    private static bool MatchesSearch(VpnKey k, string q)
+    {
+        bool m(string? s) => !string.IsNullOrEmpty(s)
+            && s.Contains(q, StringComparison.OrdinalIgnoreCase);
+        return m(k.Remark) || m(k.Host) || m(k.ShortProtocolLabel) || m(k.DisplayBadge);
+    }
+
+    private void RebuildKeyGroups(IReadOnlyList<VpnKey> keys)
+    {
+        // Группируем по SubscriptionId. Ключи без подписки (Source != Subscription)
+        // едут в специальную группу "@manual" с лейблом "Ручные ключи".
+        var subById = Subscriptions.ToDictionary(s => s.Id, s => s);
+        var groups = new List<KeyGroup>();
+
+        var manual = keys.Where(k => string.IsNullOrEmpty(k.SubscriptionId)).ToList();
+        if (manual.Count > 0)
+            groups.Add(new KeyGroup("@manual", "Ручные ключи", string.Empty, manual, isManual: true));
+
+        var bySub = keys
+            .Where(k => !string.IsNullOrEmpty(k.SubscriptionId))
+            .GroupBy(k => k.SubscriptionId!);
+
+        foreach (var g in bySub)
+        {
+            string label = subById.TryGetValue(g.Key, out var entry) ? entry.Label : g.Key;
+            string lastUpdate = entry?.LastRefreshedAt is long ts
+                ? DateTimeOffset.FromUnixTimeMilliseconds(ts).LocalDateTime.ToString("dd.MM.yyyy HH:mm")
+                : string.Empty;
+            groups.Add(new KeyGroup(g.Key, label, lastUpdate, g));
+        }
+
+        KeyGroups.Clear();
+        foreach (var grp in groups) KeyGroups.Add(grp);
     }
 
     private void Persist()

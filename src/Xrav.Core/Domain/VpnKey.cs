@@ -40,6 +40,42 @@ public sealed record VpnKey(
 
     public string Subtitle => $"{ShortProtocolLabel} · {Host ?? "—"}";
     public string LatencyDisplay => LatencyMs is null ? "—" : $"{LatencyMs} мс";
+
+    /// <summary>Стек протокол/транспорт/security вида "VLESS / WS / TLS" (как в Happ).
+    /// Транспорт и security вытаскиваются из query share-link'а; если их нет — только протокол.</summary>
+    public string ProtocolStack
+    {
+        get
+        {
+            var parts = new List<string> { ShortProtocolLabel };
+            string? type = null, security = null;
+            try
+            {
+                if (!string.IsNullOrEmpty(Raw) && Uri.TryCreate(Raw, UriKind.Absolute, out var uri))
+                {
+                    var q = uri.Query.TrimStart('?');
+                    foreach (var kv in q.Split('&', StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        var eq = kv.IndexOf('=');
+                        if (eq <= 0) continue;
+                        var key = kv.Substring(0, eq).ToLowerInvariant();
+                        var val = Uri.UnescapeDataString(kv[(eq + 1)..]);
+                        if (key == "type") type = val;
+                        else if (key == "security") security = val;
+                    }
+                }
+            }
+            catch { /* ignore parse */ }
+
+            if (!string.IsNullOrWhiteSpace(type)) parts.Add(type!.ToUpperInvariant());
+            if (!string.IsNullOrWhiteSpace(security) && !string.Equals(security, "none", StringComparison.OrdinalIgnoreCase))
+                parts.Add(security!.ToUpperInvariant());
+            return string.Join(" / ", parts);
+        }
+    }
+
+    /// <summary>Ключ группировки в списке: SubscriptionId либо "@manual" для ручных.</summary>
+    public string GroupKey => string.IsNullOrEmpty(SubscriptionId) ? "@manual" : SubscriptionId!;
 }
 
 /// <summary>

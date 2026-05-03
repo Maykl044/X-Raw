@@ -9,16 +9,55 @@
   <UserControl.Resources>
     <BooleanToVisibilityConverter x:Key="BoolToVis" />
     <ui:SubscriptionFilterMatchConverter x:Key="FilterMatch" />
+
+    <!-- Карточка ключа в стиле Happ 2.9.0: круглый флаг 32px,
+         двустрочный текст "имя ключа / VLESS / WS / TLS",
+         справа chevron `›`. На hover — подсветка фона. -->
+    <DataTemplate x:Key="X.KeyItem.Template">
+      <Grid Margin="0,0,4,0">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <Border Grid.Column="0" Width="32" Height="32" CornerRadius="16"
+                Background="{DynamicResource X.Brush.AccentGrad}"
+                VerticalAlignment="Center" Margin="0,0,12,0"
+                ClipToBounds="True" ToolTip="{Binding FlagEmoji}">
+          <Grid>
+            <TextBlock Text="{Binding DisplayBadge}" Foreground="White" FontWeight="Bold"
+                       FontFamily="Segoe UI" FontSize="11"
+                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+            <Image Source="{Binding DisplayBadge, Converter={StaticResource FlagImage}}"
+                   Stretch="UniformToFill" />
+          </Grid>
+        </Border>
+        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+          <TextBlock Text="{Binding Remark}" Foreground="{DynamicResource X.Brush.Text}"
+                     FontWeight="SemiBold" FontSize="13" TextTrimming="CharacterEllipsis" />
+          <TextBlock Text="{Binding ProtocolStack}" Foreground="{DynamicResource X.Brush.TextMuted}"
+                     FontSize="11" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" />
+        </StackPanel>
+        <TextBlock Grid.Column="2" Text="{Binding LatencyDisplay}" FontSize="11"
+                   Foreground="{DynamicResource X.Brush.TextSoft}" VerticalAlignment="Center"
+                   Margin="0,0,8,0"
+                   Visibility="{Binding LatencyMs, Converter={StaticResource NullToVisCollapsed}}" />
+        <TextBlock Grid.Column="3" Text="›" FontSize="20"
+                   Foreground="{DynamicResource X.Brush.TextSoft}" VerticalAlignment="Center" />
+      </Grid>
+    </DataTemplate>
   </UserControl.Resources>
   <Grid Margin="20,0,20,6">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
-      <RowDefinition Height="*" />
       <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
     </Grid.RowDefinitions>
 
+    <!-- ROW 0: заголовок + действия -->
     <Grid Grid.Row="0">
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="*" />
@@ -39,8 +78,28 @@
       </StackPanel>
     </Grid>
 
-    <!-- Фильтр-пилюли по подпискам -->
+    <!-- ROW 1: поле поиска (стиль Happ — pill-input с лупой) -->
     <Border Grid.Row="1" Margin="0,12,0,0"
+            Background="{DynamicResource X.Brush.GlassFill}"
+            BorderBrush="{DynamicResource X.Brush.GlassBorder}" BorderThickness="1"
+            CornerRadius="14" Padding="12,8"
+            Visibility="{Binding SmartOnly, Converter={StaticResource InverseBoolToVis}}">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <TextBox Grid.Column="0" Grid.ColumnSpan="2"
+                 Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=120}"
+                 Style="{StaticResource X.SearchBox}" />
+        <TextBlock Grid.Column="2" Text="🔍" FontSize="14" VerticalAlignment="Center"
+                   Foreground="{DynamicResource X.Brush.TextSoft}" Margin="6,0,0,0" />
+      </Grid>
+    </Border>
+
+    <!-- ROW 2: фильтр-пилюли по подпискам -->
+    <Border Grid.Row="2" Margin="0,8,0,0"
             Visibility="{Binding HasSubscriptions, Converter={StaticResource BoolToVisHelper}}">
       <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
         <StackPanel Orientation="Horizontal">
@@ -63,8 +122,8 @@
       </ScrollViewer>
     </Border>
 
-    <!-- Smart-режим: компактная карточка с информацией о выбранном ключе -->
-    <Border Grid.Row="2" Margin="0,12,0,0" Style="{StaticResource X.Card}"
+    <!-- ROW 3: Smart-режим: компактная карточка -->
+    <Border Grid.Row="3" Margin="0,12,0,0" Style="{StaticResource X.Card}"
             Visibility="{Binding SmartOnly, Converter={StaticResource BoolToVisHelper}}">
       <StackPanel>
         <StackPanel Orientation="Horizontal">
@@ -80,49 +139,54 @@
       </StackPanel>
     </Border>
 
-    <Border Grid.Row="3" Margin="0,12,0,0"
-            Visibility="{Binding SmartOnly, Converter={StaticResource InverseBoolToVis}}">
-      <ListBox ItemsSource="{Binding FilteredKeys}" SelectedItem="{Binding SelectedKey, Mode=TwoWay}" Style="{StaticResource X.ListBox}">
-        <ListBox.ItemTemplate>
+    <!-- ROW 4: список ключей сгруппированных по подпискам -->
+    <ScrollViewer Grid.Row="4" Margin="0,12,0,0" VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled"
+                  Visibility="{Binding SmartOnly, Converter={StaticResource InverseBoolToVis}}">
+      <ItemsControl ItemsSource="{Binding KeyGroups}">
+        <ItemsControl.ItemTemplate>
           <DataTemplate>
-            <Grid>
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-              </Grid.ColumnDefinitions>
-              <Border Grid.Column="0" Width="28" Height="28" CornerRadius="7"
-                      Background="{DynamicResource X.Brush.AccentGrad}" VerticalAlignment="Center" Margin="0,0,8,0"
-                      ClipToBounds="True" ToolTip="{Binding FlagEmoji}">
-                <Grid>
-                  <TextBlock Text="{Binding DisplayBadge}" Foreground="White" FontWeight="Bold"
-                             FontFamily="Segoe UI" FontSize="11"
-                             HorizontalAlignment="Center" VerticalAlignment="Center" />
-                  <Image Source="{Binding DisplayBadge, Converter={StaticResource FlagImage}}"
-                         Stretch="UniformToFill" />
-                </Grid>
-              </Border>
-              <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                <TextBlock Text="{Binding Remark}" Foreground="{DynamicResource X.Brush.Text}"
-                           FontWeight="SemiBold" FontSize="13" TextTrimming="CharacterEllipsis" />
-                <TextBlock Text="{Binding Subtitle}" Foreground="{DynamicResource X.Brush.TextMuted}"
-                           FontSize="11" TextTrimming="CharacterEllipsis" Margin="0,1,0,0" />
-              </StackPanel>
-              <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                <Border Style="{StaticResource X.Badge.Pill}" Margin="6,0,0,0" Padding="8,2">
-                  <TextBlock Text="{Binding LatencyDisplay}" FontSize="11"
-                             Foreground="{DynamicResource X.Brush.TextSoft}" />
+            <Border Margin="0,0,0,10"
+                    Background="{DynamicResource X.Brush.GlassFill}"
+                    BorderBrush="{DynamicResource X.Brush.GlassBorder}" BorderThickness="1"
+                    CornerRadius="14" Padding="0">
+              <StackPanel>
+                <!-- Заголовок группы: домен подписки + дата обновления + кол-во -->
+                <Border Padding="14,10" CornerRadius="14,14,0,0"
+                        Background="{DynamicResource X.Brush.GlassFillStrong}">
+                  <Grid>
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="*" />
+                      <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                      <TextBlock Text="{Binding Label}" Foreground="{DynamicResource X.Brush.Text}"
+                                 FontWeight="SemiBold" FontSize="13" TextTrimming="CharacterEllipsis" />
+                      <TextBlock Text="{Binding LastUpdate}" Foreground="{DynamicResource X.Brush.TextSoft}"
+                                 FontSize="11" Margin="0,2,0,0"
+                                 Visibility="{Binding LastUpdate, Converter={StaticResource StringToVisCollapsed}}" />
+                    </StackPanel>
+                    <Border Grid.Column="1" Style="{StaticResource X.Badge.Pill}" VerticalAlignment="Center">
+                      <TextBlock Text="{Binding Count}" FontSize="11"
+                                 Foreground="{DynamicResource X.Brush.TextSoft}" />
+                    </Border>
+                  </Grid>
                 </Border>
-                <TextBlock Text="●" Foreground="{DynamicResource X.Brush.Accent}"
-                           FontSize="14" VerticalAlignment="Center" Margin="4,0,2,0"
-                           Visibility="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}, Converter={StaticResource BoolToVis}}" />
+
+                <!-- Тонкий разделитель header / body -->
+                <Border Height="1" Background="{DynamicResource X.Brush.GlassBorder}" />
+
+                <!-- Список ключей внутри группы -->
+                <ListBox ItemsSource="{Binding Keys}"
+                         SelectedItem="{Binding DataContext.SelectedKey, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay}"
+                         Style="{StaticResource X.ListBox}"
+                         BorderThickness="0" Background="Transparent"
+                         ItemTemplate="{StaticResource X.KeyItem.Template}" />
               </StackPanel>
-            </Grid>
+            </Border>
           </DataTemplate>
-        </ListBox.ItemTemplate>
-      </ListBox>
-    </Border>
-
-
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
   </Grid>
 </UserControl>
