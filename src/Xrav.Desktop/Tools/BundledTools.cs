@@ -14,7 +14,7 @@ public static class BundledTools
     /// <summary>Версии встроенных бинарников. Используются для уведомления о новых релизах.</summary>
     public const string XrayVersion    = "26.3.27";
     public const string SingBoxVersion = "1.13.11";
-    public const string HevVersion     = "2.7.4";
+    public const string HevVersion     = "2.14.4";
 
     private static bool IsX86 => RuntimeInformation.ProcessArchitecture == Architecture.X86;
 

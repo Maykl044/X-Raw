@@ -57,12 +57,19 @@ jobs:
           $wtArchPath = if ($arch -eq 'x86') { 'wintun/bin/x86/wintun.dll' } else { 'wintun/bin/amd64/wintun.dll' }
           Copy-Item "$tmp/wt/$wtArchPath" "$bundled/$arch/wintun.dll"
 
-          # hev-socks5-tunnel (только x64)
+          # hev-socks5-tunnel (только x64). С 2.14.x релиз публикуется в win64.zip.
           if ($arch -eq 'x64') {
-            $hevUrl = (Invoke-RestMethod 'https://api.github.com/repos/heiher/hev-socks5-tunnel/releases/latest').assets | Where-Object { $_.name -match 'win.*amd64\.tar\.gz$' -or $_.name -match 'windows.*amd64' -or $_.name -eq 'hev-socks5-tunnel-windows-x86_64.tar.gz' } | Select-Object -First 1 -ExpandProperty browser_download_url
+            $hevAssets = (Invoke-RestMethod 'https://api.github.com/repos/heiher/hev-socks5-tunnel/releases/latest').assets
+            $hevAsset = $hevAssets | Where-Object { $_.name -eq 'hev-socks5-tunnel-win64.zip' } | Select-Object -First 1
+            if (-not $hevAsset) {
+              $hevAsset = $hevAssets | Where-Object { $_.name -match 'win.*amd64\.tar\.gz$' -or $_.name -match 'windows.*amd64' -or $_.name -eq 'hev-socks5-tunnel-windows-x86_64.tar.gz' } | Select-Object -First 1
+            }
+            $hevUrl = $hevAsset.browser_download_url
             if ($hevUrl) {
-              Invoke-WebRequest $hevUrl -OutFile "$tmp/hev.tar.gz"
-              tar -xzf "$tmp/hev.tar.gz" -C "$tmp"
+              $isZip = $hevAsset.name -match '\.zip$'
+              $hevDl = if ($isZip) { "$tmp/hev.zip" } else { "$tmp/hev.tar.gz" }
+              Invoke-WebRequest $hevUrl -OutFile $hevDl
+              if ($isZip) { Expand-Archive $hevDl "$tmp/hev" -Force } else { tar -xzf $hevDl -C "$tmp" }
               $hevExe = Get-ChildItem -Recurse "$tmp" -Filter 'hev-socks5-tunnel.exe' | Select-Object -First 1
               if ($hevExe) {
                 Copy-Item $hevExe.FullName "$bundled/$arch/hev-socks5-tunnel.exe"

@@ -206,6 +206,7 @@ public sealed class WinTunnelService : ITunnelService, INotifyPropertyChanged, I
                 WorkingDirectory = tools,
                 UseShellExecute = false,
                 CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Hidden,
                 RedirectStandardError = true,
                 RedirectStandardOutput = true
             };
@@ -235,6 +236,7 @@ public sealed class WinTunnelService : ITunnelService, INotifyPropertyChanged, I
                 WorkingDirectory = tools,
                 UseShellExecute = false,
                 CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Hidden,
                 RedirectStandardError = true,
                 RedirectStandardOutput = true
             };
@@ -271,6 +273,7 @@ public sealed class WinTunnelService : ITunnelService, INotifyPropertyChanged, I
                 WorkingDirectory = tools,
                 UseShellExecute = false,
                 CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Hidden,
                 RedirectStandardError = true,
                 RedirectStandardOutput = true
             };

@@ -91,12 +91,12 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
               </Grid.ColumnDefinitions>
-              <Border Grid.Column="0" Width="40" Height="40" CornerRadius="10"
-                      Background="{DynamicResource X.Brush.AccentGrad}" VerticalAlignment="Center" Margin="0,0,12,0"
+              <Border Grid.Column="0" Width="28" Height="28" CornerRadius="7"
+                      Background="{DynamicResource X.Brush.AccentGrad}" VerticalAlignment="Center" Margin="0,0,8,0"
                       ClipToBounds="True" ToolTip="{Binding FlagEmoji}">
                 <Grid>
                   <TextBlock Text="{Binding DisplayBadge}" Foreground="White" FontWeight="Bold"
-                             FontFamily="Segoe UI" FontSize="15"
+                             FontFamily="Segoe UI" FontSize="11"
                              HorizontalAlignment="Center" VerticalAlignment="Center" />
                   <Image Source="{Binding DisplayBadge, Converter={StaticResource FlagImage}}"
                          Stretch="UniformToFill" />
@@ -104,17 +104,17 @@
               </Border>
               <StackPanel Grid.Column="1" VerticalAlignment="Center">
                 <TextBlock Text="{Binding Remark}" Foreground="{DynamicResource X.Brush.Text}"
-                           FontWeight="SemiBold" FontSize="14" TextTrimming="CharacterEllipsis" />
+                           FontWeight="SemiBold" FontSize="13" TextTrimming="CharacterEllipsis" />
                 <TextBlock Text="{Binding Subtitle}" Foreground="{DynamicResource X.Brush.TextMuted}"
-                           FontSize="11" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" />
+                           FontSize="11" TextTrimming="CharacterEllipsis" Margin="0,1,0,0" />
               </StackPanel>
               <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                <Border Style="{StaticResource X.Badge.Pill}" Margin="6,0">
+                <Border Style="{StaticResource X.Badge.Pill}" Margin="6,0,0,0" Padding="8,2">
                   <TextBlock Text="{Binding LatencyDisplay}" FontSize="11"
                              Foreground="{DynamicResource X.Brush.TextSoft}" />
                 </Border>
                 <TextBlock Text="●" Foreground="{DynamicResource X.Brush.Accent}"
-                           FontSize="14" VerticalAlignment="Center" Margin="4,0,4,0"
+                           FontSize="14" VerticalAlignment="Center" Margin="4,0,2,0"
                            Visibility="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}, Converter={StaticResource BoolToVis}}" />
               </StackPanel>
             </Grid>

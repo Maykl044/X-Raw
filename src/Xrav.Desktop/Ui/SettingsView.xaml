@@ -40,7 +40,7 @@
     </Style>
   </UserControl.Resources>
   <ScrollViewer VerticalScrollBarVisibility="Auto">
-    <Grid Margin="20,4,20,8" TextOptions.TextFormattingMode="Display">
+    <Grid Margin="20,0,20,6" TextOptions.TextFormattingMode="Display">
       <Grid.Resources>
         <Style TargetType="TextBlock">
           <Setter Property="FontFamily" Value="Segoe UI, Segoe UI Emoji, Segoe UI Symbol" />

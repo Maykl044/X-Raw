@@ -921,6 +921,35 @@ public sealed class MainViewModel : ViewModelBase
 
     private async Task CheckHandshakeAsync(VpnKey? key)
     {
+        // Если туннель поднят — проверяем реальную работу VPN: HTTP(S) через локальный
+        // xray http-инбаунд (порт SocksInboundPort + 1 = 10809). Это надёжнее прямого
+        // TCP-коннекта к серверу, потому что отвечает на вопрос "интернет идёт через VPN?"
+        // а не "сервер доступен с моего ПК?".
+        if (IsConnected)
+        {
+            PingBusy = true;
+            var label = key?.Remark ?? "активный ключ";
+            ShowToast($"Проверяю VPN-соединение «{label}»…", "info", 30);
+            try
+            {
+                var httpPort = Xrav.Core.Xray.XrayConfigBuilder.DefaultSocksInboundPort + 1;
+                var (ok, ms, detail) = await Services.HandshakeProbe.ProbeViaTunnelAsync(
+                    httpPort, TimeSpan.FromSeconds(8));
+                var status = ok ? "✓ OK" : "✗ FAIL";
+                EmitTunnelLog("vpn-probe", $"{status} {ms} мс · {label}: {detail}");
+                if (ok)
+                    ShowToast($"VPN работает · {ms} мс · {detail}", "success", 5);
+                else
+                    ShowToast($"VPN не пропускает трафик ({ms} мс): {detail}", "error", 7);
+            }
+            finally
+            {
+                PingBusy = false;
+            }
+            return;
+        }
+
+        // Ветка "до подключения": прямой TLS-handshake к host:port ключа.
         if (key is null)
         {
             ShowToast("Не выбран ключ для проверки", "error");

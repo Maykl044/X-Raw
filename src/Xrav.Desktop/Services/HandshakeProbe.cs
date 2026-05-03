@@ -1,5 +1,7 @@
 using System;
 using System.Diagnostics;
+using System.Net;
+using System.Net.Http;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Authentication;
@@ -12,11 +14,72 @@ using Xrav.Core.Xray;
 namespace Xrav.Desktop.Services;
 
 /// <summary>
-/// Реальная проверка соединения: TCP-коннект → TLS handshake (с SNI/ALPN, если есть)
-/// → возвращает результат и время. Для REALITY/non-TLS просто проверяет TCP-уровень.
+/// Реальная проверка соединения. Два режима:
+///  • <see cref="ProbeAsync"/> — TCP+TLS handshake напрямую к серверу ключа (до подключения VPN).
+///  • <see cref="ProbeViaTunnelAsync"/> — HTTP(S)-проверка через локальный xray-инбаунд
+///    (после подключения VPN): подтверждает что трафик реально идёт через туннель.
 /// </summary>
 public static class HandshakeProbe
 {
+    /// <summary>
+    /// Проверка живого VPN-соединения через локальный xray-инбаунд.
+    /// HTTP GET к /generate_204 эндпоинтам через 127.0.0.1:&lt;httpInboundPort&gt; (по умолчанию 10809).
+    /// Возвращает (Ok, Ms, Detail). Ok=true — туннель пропускает трафик до глобального интернета.
+    /// </summary>
+    public static async Task<(bool Ok, int Ms, string Detail)> ProbeViaTunnelAsync(
+        int httpInboundPort, TimeSpan timeout)
+    {
+        // Каскад из нескольких "captive portal" эндпоинтов: ожидаемый ответ — 204 No Content.
+        // Используем разных провайдеров чтобы не зависеть от блокировки одного.
+        var endpoints = new[]
+        {
+            "http://www.gstatic.com/generate_204",
+            "http://connectivitycheck.gstatic.com/generate_204",
+            "http://cp.cloudflare.com/generate_204",
+        };
+
+        var sw = Stopwatch.StartNew();
+        try
+        {
+            var proxy = new WebProxy($"http://127.0.0.1:{httpInboundPort}", BypassOnLocal: false);
+            using var handler = new HttpClientHandler
+            {
+                Proxy = proxy,
+                UseProxy = true,
+                AllowAutoRedirect = false,
+                ServerCertificateCustomValidationCallback = (_, _, _, _) => true,
+            };
+            using var http = new HttpClient(handler) { Timeout = timeout };
+            http.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 X-Rav handshake-probe");
+
+            string? lastErr = null;
+            foreach (var url in endpoints)
+            {
+                try
+                {
+                    using var cts = new CancellationTokenSource(timeout);
+                    using var resp = await http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cts.Token).ConfigureAwait(false);
+                    var ms = (int)sw.ElapsedMilliseconds;
+                    if ((int)resp.StatusCode is 204 or 200)
+                    {
+                        var via = url.Contains("gstatic") ? "Google" : url.Contains("cloudflare") ? "Cloudflare" : "captive";
+                        return (true, ms, $"HTTP {(int)resp.StatusCode} через VPN · {via}");
+                    }
+                    lastErr = $"HTTP {(int)resp.StatusCode} {resp.ReasonPhrase}";
+                }
+                catch (Exception ex)
+                {
+                    lastErr = ex.Message;
+                }
+            }
+            return (false, (int)sw.ElapsedMilliseconds, $"Туннель не пропустил HTTP: {lastErr}");
+        }
+        catch (Exception ex)
+        {
+            return (false, (int)sw.ElapsedMilliseconds, ex.Message);
+        }
+    }
+
     public static async Task<(bool Ok, int Ms, string Detail)> ProbeAsync(VpnKey key, TimeSpan timeout)
     {
         if (string.IsNullOrEmpty(key.Host) || key.Port is null or <= 0)

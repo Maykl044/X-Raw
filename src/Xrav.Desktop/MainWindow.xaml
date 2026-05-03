@@ -8,7 +8,11 @@
         Height="760" Width="500" MinWidth="380" MinHeight="560"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource X.Brush.Bg}"
-        TextOptions.TextFormattingMode="Display">
+        UseLayoutRounding="True" SnapsToDevicePixels="True"
+        TextOptions.TextFormattingMode="Display"
+        TextOptions.TextRenderingMode="ClearType"
+        RenderOptions.BitmapScalingMode="HighQuality"
+        RenderOptions.ClearTypeHint="Enabled">
   <Window.Resources>
     <BooleanToVisibilityConverter x:Key="BoolToVis" />
     <ui:NonEmptyStringToVisibilityConverter x:Key="StringToVis" />
@@ -90,8 +94,10 @@
     <ui:ParticleField Grid.ColumnSpan="2" IsHitTestVisible="False" />
 
     <!-- Brushed-metal sidebar: появляется при ActualWidth >= 900 (adaptive layout).
-         Внутри — вертикальная навигация по тем же 4 вкладкам что и в нижнем баре. -->
+         Внутри — вертикальная навигация по тем же 4 вкладкам что и в нижнем баре.
+         Тонкая правая граница (1px) визуально отделяет sidebar от основной зоны. -->
     <Border Grid.Column="0" Width="220" Style="{StaticResource X.Panel.BrushedMetal}"
+            BorderBrush="{DynamicResource X.Brush.GlassBorder}" BorderThickness="0,0,1,0"
             Visibility="{Binding IsWideLayout, Converter={StaticResource BoolToVisHelper}}">
       <Grid>
         <!-- Шлифовка поверх (тонкие горизонтальные штрихи + шум) -->

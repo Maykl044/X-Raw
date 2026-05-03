@@ -129,28 +129,61 @@
   <Style x:Key="Xrav.Text.Body"    TargetType="TextBlock" BasedOn="{StaticResource X.Text.Body}" />
   <Style x:Key="Xrav.Text.Caption" TargetType="TextBlock" BasedOn="{StaticResource X.Text.Caption}" />
 
-  <!-- Кнопка primary: акцент-градиент + dynamic cursor lighting. -->
+  <!-- Кнопка primary: акцент-градиент + dynamic cursor lighting + плавный hover scale. -->
   <Style x:Key="X.Btn.Primary" TargetType="Button">
     <Setter Property="Foreground" Value="White" />
     <Setter Property="FontWeight" Value="SemiBold" />
     <Setter Property="FontSize" Value="13" />
-    <Setter Property="Padding" Value="16,9" />
+    <Setter Property="Padding" Value="14,7" />
     <Setter Property="Cursor" Value="Hand" />
     <Setter Property="BorderThickness" Value="0" />
     <Setter Property="Background" Value="{DynamicResource X.Brush.AccentGrad}" />
     <Setter Property="SnapsToDevicePixels" Value="True" />
     <Setter Property="ui:CursorLight.Enabled" Value="True" />
+    <Setter Property="RenderTransformOrigin" Value="0.5,0.5" />
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="Button">
           <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="12"
-                  BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                  BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+                  RenderTransformOrigin="0.5,0.5">
+            <Border.RenderTransform>
+              <ScaleTransform ScaleX="1" ScaleY="1" />
+            </Border.RenderTransform>
             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
                               Margin="{TemplateBinding Padding}" />
           </Border>
           <ControlTemplate.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-              <Setter TargetName="bd" Property="Opacity" Value="0.92" />
+              <Setter TargetName="bd" Property="Opacity" Value="0.94" />
+              <Trigger.EnterActions>
+                <BeginStoryboard>
+                  <Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="bd"
+                                     Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                     To="1.04" Duration="0:0:0.18">
+                      <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut" /></DoubleAnimation.EasingFunction>
+                    </DoubleAnimation>
+                    <DoubleAnimation Storyboard.TargetName="bd"
+                                     Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                     To="1.04" Duration="0:0:0.18">
+                      <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut" /></DoubleAnimation.EasingFunction>
+                    </DoubleAnimation>
+                  </Storyboard>
+                </BeginStoryboard>
+              </Trigger.EnterActions>
+              <Trigger.ExitActions>
+                <BeginStoryboard>
+                  <Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="bd"
+                                     Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                     To="1" Duration="0:0:0.18" />
+                    <DoubleAnimation Storyboard.TargetName="bd"
+                                     Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                     To="1" Duration="0:0:0.18" />
+                  </Storyboard>
+                </BeginStoryboard>
+              </Trigger.ExitActions>
             </Trigger>
             <Trigger Property="IsPressed" Value="True">
               <Setter TargetName="bd" Property="Opacity" Value="0.78" />
@@ -164,23 +197,28 @@
     </Setter>
   </Style>
 
-  <!-- Кнопка ghost: стеклянная, контурная + dynamic cursor lighting. -->
+  <!-- Кнопка ghost: стеклянная, контурная + dynamic cursor lighting + плавный hover scale. -->
   <Style x:Key="X.Btn.Ghost" TargetType="Button">
     <Setter Property="Foreground" Value="{DynamicResource X.Brush.Text}" />
     <Setter Property="FontWeight" Value="SemiBold" />
     <Setter Property="FontSize" Value="13" />
-    <Setter Property="Padding" Value="14,8" />
+    <Setter Property="Padding" Value="12,6" />
     <Setter Property="Cursor" Value="Hand" />
     <Setter Property="BorderThickness" Value="1" />
     <Setter Property="BorderBrush" Value="{DynamicResource X.Brush.GlassBorder}" />
     <Setter Property="Background" Value="{DynamicResource X.Brush.GlassFill}" />
     <Setter Property="SnapsToDevicePixels" Value="True" />
     <Setter Property="ui:CursorLight.Enabled" Value="True" />
+    <Setter Property="RenderTransformOrigin" Value="0.5,0.5" />
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="Button">
           <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="12"
-                  BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                  BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+                  RenderTransformOrigin="0.5,0.5">
+            <Border.RenderTransform>
+              <ScaleTransform ScaleX="1" ScaleY="1" />
+            </Border.RenderTransform>
             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
                               Margin="{TemplateBinding Padding}" />
           </Border>
@@ -188,6 +226,34 @@
             <Trigger Property="IsMouseOver" Value="True">
               <Setter TargetName="bd" Property="Background" Value="{DynamicResource X.Brush.GlassFillStrong}" />
               <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource X.Brush.Accent}" />
+              <Trigger.EnterActions>
+                <BeginStoryboard>
+                  <Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="bd"
+                                     Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                     To="1.04" Duration="0:0:0.18">
+                      <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut" /></DoubleAnimation.EasingFunction>
+                    </DoubleAnimation>
+                    <DoubleAnimation Storyboard.TargetName="bd"
+                                     Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                     To="1.04" Duration="0:0:0.18">
+                      <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut" /></DoubleAnimation.EasingFunction>
+                    </DoubleAnimation>
+                  </Storyboard>
+                </BeginStoryboard>
+              </Trigger.EnterActions>
+              <Trigger.ExitActions>
+                <BeginStoryboard>
+                  <Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="bd"
+                                     Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                     To="1" Duration="0:0:0.18" />
+                    <DoubleAnimation Storyboard.TargetName="bd"
+                                     Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                     To="1" Duration="0:0:0.18" />
+                  </Storyboard>
+                </BeginStoryboard>
+              </Trigger.ExitActions>
             </Trigger>
             <Trigger Property="IsPressed" Value="True">
               <Setter TargetName="bd" Property="Opacity" Value="0.78" />
@@ -446,18 +512,19 @@
     </Setter>
   </Style>
 
-  <!-- ListBoxItem с состоянием выбора -->
+  <!-- ListBoxItem с состоянием выбора. Компактный desktop-вариант:
+       padding 8×6, margin 4 — на 500×760 видно 4-5 карточек ключей сразу. -->
   <Style x:Key="X.ListBoxItem" TargetType="ListBoxItem">
     <Setter Property="Padding" Value="0" />
-    <Setter Property="Margin" Value="0,0,0,6" />
+    <Setter Property="Margin" Value="0,0,0,4" />
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderThickness" Value="0" />
     <Setter Property="HorizontalContentAlignment" Value="Stretch" />
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="ListBoxItem">
-          <Border x:Name="bd" Background="{DynamicResource X.Brush.GlassFill}" CornerRadius="12"
-                  BorderBrush="{DynamicResource X.Brush.GlassBorder}" BorderThickness="1" Padding="12,10">
+          <Border x:Name="bd" Background="{DynamicResource X.Brush.GlassFill}" CornerRadius="10"
+                  BorderBrush="{DynamicResource X.Brush.GlassBorder}" BorderThickness="1" Padding="8,6">
             <ContentPresenter />
           </Border>
           <ControlTemplate.Triggers>
