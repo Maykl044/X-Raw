@@ -5,14 +5,19 @@ __pycache__/
 .eggs/
 .venv/
 venv/
-build/.venv/
 
 # PyInstaller / Nuitka
 build/
 dist/
+release/
+packaging/.venv/
 *.spec.bak
 *.dist/
 *.build/
+
+# Source-controlled packaging files (everything else under packaging/)
+!packaging/
+!packaging/*
 
 # OS
 .DS_Store

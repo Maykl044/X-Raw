@@ -39,7 +39,7 @@ jobs:
           python -m pip install pyinstaller
 
       - name: Build with PyInstaller (one-folder)
-        run: python -m PyInstaller --noconfirm --clean build/x_ravscan.spec
+        run: python -m PyInstaller --noconfirm --clean packaging/x_ravscan.spec
 
       - name: Build with PyInstaller (one-file)
         run: |

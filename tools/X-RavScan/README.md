@@ -16,7 +16,7 @@ tools/X-RavScan/
 ├── pyproject.toml
 ├── requirements.txt
 ├── README.md
-├── build/
+├── packaging/
 │   ├── x_ravscan.spec            # PyInstaller
 │   ├── build_pyinstaller.ps1
 │   └── build_nuitka.ps1
@@ -90,7 +90,7 @@ python main.py --cli --engine asyncio --concurrency 1024 --sample 256 \
 
 ```powershell
 cd tools/X-RavScan
-powershell -ExecutionPolicy Bypass -File build/build_pyinstaller.ps1
+powershell -ExecutionPolicy Bypass -File packaging/build_pyinstaller.ps1
 # output: dist/X-RavScan/X-RavScan.exe
 ```
 
@@ -98,17 +98,21 @@ powershell -ExecutionPolicy Bypass -File build/build_pyinstaller.ps1
 
 ```powershell
 cd tools/X-RavScan
-powershell -ExecutionPolicy Bypass -File build/build_nuitka.ps1
+powershell -ExecutionPolicy Bypass -File packaging/build_nuitka.ps1
 # output: dist/nuitka/X-RavScan.exe
 ```
 
 Both helpers automatically:
 
-1. create a `build/.venv` virtualenv,
+1. create a `packaging/.venv` virtualenv,
 2. `pip install -r requirements.txt`,
 3. install the chosen builder (`pyinstaller` or `nuitka`),
 4. bundle `x_ravscan/data/seed_providers.json`, `x_ravscan/data/ranges/*.txt`
    and (if present) `x_ravscan/bin/subfinder*` into the .exe.
+
+> CI also produces these artifacts on every push: see the **x-ravscan-build**
+> workflow in *Actions* → download `X-RavScan-windows-zip` (one-folder build
+> archived to ZIP) or `X-RavScan-windows-onefile` (single `.exe`).
 
 ## Smart Discovery & auto-sync logic
 
