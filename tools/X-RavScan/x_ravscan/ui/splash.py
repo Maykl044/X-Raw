@@ -18,11 +18,16 @@ _LOGO = r"""
 """
 
 
-class Splash(tk.Toplevel):
-    """Borderless splash with neon logo."""
+class Splash(tk.Tk):
+    """Borderless splash with neon logo.
+
+    Implemented as the *root* Tk instance so we don't fight with the second
+    ``ctk.CTk`` root that the main app creates.  We destroy ourselves in
+    :meth:`finish` before the main window starts its mainloop.
+    """
 
     def __init__(self, master: Optional[tk.Misc] = None) -> None:
-        super().__init__(master)
+        super().__init__()
         self.overrideredirect(True)
         self.configure(bg=THEME["bg"])
         w, h = 560, 320
@@ -90,6 +95,7 @@ class Splash(tk.Toplevel):
 
         self._canvas = canvas
         self._w = w
+        self._h = h
         self._progress = 0.0
         self.update()
 
@@ -102,10 +108,14 @@ class Splash(tk.Toplevel):
 
     def update_status(self, text: str, progress: float) -> None:
         self._progress = max(0.0, min(progress, 1.0))
-        self._canvas.itemconfigure(self._status, text=text)
-        right = 60 + (self._w - 120) * self._progress
-        self._canvas.coords(self._bar, 60, self.winfo_height() - 30, right, self.winfo_height() - 18)
-        self.update()
+        try:
+            self._canvas.itemconfigure(self._status, text=text)
+            right = 60 + (self._w - 120) * self._progress
+            self._canvas.coords(self._bar, 60, self._h - 30, right, self._h - 18)
+            self.update()
+        except tk.TclError:
+            # splash already destroyed
+            pass
 
     def finish(self) -> None:
         try:

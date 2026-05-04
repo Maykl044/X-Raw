@@ -38,39 +38,66 @@ jobs:
           python -m pip install -r requirements.txt
           python -m pip install pyinstaller
 
-      - name: Build with PyInstaller (one-folder)
+      - name: Build PyInstaller (one-folder, windowed)
+        env:
+          X_RAVSCAN_CONSOLE: "0"
         run: python -m PyInstaller --noconfirm --clean packaging/x_ravscan.spec
 
-      - name: Build with PyInstaller (one-file)
+      - name: Stage one-folder build
         run: |
-          python -m PyInstaller --noconfirm --clean --onefile --windowed `
-            --name X-RavScan `
-            --add-data "x_ravscan/data/seed_providers.json;x_ravscan/data" `
-            --add-data "x_ravscan/data/ranges;x_ravscan/data/ranges" `
-            --add-data "x_ravscan/data/resellers.txt;x_ravscan/data" `
-            --hidden-import customtkinter `
-            --hidden-import matplotlib.backends.backend_tkagg `
-            --hidden-import PIL.ImageTk `
-            --distpath dist/onefile `
-            --workpath build/work-onefile `
-            main.py
-
-      - name: Stage release tree
-        run: |
-          $stage = "release/X-RavScan"
-          New-Item -ItemType Directory -Force -Path $stage | Out-Null
-          Copy-Item -Recurse -Force dist/X-RavScan/* $stage/
-          Copy-Item -Force dist/onefile/X-RavScan.exe release/X-RavScan-onefile.exe
-          Copy-Item -Force README.md $stage/README.md
-          Copy-Item -Force requirements.txt $stage/requirements.txt
-          Get-ChildItem $stage | Select-Object Name, Length | Format-Table -AutoSize
-
-      - name: Create ZIP archive
-        run: |
+          New-Item -ItemType Directory -Force -Path release | Out-Null
+          Copy-Item -Recurse -Force dist/X-RavScan release/X-RavScan
+          Copy-Item -Force README.md release/X-RavScan/README.md
+          Copy-Item -Force requirements.txt release/X-RavScan/requirements.txt
           Compress-Archive -Path release/X-RavScan/* `
                            -DestinationPath release/X-RavScan-windows.zip `
                            -Force
           Get-Item release/X-RavScan-windows.zip | Select-Object Name, Length
+
+      - name: Build PyInstaller (one-file, windowed)
+        run: |
+          Remove-Item -Recurse -Force build, dist -ErrorAction SilentlyContinue
+          python -m PyInstaller --noconfirm --clean --onefile --windowed `
+            --name X-RavScan `
+            --collect-data customtkinter `
+            --collect-data matplotlib `
+            --collect-data PIL `
+            --collect-submodules customtkinter `
+            --add-data "x_ravscan/data/seed_providers.json;x_ravscan/data" `
+            --add-data "x_ravscan/data/ranges;x_ravscan/data/ranges" `
+            --add-data "x_ravscan/data/resellers.txt;x_ravscan/data" `
+            --hidden-import _tkinter `
+            --hidden-import tkinter `
+            --hidden-import customtkinter `
+            --hidden-import matplotlib.backends.backend_tkagg `
+            --hidden-import PIL.ImageTk `
+            --distpath dist `
+            main.py
+          Copy-Item -Force dist/X-RavScan.exe release/X-RavScan-onefile.exe
+
+      - name: Build PyInstaller (one-file, CONSOLE/DEBUG)
+        run: |
+          Remove-Item -Recurse -Force build, dist -ErrorAction SilentlyContinue
+          python -m PyInstaller --noconfirm --clean --onefile `
+            --name X-RavScan-debug `
+            --collect-data customtkinter `
+            --collect-data matplotlib `
+            --collect-data PIL `
+            --collect-submodules customtkinter `
+            --add-data "x_ravscan/data/seed_providers.json;x_ravscan/data" `
+            --add-data "x_ravscan/data/ranges;x_ravscan/data/ranges" `
+            --add-data "x_ravscan/data/resellers.txt;x_ravscan/data" `
+            --hidden-import _tkinter `
+            --hidden-import tkinter `
+            --hidden-import customtkinter `
+            --hidden-import matplotlib.backends.backend_tkagg `
+            --hidden-import PIL.ImageTk `
+            --distpath dist `
+            main.py
+          Copy-Item -Force dist/X-RavScan-debug.exe release/X-RavScan-debug.exe
+
+      - name: List artifacts
+        run: Get-ChildItem release | Select-Object Name, Length | Format-Table
 
       - name: Upload one-folder build
         uses: actions/upload-artifact@v4
@@ -79,16 +106,23 @@ jobs:
           path: tools/X-RavScan/release/X-RavScan/**
           retention-days: 30
 
-      - name: Upload zipped build
+      - name: Upload zipped one-folder build
         uses: actions/upload-artifact@v4
         with:
           name: X-RavScan-windows-zip
           path: tools/X-RavScan/release/X-RavScan-windows.zip
           retention-days: 30
 
-      - name: Upload one-file build
+      - name: Upload one-file build (windowed)
         uses: actions/upload-artifact@v4
         with:
           name: X-RavScan-windows-onefile
           path: tools/X-RavScan/release/X-RavScan-onefile.exe
+          retention-days: 30
+
+      - name: Upload one-file build (console / debug)
+        uses: actions/upload-artifact@v4
+        with:
+          name: X-RavScan-windows-debug
+          path: tools/X-RavScan/release/X-RavScan-debug.exe
           retention-days: 30
