@@ -34,6 +34,9 @@ datas = [
      "x_ravscan/data/ranges"),
     (str(PROJECT_ROOT / "x_ravscan" / "data" / "resellers.txt"),
      "x_ravscan/data"),
+    # i18n locale JSONs (en / ru / tk)
+    (str(PROJECT_ROOT / "x_ravscan" / "i18n" / "locales"),
+     "x_ravscan/i18n/locales"),
 ]
 
 # CustomTkinter / matplotlib / PIL ship JSON theme files / fonts that are not

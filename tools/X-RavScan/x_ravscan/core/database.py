@@ -95,6 +95,11 @@ CREATE TABLE IF NOT EXISTS hosts (
 CREATE INDEX IF NOT EXISTS idx_hosts_scan ON hosts(scan_id);
 CREATE INDEX IF NOT EXISTS idx_hosts_ip ON hosts(ip);
 CREATE INDEX IF NOT EXISTS idx_hosts_provider ON hosts(provider_id);
+
+CREATE TABLE IF NOT EXISTS app_settings (
+    key   TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+);
 """
 
 
@@ -163,6 +168,24 @@ class Database:
     def close(self) -> None:
         with self._lock:
             self._conn.close()
+
+    # ------------------------------------------------------------------
+    # App settings (key/value)
+    # ------------------------------------------------------------------
+    def get_setting(self, key: str, default: Optional[str] = None) -> Optional[str]:
+        with self._cursor() as cur:
+            row = cur.execute(
+                "SELECT value FROM app_settings WHERE key=?", (key,)
+            ).fetchone()
+            return row["value"] if row else default
+
+    def set_setting(self, key: str, value: str) -> None:
+        with self._cursor() as cur:
+            cur.execute(
+                "INSERT INTO app_settings(key, value) VALUES (?, ?) "
+                "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+                (key, value),
+            )
 
     # ------------------------------------------------------------------
     # Providers

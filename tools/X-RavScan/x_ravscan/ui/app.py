@@ -1,22 +1,40 @@
-"""Main application window for X-RavScan."""
+"""Main application window for X-RavScan — glassmorphism dark UI + i18n."""
 
 from __future__ import annotations
 
 import asyncio
+import platform
+import sys
 import threading
 import time
 import tkinter as tk
 import tkinter.messagebox as messagebox
-from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 import customtkinter as ctk
 
 from x_ravscan import __version__
-from x_ravscan.core.config import APP_NAME, THEME
+from x_ravscan.core.config import (
+    APP_NAME,
+    DEFAULT_CONCURRENCY,
+    DEFAULT_PORT,
+    THEME,
+    db_path,
+    export_dir,
+    log_path,
+    user_data_dir,
+)
 from x_ravscan.core.database import Database, Provider
 from x_ravscan.core import exporter, network_updater, providers_manager, scanner
+from x_ravscan.i18n import (
+    LANGUAGES,
+    current_language,
+    language_name,
+    set_language,
+    t,
+)
 from x_ravscan.ui.dashboard import LogConsole, PPSChart, ProviderPie
+from x_ravscan.ui.theme import GlassCard, SectionHeader
 from x_ravscan.utils.logger import add_ui_handler, get_logger
 
 
@@ -27,15 +45,31 @@ ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("dark-blue")
 
 
+# ---------------------------------------------------------------------------
+# i18n bootstrap helpers used by main.py before we open the window
+# ---------------------------------------------------------------------------
+
+
+def load_persisted_language(db: Database) -> str:
+    """Read the saved language from app_settings (or fall back to default)."""
+    code = db.get_setting("ui.language") or ""
+    return set_language(code)
+
+
+# ---------------------------------------------------------------------------
+# Main window
+# ---------------------------------------------------------------------------
+
+
 class XRavScanApp(ctk.CTk):
-    """Top-level CTk window."""
+    """Top-level CTk window with glassmorphism dark theme."""
 
     def __init__(self, db: Database) -> None:
         super().__init__()
         self.db = db
         self.title(f"{APP_NAME} v{__version__}")
-        self.geometry("1280x820")
-        self.minsize(1100, 700)
+        self.geometry("1320x840")
+        self.minsize(1160, 720)
         self.configure(fg_color=THEME["bg"])
         try:
             self.option_add("*Font", ("Segoe UI", 10))
@@ -46,6 +80,7 @@ class XRavScanApp(ctk.CTk):
         self._scan_thread: Optional[threading.Thread] = None
         self._scan_loop: Optional[asyncio.AbstractEventLoop] = None
         self._provider_vars: Dict[str, tk.BooleanVar] = {}
+        self._language_var = tk.StringVar(value=current_language())
 
         self._build_layout()
         self._wire_logging()
@@ -57,276 +92,260 @@ class XRavScanApp(ctk.CTk):
     # Layout
     # ------------------------------------------------------------------
     def _build_layout(self) -> None:
-        self.grid_columnconfigure(0, weight=0, minsize=240)
+        self.grid_columnconfigure(0, weight=0, minsize=260)
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
         self._build_sidebar()
 
-        self._tabs = ctk.CTkTabview(self, fg_color=THEME["panel"], segmented_button_selected_color=THEME["accent"], segmented_button_selected_hover_color=THEME["accent"])
-        self._tabs.grid(row=0, column=1, padx=12, pady=12, sticky="nsew")
-        for tab in ("Dashboard", "Providers", "Discovery", "Results", "Settings"):
-            self._tabs.add(tab)
-        self._build_dashboard_tab(self._tabs.tab("Dashboard"))
-        self._build_providers_tab(self._tabs.tab("Providers"))
-        self._build_discovery_tab(self._tabs.tab("Discovery"))
-        self._build_results_tab(self._tabs.tab("Results"))
-        self._build_settings_tab(self._tabs.tab("Settings"))
+        body = ctk.CTkFrame(self, fg_color=THEME["bg"], corner_radius=0)
+        body.grid(row=0, column=1, sticky="nsew")
+        body.grid_columnconfigure(0, weight=1)
+        body.grid_rowconfigure(0, weight=1)
+
+        self._tabs = ctk.CTkTabview(
+            body,
+            fg_color=THEME["glass"],
+            border_color=THEME["border"],
+            border_width=1,
+            corner_radius=14,
+            segmented_button_fg_color=THEME["glass_alt"],
+            segmented_button_unselected_color=THEME["glass_alt"],
+            segmented_button_unselected_hover_color=THEME["glass_hi"],
+            segmented_button_selected_color=THEME["accent"],
+            segmented_button_selected_hover_color=THEME["accent"],
+            text_color=THEME["text"],
+            text_color_disabled=THEME["text_muted"],
+        )
+        self._tabs.grid(row=0, column=0, padx=14, pady=14, sticky="nsew")
+
+        self._tab_keys = [
+            ("Dashboard", "tab.dashboard"),
+            ("Providers", "tab.providers"),
+            ("Discovery", "tab.discovery"),
+            ("Results", "tab.results"),
+            ("Settings", "tab.settings"),
+        ]
+        for tab, _ in self._tab_keys:
+            self._tabs.add(t(f"tab.{tab.lower()}"))
+        # CTkTabview indexes tabs by displayed name — track the localized
+        # names so we can look them up later.
+        self._tab_names = {key: t(f"tab.{name.lower()}") for name, key in self._tab_keys}
+
+        self._build_dashboard_tab(self._tabs.tab(self._tab_names["tab.dashboard"]))
+        self._build_providers_tab(self._tabs.tab(self._tab_names["tab.providers"]))
+        self._build_discovery_tab(self._tabs.tab(self._tab_names["tab.discovery"]))
+        self._build_results_tab(self._tabs.tab(self._tab_names["tab.results"]))
+        self._build_settings_tab(self._tabs.tab(self._tab_names["tab.settings"]))
 
     def _build_sidebar(self) -> None:
-        side = ctk.CTkFrame(self, fg_color=THEME["panel"], corner_radius=0)
-        side.grid(row=0, column=0, sticky="nsw")
+        side = ctk.CTkFrame(
+            self,
+            fg_color=THEME["glass"],
+            border_color=THEME["border"],
+            border_width=1,
+            corner_radius=0,
+        )
+        side.grid(row=0, column=0, sticky="nsw", padx=(14, 0), pady=14)
         side.grid_rowconfigure(99, weight=1)
+        side.grid_columnconfigure(0, weight=1)
 
+        # Brand block
+        brand = ctk.CTkFrame(side, fg_color="transparent")
+        brand.grid(row=0, column=0, padx=18, pady=(20, 4), sticky="ew")
         ctk.CTkLabel(
-            side,
+            brand,
             text=APP_NAME,
             text_color=THEME["accent"],
-            font=ctk.CTkFont("Consolas", 22, weight="bold"),
-        ).grid(row=0, column=0, padx=20, pady=(20, 0), sticky="w")
+            font=ctk.CTkFont("Consolas", 24, weight="bold"),
+        ).pack(anchor="w")
         ctk.CTkLabel(
-            side,
-            text=f"v{__version__}",
+            brand,
+            text=t("app.subtitle"),
             text_color=THEME["text_dim"],
-        ).grid(row=1, column=0, padx=22, pady=(0, 18), sticky="w")
+            font=ctk.CTkFont(size=10),
+            wraplength=210,
+            justify="left",
+        ).pack(anchor="w")
+        ctk.CTkLabel(
+            brand,
+            text=f"v{__version__}",
+            text_color=THEME["text_muted"],
+            font=ctk.CTkFont(size=10),
+        ).pack(anchor="w", pady=(4, 0))
 
-        # Engine
-        ctk.CTkLabel(side, text="Scan engine", text_color=THEME["text_dim"]).grid(row=2, column=0, padx=20, pady=(8, 2), sticky="w")
+        # Engine / concurrency / sample inside a glass card
+        card = GlassCard(side, nested=True)
+        card.grid(row=1, column=0, padx=14, pady=12, sticky="ew")
+        card.grid_columnconfigure(0, weight=1)
+
+        ctk.CTkLabel(card, text=t("sidebar.engine"), text_color=THEME["text_dim"], font=ctk.CTkFont(size=10, weight="bold")).grid(row=0, column=0, padx=14, pady=(12, 2), sticky="w")
         self._engine = ctk.CTkOptionMenu(
-            side,
+            card,
             values=["asyncio", "masscan", "zmap"],
-            fg_color=THEME["panel_alt"],
-            button_color=THEME["panel_alt"],
-            button_hover_color=THEME["border"],
+            fg_color=THEME["glass_hi"],
+            button_color=THEME["glass_hi"],
+            button_hover_color=THEME["border_hi"],
             text_color=THEME["text"],
         )
         self._engine.set("asyncio")
-        self._engine.grid(row=3, column=0, padx=20, pady=(0, 12), sticky="ew")
+        self._engine.grid(row=1, column=0, padx=14, pady=(0, 10), sticky="ew")
 
-        # Concurrency
-        ctk.CTkLabel(side, text="Concurrency", text_color=THEME["text_dim"]).grid(row=4, column=0, padx=20, pady=(0, 2), sticky="w")
-        self._conc = ctk.CTkSlider(side, from_=64, to=2048, number_of_steps=31)
-        self._conc.set(512)
-        self._conc.grid(row=5, column=0, padx=20, pady=(0, 4), sticky="ew")
-        self._conc_lbl = ctk.CTkLabel(side, text="512", text_color=THEME["text_dim"])
-        self._conc_lbl.grid(row=6, column=0, padx=20, pady=(0, 12), sticky="w")
+        ctk.CTkLabel(card, text=t("sidebar.concurrency"), text_color=THEME["text_dim"], font=ctk.CTkFont(size=10, weight="bold")).grid(row=2, column=0, padx=14, pady=(0, 2), sticky="w")
+        self._conc = ctk.CTkSlider(card, from_=64, to=2048, number_of_steps=31, progress_color=THEME["accent"], button_color=THEME["accent"], button_hover_color="#5cffb6")
+        self._conc.set(DEFAULT_CONCURRENCY)
+        self._conc.grid(row=3, column=0, padx=14, pady=(0, 2), sticky="ew")
+        self._conc_lbl = ctk.CTkLabel(card, text=str(DEFAULT_CONCURRENCY), text_color=THEME["accent"], font=ctk.CTkFont(size=11, weight="bold"))
+        self._conc_lbl.grid(row=4, column=0, padx=14, pady=(0, 8), sticky="w")
         self._conc.configure(command=self._on_conc_change)
 
-        # Sample per CIDR
-        ctk.CTkLabel(side, text="Sample per CIDR", text_color=THEME["text_dim"]).grid(row=7, column=0, padx=20, pady=(0, 2), sticky="w")
-        self._sample = ctk.CTkSlider(side, from_=16, to=1024, number_of_steps=63)
+        ctk.CTkLabel(card, text=t("sidebar.sample"), text_color=THEME["text_dim"], font=ctk.CTkFont(size=10, weight="bold")).grid(row=5, column=0, padx=14, pady=(0, 2), sticky="w")
+        self._sample = ctk.CTkSlider(card, from_=16, to=1024, number_of_steps=63, progress_color=THEME["accent_alt"], button_color=THEME["accent_alt"], button_hover_color="#67b7ff")
         self._sample.set(128)
-        self._sample.grid(row=8, column=0, padx=20, pady=(0, 4), sticky="ew")
-        self._sample_lbl = ctk.CTkLabel(side, text="128", text_color=THEME["text_dim"])
-        self._sample_lbl.grid(row=9, column=0, padx=20, pady=(0, 18), sticky="w")
+        self._sample.grid(row=6, column=0, padx=14, pady=(0, 2), sticky="ew")
+        self._sample_lbl = ctk.CTkLabel(card, text="128", text_color=THEME["accent_alt"], font=ctk.CTkFont(size=11, weight="bold"))
+        self._sample_lbl.grid(row=7, column=0, padx=14, pady=(0, 12), sticky="w")
         self._sample.configure(command=self._on_sample_change)
 
+        # CTAs
         self._scan_btn = ctk.CTkButton(
             side,
-            text="▶  START SCAN",
+            text=t("sidebar.start"),
             font=ctk.CTkFont(weight="bold"),
             fg_color=THEME["accent"],
             text_color=THEME["bg"],
             hover_color="#5cffb6",
+            corner_radius=12,
             command=self._on_start_scan,
         )
-        self._scan_btn.grid(row=10, column=0, padx=20, pady=(0, 6), sticky="ew")
+        self._scan_btn.grid(row=2, column=0, padx=14, pady=(0, 6), sticky="ew")
 
         self._stop_btn = ctk.CTkButton(
             side,
-            text="■  STOP",
+            text=t("sidebar.stop"),
             fg_color=THEME["danger"],
             text_color=THEME["bg"],
             hover_color="#ff7c7c",
+            corner_radius=12,
             command=self._on_stop_scan,
             state="disabled",
         )
-        self._stop_btn.grid(row=11, column=0, padx=20, pady=(0, 18), sticky="ew")
+        self._stop_btn.grid(row=3, column=0, padx=14, pady=(0, 16), sticky="ew")
 
         ctk.CTkButton(
             side,
-            text="↺  Cloud Sync",
-            fg_color=THEME["panel_alt"],
+            text=t("sidebar.cloud_sync"),
+            fg_color="transparent",
             border_color=THEME["accent_alt"],
             border_width=1,
             text_color=THEME["accent_alt"],
-            hover_color=THEME["panel_alt"],
+            hover_color=THEME["glass_hi"],
+            corner_radius=12,
             command=self._on_cloud_sync,
-        ).grid(row=12, column=0, padx=20, pady=(0, 6), sticky="ew")
+        ).grid(row=4, column=0, padx=14, pady=(0, 6), sticky="ew")
 
         ctk.CTkButton(
             side,
-            text="🔍  Smart Discovery",
-            fg_color=THEME["panel_alt"],
+            text=t("sidebar.discovery"),
+            fg_color="transparent",
             border_color=THEME["accent"],
             border_width=1,
             text_color=THEME["accent"],
-            hover_color=THEME["panel_alt"],
+            hover_color=THEME["glass_hi"],
+            corner_radius=12,
             command=self._on_smart_discovery,
-        ).grid(row=13, column=0, padx=20, pady=(0, 18), sticky="ew")
+        ).grid(row=5, column=0, padx=14, pady=(0, 18), sticky="ew")
 
-        side.grid_columnconfigure(0, weight=1)
-
+    # ------------------------------------------------------------------
+    # Dashboard
+    # ------------------------------------------------------------------
     def _build_dashboard_tab(self, parent) -> None:
-        parent.grid_rowconfigure(1, weight=1)
+        parent.grid_rowconfigure(2, weight=1)
         parent.grid_columnconfigure(0, weight=1)
-        parent.grid_columnconfigure(1, weight=0, minsize=380)
+        parent.grid_columnconfigure(1, weight=0, minsize=400)
 
-        # Top stats strip
-        stats = ctk.CTkFrame(parent, fg_color=THEME["panel"], corner_radius=10)
+        stats = GlassCard(parent)
         stats.grid(row=0, column=0, columnspan=2, sticky="ew", padx=4, pady=(4, 12))
         for c in range(4):
             stats.grid_columnconfigure(c, weight=1, uniform="stats")
-        self._stat_total = self._make_stat(stats, 0, "Targets", "0")
-        self._stat_done = self._make_stat(stats, 1, "Completed", "0")
-        self._stat_alive = self._make_stat(stats, 2, "Alive", "0")
-        self._stat_pps = self._make_stat(stats, 3, "PPS", "0.0")
+        self._stat_total = self._make_stat(stats, 0, t("stat.targets"), "0", THEME["accent"])
+        self._stat_done = self._make_stat(stats, 1, t("stat.completed"), "0", THEME["accent_alt"])
+        self._stat_alive = self._make_stat(stats, 2, t("stat.alive"), "0", THEME["accent"])
+        self._stat_pps = self._make_stat(stats, 3, t("stat.pps"), "0.0", THEME["accent_pink"])
 
+        # Charts row
         self._pps_chart = PPSChart(parent)
         self._pps_chart.grid(row=1, column=0, sticky="nsew", padx=4, pady=4)
-
         self._pie = ProviderPie(parent)
         self._pie.grid(row=1, column=1, sticky="nsew", padx=4, pady=4)
+        parent.grid_rowconfigure(1, weight=1)
 
+        # Activity log under the charts
         self._console = LogConsole(parent)
         self._console.grid(row=2, column=0, columnspan=2, sticky="nsew", padx=4, pady=(12, 4))
-        parent.grid_rowconfigure(2, weight=1)
 
-    def _make_stat(self, parent, col: int, label: str, value: str) -> ctk.CTkLabel:
-        cell = ctk.CTkFrame(parent, fg_color="transparent")
-        cell.grid(row=0, column=col, padx=12, pady=12, sticky="ew")
+    def _make_stat(self, parent, col: int, label: str, value: str, color: str) -> ctk.CTkLabel:
+        cell = GlassCard(parent, nested=True, corner_radius=12)
+        cell.grid(row=0, column=col, padx=8, pady=10, sticky="nsew")
         ctk.CTkLabel(
             cell,
-            text=label.upper(),
+            text=label,
             text_color=THEME["text_dim"],
             font=ctk.CTkFont(size=10, weight="bold"),
-        ).pack(anchor="w")
+        ).pack(anchor="w", padx=14, pady=(10, 0))
         v = ctk.CTkLabel(
             cell,
             text=value,
-            text_color=THEME["accent"],
+            text_color=color,
             font=ctk.CTkFont(size=22, weight="bold"),
         )
-        v.pack(anchor="w")
+        v.pack(anchor="w", padx=14, pady=(0, 12))
         return v
 
+    # ------------------------------------------------------------------
+    # Providers
+    # ------------------------------------------------------------------
     def _build_providers_tab(self, parent) -> None:
         parent.grid_rowconfigure(1, weight=1)
         parent.grid_columnconfigure(0, weight=1)
 
         toolbar = ctk.CTkFrame(parent, fg_color="transparent")
         toolbar.grid(row=0, column=0, sticky="ew", pady=(4, 8))
-        ctk.CTkButton(toolbar, text="Enable all", fg_color=THEME["panel_alt"], text_color=THEME["text"], command=lambda: self._toggle_all(True)).pack(side="left", padx=4)
-        ctk.CTkButton(toolbar, text="Disable all", fg_color=THEME["panel_alt"], text_color=THEME["text"], command=lambda: self._toggle_all(False)).pack(side="left", padx=4)
-        ctk.CTkButton(toolbar, text="Refresh", fg_color=THEME["panel_alt"], text_color=THEME["text"], command=self._refresh_providers_panel).pack(side="left", padx=4)
+        for label_key, color, fn in (
+            ("providers.toolbar.enable_all", THEME["accent"], lambda: self._toggle_all(True)),
+            ("providers.toolbar.disable_all", THEME["danger"], lambda: self._toggle_all(False)),
+            ("providers.toolbar.refresh", THEME["accent_alt"], self._refresh_providers_panel),
+        ):
+            ctk.CTkButton(
+                toolbar,
+                text=t(label_key),
+                fg_color="transparent",
+                border_color=color,
+                border_width=1,
+                text_color=color,
+                hover_color=THEME["glass_hi"],
+                corner_radius=10,
+                command=fn,
+            ).pack(side="left", padx=4)
 
-        self._providers_box = ctk.CTkScrollableFrame(parent, fg_color=THEME["panel"], corner_radius=10)
-        self._providers_box.grid(row=1, column=0, sticky="nsew", padx=4, pady=4)
-        self._providers_box.grid_columnconfigure(0, weight=1)
-
-    def _build_discovery_tab(self, parent) -> None:
-        parent.grid_rowconfigure(1, weight=1)
-        parent.grid_columnconfigure(0, weight=1)
-
-        bar = ctk.CTkFrame(parent, fg_color="transparent")
-        bar.grid(row=0, column=0, sticky="ew", pady=(4, 8))
-        ctk.CTkButton(bar, text="Run Smart Discovery", fg_color=THEME["accent"], text_color=THEME["bg"], hover_color="#5cffb6", command=self._on_smart_discovery).pack(side="left", padx=4)
-        ctk.CTkButton(bar, text="Auto-sync (accept all)", fg_color=THEME["accent_alt"], text_color=THEME["bg"], command=self._on_auto_sync).pack(side="left", padx=4)
-        ctk.CTkButton(bar, text="Refresh", fg_color=THEME["panel_alt"], text_color=THEME["text"], command=self._refresh_discoveries_panel).pack(side="left", padx=4)
-
-        self._discovery_box = ctk.CTkScrollableFrame(parent, fg_color=THEME["panel"], corner_radius=10)
-        self._discovery_box.grid(row=1, column=0, sticky="nsew", padx=4, pady=4)
-        self._discovery_box.grid_columnconfigure(0, weight=1)
-        self._refresh_discoveries_panel()
-
-    def _build_results_tab(self, parent) -> None:
-        parent.grid_rowconfigure(1, weight=1)
-        parent.grid_columnconfigure(0, weight=1)
-
-        bar = ctk.CTkFrame(parent, fg_color="transparent")
-        bar.grid(row=0, column=0, sticky="ew", pady=(4, 8))
-        ctk.CTkButton(bar, text="Refresh", fg_color=THEME["panel_alt"], text_color=THEME["text"], command=self._refresh_results_panel).pack(side="left", padx=4)
-        ctk.CTkButton(bar, text="Export JSON", fg_color=THEME["panel_alt"], text_color=THEME["accent"], border_color=THEME["accent"], border_width=1, hover_color=THEME["panel_alt"], command=lambda: self._export("json")).pack(side="left", padx=4)
-        ctk.CTkButton(bar, text="Export CSV", fg_color=THEME["panel_alt"], text_color=THEME["accent_alt"], border_color=THEME["accent_alt"], border_width=1, hover_color=THEME["panel_alt"], command=lambda: self._export("csv")).pack(side="left", padx=4)
-        ctk.CTkButton(bar, text="Export HTML report", fg_color=THEME["accent"], text_color=THEME["bg"], hover_color="#5cffb6", command=lambda: self._export("html")).pack(side="left", padx=4)
-
-        # Use ttk.Treeview wrapped inside CTkFrame for tabular output.
-        from tkinter import ttk
-
-        style = ttk.Style()
-        style.theme_use("default")
-        style.configure(
-            "Cyber.Treeview",
-            background=THEME["bg"],
-            foreground=THEME["text"],
-            fieldbackground=THEME["bg"],
-            rowheight=22,
-            bordercolor=THEME["border"],
-        )
-        style.configure(
-            "Cyber.Treeview.Heading",
-            background=THEME["panel_alt"],
-            foreground=THEME["accent"],
-            relief="flat",
-        )
-        style.map("Cyber.Treeview", background=[("selected", THEME["panel_alt"])])
-
-        wrap = ctk.CTkFrame(parent, fg_color=THEME["panel"], corner_radius=10)
+        wrap = GlassCard(parent)
         wrap.grid(row=1, column=0, sticky="nsew", padx=4, pady=4)
         wrap.grid_rowconfigure(0, weight=1)
         wrap.grid_columnconfigure(0, weight=1)
 
-        cols = ("ip", "port", "provider", "issuer", "subject", "expires")
-        self._tree = ttk.Treeview(wrap, columns=cols, show="headings", style="Cyber.Treeview")
-        for c, w in zip(cols, (140, 60, 130, 280, 280, 160)):
-            self._tree.heading(c, text=c.upper())
-            self._tree.column(c, width=w, stretch=True)
-        self._tree.grid(row=0, column=0, sticky="nsew", padx=4, pady=4)
+        self._providers_box = ctk.CTkScrollableFrame(
+            wrap, fg_color="transparent", corner_radius=0,
+        )
+        self._providers_box.grid(row=0, column=0, padx=8, pady=8, sticky="nsew")
+        self._providers_box.grid_columnconfigure(0, weight=1)
 
-        scroll = ttk.Scrollbar(wrap, orient="vertical", command=self._tree.yview)
-        self._tree.configure(yscrollcommand=scroll.set)
-        scroll.grid(row=0, column=1, sticky="ns")
-
-    def _build_settings_tab(self, parent) -> None:
-        for col in (0, 1):
-            parent.grid_columnconfigure(col, weight=1)
-        info = ctk.CTkFrame(parent, fg_color=THEME["panel"], corner_radius=10)
-        info.grid(row=0, column=0, columnspan=2, sticky="nsew", padx=4, pady=4)
-        from x_ravscan.core.config import db_path, log_path, export_dir, user_data_dir
-
-        rows = [
-            ("Application", f"{APP_NAME} v{__version__}"),
-            ("Data dir", str(user_data_dir())),
-            ("Database", str(db_path())),
-            ("Logs", str(log_path())),
-            ("Exports", str(export_dir())),
-        ]
-        for i, (k, v) in enumerate(rows):
-            ctk.CTkLabel(info, text=k, text_color=THEME["text_dim"], font=ctk.CTkFont(weight="bold")).grid(row=i, column=0, sticky="w", padx=18, pady=4)
-            ctk.CTkLabel(info, text=v, text_color=THEME["text"], anchor="w").grid(row=i, column=1, sticky="ew", padx=18, pady=4)
-        info.grid_columnconfigure(1, weight=1)
-
-    # ------------------------------------------------------------------
-    # Logging hookup
-    # ------------------------------------------------------------------
-    def _wire_logging(self) -> None:
-        def cb(level: str, message: str) -> None:
-            try:
-                self.after(0, lambda: self._console.append(level, message))
-            except RuntimeError:
-                pass
-        add_ui_handler(cb)
-
-    # ------------------------------------------------------------------
-    # Providers panel
-    # ------------------------------------------------------------------
     def _refresh_providers_panel(self) -> None:
         for child in self._providers_box.winfo_children():
             child.destroy()
         self._provider_vars.clear()
         for i, prov in enumerate(self.db.list_providers()):
-            row = ctk.CTkFrame(self._providers_box, fg_color=THEME["panel_alt"], corner_radius=8)
-            row.grid(row=i, column=0, sticky="ew", padx=6, pady=4)
+            row = GlassCard(self._providers_box, nested=True, accent=prov.color, corner_radius=10)
+            row.grid(row=i, column=0, sticky="ew", padx=4, pady=4)
             row.grid_columnconfigure(1, weight=1)
 
             var = tk.BooleanVar(value=prov.enabled)
@@ -336,35 +355,40 @@ class XRavScanApp(ctk.CTk):
                 text="",
                 variable=var,
                 width=24,
-                fg_color=THEME["accent"],
-                hover_color="#5cffb6",
+                fg_color=prov.color,
+                hover_color=prov.color,
+                border_color=THEME["border_hi"],
                 command=lambda slug=prov.slug, v=var: self._on_provider_toggle(slug, v.get()),
             )
-            chk.grid(row=0, column=0, padx=(8, 4), pady=8)
+            chk.grid(row=0, column=0, rowspan=2, padx=(12, 6), pady=10)
 
-            txt = ctk.CTkLabel(
+            ctk.CTkLabel(
                 row,
-                text=f"{prov.name}",
+                text=prov.name,
                 text_color=THEME["text"],
-                font=ctk.CTkFont(weight="bold"),
+                font=ctk.CTkFont(size=13, weight="bold"),
                 anchor="w",
-            )
-            txt.grid(row=0, column=1, sticky="w", padx=4, pady=8)
+            ).grid(row=0, column=1, sticky="w", padx=4, pady=(8, 0))
 
             assert prov.id is not None
             cidr_count = len(self.db.list_ranges(prov.id))
-            sub = ctk.CTkLabel(
+            asns = ", ".join(map(str, prov.asns)) or "—"
+            sub = " · ".join([
+                t("providers.row.cidrs", count=cidr_count),
+                t("providers.row.asns", asns=asns),
+                t("providers.row.synced", when=providers_managed_label(prov)),
+            ])
+            ctk.CTkLabel(
                 row,
-                text=f"{cidr_count} CIDRs · ASNs: {', '.join(map(str, prov.asns)) or '—'} · synced: {providers_managed_label(prov)}",
+                text=sub,
                 text_color=THEME["text_dim"],
                 anchor="w",
                 font=ctk.CTkFont(size=11),
-            )
-            sub.grid(row=1, column=1, sticky="w", padx=4, pady=(0, 8))
+            ).grid(row=1, column=1, sticky="w", padx=4, pady=(0, 8))
 
-            dot = tk.Canvas(row, width=10, height=10, highlightthickness=0, bg=THEME["panel_alt"])
-            dot.create_oval(1, 1, 9, 9, fill=prov.color, outline=prov.color)
-            dot.grid(row=0, column=2, padx=12, pady=8)
+            dot = tk.Canvas(row, width=14, height=14, highlightthickness=0, bg=THEME["glass_alt"])
+            dot.create_oval(2, 2, 12, 12, fill=prov.color, outline=prov.color)
+            dot.grid(row=0, column=2, rowspan=2, padx=14, pady=10)
 
     def _on_provider_toggle(self, slug: str, enabled: bool) -> None:
         self.db.set_provider_enabled(slug, enabled)
@@ -377,8 +401,27 @@ class XRavScanApp(ctk.CTk):
         log.info("bulk toggle providers -> %s", enabled)
 
     # ------------------------------------------------------------------
-    # Discovery panel
+    # Discovery
     # ------------------------------------------------------------------
+    def _build_discovery_tab(self, parent) -> None:
+        parent.grid_rowconfigure(1, weight=1)
+        parent.grid_columnconfigure(0, weight=1)
+
+        bar = ctk.CTkFrame(parent, fg_color="transparent")
+        bar.grid(row=0, column=0, sticky="ew", pady=(4, 8))
+        ctk.CTkButton(bar, text=t("discovery.run"), fg_color=THEME["accent"], text_color=THEME["bg"], hover_color="#5cffb6", corner_radius=10, command=self._on_smart_discovery).pack(side="left", padx=4)
+        ctk.CTkButton(bar, text=t("discovery.auto_sync"), fg_color=THEME["accent_alt"], text_color=THEME["bg"], hover_color="#67b7ff", corner_radius=10, command=self._on_auto_sync).pack(side="left", padx=4)
+        ctk.CTkButton(bar, text=t("discovery.refresh"), fg_color="transparent", border_color=THEME["border_hi"], border_width=1, text_color=THEME["text"], hover_color=THEME["glass_hi"], corner_radius=10, command=self._refresh_discoveries_panel).pack(side="left", padx=4)
+
+        wrap = GlassCard(parent)
+        wrap.grid(row=1, column=0, sticky="nsew", padx=4, pady=4)
+        wrap.grid_rowconfigure(0, weight=1)
+        wrap.grid_columnconfigure(0, weight=1)
+        self._discovery_box = ctk.CTkScrollableFrame(wrap, fg_color="transparent", corner_radius=0)
+        self._discovery_box.grid(row=0, column=0, padx=8, pady=8, sticky="nsew")
+        self._discovery_box.grid_columnconfigure(0, weight=1)
+        self._refresh_discoveries_panel()
+
     def _refresh_discoveries_panel(self) -> None:
         for c in self._discovery_box.winfo_children():
             c.destroy()
@@ -386,18 +429,20 @@ class XRavScanApp(ctk.CTk):
         if not rows:
             ctk.CTkLabel(
                 self._discovery_box,
-                text="No pending discoveries — run Smart Discovery to query BGPView for new prefixes.",
+                text=t("discovery.empty"),
                 text_color=THEME["text_dim"],
-            ).grid(row=0, column=0, padx=12, pady=12, sticky="w")
+                wraplength=720,
+                justify="left",
+            ).grid(row=0, column=0, padx=14, pady=14, sticky="w")
             return
         for i, r in enumerate(rows):
-            box = ctk.CTkFrame(self._discovery_box, fg_color=THEME["panel_alt"], corner_radius=8)
-            box.grid(row=i, column=0, sticky="ew", padx=6, pady=4)
+            box = GlassCard(self._discovery_box, nested=True, corner_radius=10)
+            box.grid(row=i, column=0, sticky="ew", padx=4, pady=4)
             box.grid_columnconfigure(1, weight=1)
-            ctk.CTkLabel(box, text=r["cidr"], text_color=THEME["accent"], font=ctk.CTkFont(weight="bold", family="Consolas")).grid(row=0, column=0, padx=10, pady=6, sticky="w")
+            ctk.CTkLabel(box, text=r["cidr"], text_color=THEME["accent"], font=ctk.CTkFont(weight="bold", family="Consolas")).grid(row=0, column=0, padx=14, pady=10, sticky="w")
             desc = r["description"] or ""
-            ctk.CTkLabel(box, text=f"AS{r['asn']} · {r['provider_name']} · {desc}", text_color=THEME["text_dim"], anchor="w").grid(row=0, column=1, padx=4, pady=6, sticky="w")
-            ctk.CTkButton(box, text="Accept", fg_color=THEME["accent"], text_color=THEME["bg"], width=80, command=lambda pid=r["provider_id"]: self._accept_discoveries(pid)).grid(row=0, column=2, padx=8, pady=6)
+            ctk.CTkLabel(box, text=f"AS{r['asn']} · {r['provider_name']} · {desc}", text_color=THEME["text_dim"], anchor="w").grid(row=0, column=1, padx=4, pady=10, sticky="w")
+            ctk.CTkButton(box, text=t("discovery.accept"), fg_color=THEME["accent"], text_color=THEME["bg"], width=90, corner_radius=8, hover_color="#5cffb6", command=lambda pid=r["provider_id"]: self._accept_discoveries(pid)).grid(row=0, column=2, padx=10, pady=8)
 
     def _accept_discoveries(self, provider_id: int) -> None:
         n = self.db.accept_discoveries(provider_id)
@@ -406,8 +451,64 @@ class XRavScanApp(ctk.CTk):
         self._refresh_providers_panel()
 
     # ------------------------------------------------------------------
-    # Results panel
+    # Results
     # ------------------------------------------------------------------
+    def _build_results_tab(self, parent) -> None:
+        parent.grid_rowconfigure(1, weight=1)
+        parent.grid_columnconfigure(0, weight=1)
+
+        bar = ctk.CTkFrame(parent, fg_color="transparent")
+        bar.grid(row=0, column=0, sticky="ew", pady=(4, 8))
+        ctk.CTkButton(bar, text=t("results.refresh"), fg_color="transparent", border_color=THEME["border_hi"], border_width=1, text_color=THEME["text"], hover_color=THEME["glass_hi"], corner_radius=10, command=self._refresh_results_panel).pack(side="left", padx=4)
+        ctk.CTkButton(bar, text=t("results.export_json"), fg_color="transparent", border_color=THEME["accent"], border_width=1, text_color=THEME["accent"], hover_color=THEME["glass_hi"], corner_radius=10, command=lambda: self._export("json")).pack(side="left", padx=4)
+        ctk.CTkButton(bar, text=t("results.export_csv"), fg_color="transparent", border_color=THEME["accent_alt"], border_width=1, text_color=THEME["accent_alt"], hover_color=THEME["glass_hi"], corner_radius=10, command=lambda: self._export("csv")).pack(side="left", padx=4)
+        ctk.CTkButton(bar, text=t("results.export_html"), fg_color=THEME["accent"], text_color=THEME["bg"], hover_color="#5cffb6", corner_radius=10, command=lambda: self._export("html")).pack(side="left", padx=4)
+
+        from tkinter import ttk
+        style = ttk.Style()
+        style.theme_use("default")
+        style.configure(
+            "Cyber.Treeview",
+            background=THEME["glass"],
+            foreground=THEME["text"],
+            fieldbackground=THEME["glass"],
+            rowheight=24,
+            bordercolor=THEME["border"],
+            borderwidth=0,
+        )
+        style.configure(
+            "Cyber.Treeview.Heading",
+            background=THEME["glass_alt"],
+            foreground=THEME["accent"],
+            relief="flat",
+            font=("Segoe UI", 9, "bold"),
+        )
+        style.map("Cyber.Treeview", background=[("selected", THEME["glass_hi"])], foreground=[("selected", THEME["accent"])])
+
+        wrap = GlassCard(parent)
+        wrap.grid(row=1, column=0, sticky="nsew", padx=4, pady=4)
+        wrap.grid_rowconfigure(0, weight=1)
+        wrap.grid_columnconfigure(0, weight=1)
+
+        cols = ("ip", "port", "provider", "issuer", "subject", "expires")
+        col_keys = {
+            "ip": "results.col.ip",
+            "port": "results.col.port",
+            "provider": "results.col.provider",
+            "issuer": "results.col.issuer",
+            "subject": "results.col.subject",
+            "expires": "results.col.expires",
+        }
+        self._tree = ttk.Treeview(wrap, columns=cols, show="headings", style="Cyber.Treeview")
+        for c, w in zip(cols, (140, 60, 130, 280, 280, 160)):
+            self._tree.heading(c, text=t(col_keys[c]))
+            self._tree.column(c, width=w, stretch=True)
+        self._tree.grid(row=0, column=0, sticky="nsew", padx=8, pady=8)
+
+        scroll = ttk.Scrollbar(wrap, orient="vertical", command=self._tree.yview)
+        self._tree.configure(yscrollcommand=scroll.set)
+        scroll.grid(row=0, column=1, sticky="ns")
+
     def _refresh_results_panel(self) -> None:
         for r in self._tree.get_children():
             self._tree.delete(r)
@@ -440,10 +541,134 @@ class XRavScanApp(ctk.CTk):
                 p = exporter.export_html(self.db)
             else:
                 return
-            messagebox.showinfo(APP_NAME, f"Saved: {p}")
+            messagebox.showinfo(APP_NAME, t("results.export_saved", path=str(p)))
         except Exception as e:
             log.exception("export failed")
-            messagebox.showerror(APP_NAME, f"Export failed: {e}")
+            messagebox.showerror(APP_NAME, t("results.export_failed", error=str(e)))
+
+    # ------------------------------------------------------------------
+    # Settings
+    # ------------------------------------------------------------------
+    def _build_settings_tab(self, parent) -> None:
+        parent.grid_columnconfigure(0, weight=1)
+        parent.grid_columnconfigure(1, weight=1)
+        parent.grid_rowconfigure(99, weight=1)
+
+        # Two-column grid of frosted cards
+        # Left column: Appearance, Engine
+        # Right column: Language, Paths, About
+        self._build_appearance_card(parent, row=0, col=0)
+        self._build_language_card(parent, row=0, col=1)
+        self._build_engine_card(parent, row=1, col=0)
+        self._build_paths_card(parent, row=1, col=1)
+        self._build_about_card(parent, row=2, col=0, span=2)
+
+        # Save button at the bottom
+        save_bar = ctk.CTkFrame(parent, fg_color="transparent")
+        save_bar.grid(row=3, column=0, columnspan=2, sticky="ew", padx=8, pady=(8, 6))
+        ctk.CTkButton(
+            save_bar,
+            text=t("settings.action.save"),
+            fg_color=THEME["accent"],
+            text_color=THEME["bg"],
+            hover_color="#5cffb6",
+            corner_radius=10,
+            font=ctk.CTkFont(weight="bold"),
+            command=self._on_save_settings,
+        ).pack(side="right", padx=4)
+
+    def _settings_card(self, parent, row: int, col: int, *, span: int = 1, accent: Optional[str] = None) -> ctk.CTkFrame:
+        card = GlassCard(parent, accent=accent, corner_radius=14)
+        card.grid(row=row, column=col, columnspan=span, sticky="nsew", padx=10, pady=10)
+        card.grid_columnconfigure(0, weight=1)
+        return card
+
+    def _add_field(self, parent, row: int, label: str, value: str) -> None:
+        ctk.CTkLabel(parent, text=label, text_color=THEME["text_dim"], font=ctk.CTkFont(size=11)).grid(row=row, column=0, sticky="w", padx=18, pady=(2, 1))
+        ctk.CTkLabel(parent, text=value, text_color=THEME["text"], font=ctk.CTkFont(size=11, family="Consolas"), anchor="w").grid(row=row, column=1, sticky="ew", padx=18, pady=(2, 1))
+
+    def _build_appearance_card(self, parent, *, row: int, col: int) -> None:
+        card = self._settings_card(parent, row, col, accent=THEME["accent_pink"])
+        SectionHeader(card, t("settings.section.appearance"), t("settings.section.appearance.desc"), accent=THEME["accent_pink"]).grid(row=0, column=0, columnspan=2, sticky="ew", padx=18, pady=(14, 10))
+        card.grid_columnconfigure(1, weight=1)
+        ctk.CTkLabel(card, text=t("settings.field.theme"), text_color=THEME["text_dim"], font=ctk.CTkFont(size=11)).grid(row=1, column=0, sticky="w", padx=18, pady=(0, 14))
+        ctk.CTkLabel(card, text=t("settings.field.theme.value"), text_color=THEME["accent_pink"], font=ctk.CTkFont(size=11, weight="bold")).grid(row=1, column=1, sticky="w", padx=18, pady=(0, 14))
+
+    def _build_language_card(self, parent, *, row: int, col: int) -> None:
+        card = self._settings_card(parent, row, col, accent=THEME["accent_alt"])
+        SectionHeader(card, t("settings.section.language"), t("settings.section.language.desc"), accent=THEME["accent_alt"]).grid(row=0, column=0, columnspan=2, sticky="ew", padx=18, pady=(14, 10))
+        card.grid_columnconfigure(1, weight=1)
+        ctk.CTkLabel(card, text=t("settings.field.language"), text_color=THEME["text_dim"], font=ctk.CTkFont(size=11)).grid(row=1, column=0, sticky="w", padx=18, pady=(0, 6))
+        labels = [label for _, label in LANGUAGES]
+        codes = [code for code, _ in LANGUAGES]
+        self._language_var.set(language_name(current_language()))
+        opt = ctk.CTkOptionMenu(
+            card,
+            values=labels,
+            variable=self._language_var,
+            fg_color=THEME["glass_hi"],
+            button_color=THEME["glass_hi"],
+            button_hover_color=THEME["border_hi"],
+            text_color=THEME["text"],
+            command=lambda label, codes=codes, labels=labels: self._on_language_pick(codes[labels.index(label)] if label in labels else "en"),
+        )
+        opt.grid(row=1, column=1, sticky="ew", padx=18, pady=(0, 6))
+        ctk.CTkLabel(card, text=t("settings.action.restart_hint"), text_color=THEME["text_muted"], font=ctk.CTkFont(size=10), wraplength=440, justify="left").grid(row=2, column=0, columnspan=2, sticky="w", padx=18, pady=(0, 14))
+
+    def _on_language_pick(self, code: str) -> None:
+        set_language(code)
+        self.db.set_setting("ui.language", code)
+        log.info("ui language pre-selected: %s", code)
+
+    def _build_engine_card(self, parent, *, row: int, col: int) -> None:
+        card = self._settings_card(parent, row, col, accent=THEME["accent"])
+        SectionHeader(card, t("settings.section.engine"), t("settings.section.engine.desc"), accent=THEME["accent"]).grid(row=0, column=0, columnspan=2, sticky="ew", padx=18, pady=(14, 10))
+        card.grid_columnconfigure(1, weight=1)
+        self._add_field(card, 1, t("settings.field.engine"), self._engine.get())
+        self._add_field(card, 2, t("settings.field.concurrency"), str(int(self._conc.get())))
+        self._add_field(card, 3, t("settings.field.sample"), str(int(self._sample.get())))
+        ctk.CTkLabel(card, text="", height=10).grid(row=4, column=0)
+
+    def _build_paths_card(self, parent, *, row: int, col: int) -> None:
+        card = self._settings_card(parent, row, col, accent=THEME["info"])
+        SectionHeader(card, t("settings.section.paths"), t("settings.section.paths.desc"), accent=THEME["info"]).grid(row=0, column=0, columnspan=2, sticky="ew", padx=18, pady=(14, 10))
+        card.grid_columnconfigure(1, weight=1)
+        self._add_field(card, 1, t("settings.field.data_dir"), str(user_data_dir()))
+        self._add_field(card, 2, t("settings.field.database"), str(db_path()))
+        self._add_field(card, 3, t("settings.field.logs"), str(log_path()))
+        self._add_field(card, 4, t("settings.field.exports"), str(export_dir()))
+        ctk.CTkLabel(card, text="", height=10).grid(row=5, column=0)
+
+    def _build_about_card(self, parent, *, row: int, col: int, span: int) -> None:
+        card = self._settings_card(parent, row, col, span=span, accent=THEME["accent_alt"])
+        SectionHeader(card, t("settings.section.about"), t("settings.section.about.desc"), accent=THEME["accent_alt"]).grid(row=0, column=0, columnspan=2, sticky="ew", padx=18, pady=(14, 10))
+        card.grid_columnconfigure(1, weight=1)
+        self._add_field(card, 1, t("settings.field.app"), f"{APP_NAME} v{__version__}")
+        self._add_field(card, 2, t("settings.field.version"), "frozen" if getattr(sys, "frozen", False) else "from source")
+        self._add_field(card, 3, t("settings.field.python"), f"{platform.python_implementation()} {platform.python_version()} · {platform.system()} {platform.release()}")
+        ctk.CTkLabel(card, text="", height=10).grid(row=4, column=0)
+
+    def _on_save_settings(self) -> None:
+        self.db.set_setting("ui.language", current_language())
+        self.db.set_setting("scan.engine", self._engine.get())
+        self.db.set_setting("scan.concurrency", str(int(self._conc.get())))
+        self.db.set_setting("scan.sample", str(int(self._sample.get())))
+        log.info("settings saved (lang=%s)", current_language())
+        messagebox.showinfo(
+            APP_NAME,
+            f"{t('settings.action.saved')}\n{t('settings.action.restart_hint')}",
+        )
+
+    # ------------------------------------------------------------------
+    # Logging hookup
+    # ------------------------------------------------------------------
+    def _wire_logging(self) -> None:
+        def cb(level: str, message: str) -> None:
+            try:
+                self.after(0, lambda: self._console.append(level, message))
+            except RuntimeError:
+                pass
+        add_ui_handler(cb)
 
     # ------------------------------------------------------------------
     # Sliders

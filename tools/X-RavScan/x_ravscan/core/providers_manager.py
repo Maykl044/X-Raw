@@ -214,6 +214,27 @@ def fetch_fastly() -> List[str]:
     return [c for c in (data.get("addresses") or []) + (data.get("ipv6_addresses") or []) if _looks_like_cidr(c)]
 
 
+# --- Bunny CDN -------------------------------------------------------------
+
+def fetch_bunny() -> List[str]:
+    """bunny.net publishes a flat JSON array of edge-server IPv4 addresses.
+
+    We promote each /32 host to a CIDR so the scanner pipeline treats it
+    uniformly with other providers' subnets.
+    """
+    data = _http_get("https://bunnycdn.com/api/system/edgeserverlist", json_response=True)
+    if not isinstance(data, list):
+        return []
+    out: List[str] = []
+    for item in data:
+        if not isinstance(item, str):
+            continue
+        cidr = item if "/" in item else f"{item}/32"
+        if _looks_like_cidr(cidr):
+            out.append(cidr)
+    return out
+
+
 # ---------------------------------------------------------------------------
 # Orchestrator
 # ---------------------------------------------------------------------------
@@ -226,6 +247,7 @@ _SYNCERS = {
     "azure_frontdoor": lambda: fetch_azure("AzureFrontDoor.Frontend"),
     "gcp": fetch_gcp,
     "fastly": fetch_fastly,
+    "bunny": fetch_bunny,
 }
 
 
@@ -291,13 +313,20 @@ def set_enabled_bulk(db: Database, mapping: Dict[str, bool]) -> None:
 
 
 def last_synced_label(prov: Provider) -> str:
+    # Lazy import — keeps providers_manager usable in headless contexts where
+    # the i18n package may not be initialised yet.
+    try:
+        from x_ravscan.i18n import t
+        never = t("providers.row.never_synced")
+    except Exception:
+        never = "never"
     if not prov.last_synced:
-        return "never"
+        return never
     delta = time.time() - prov.last_synced
     if delta < 60:
-        return "just now"
+        return "<1m"
     if delta < 3600:
-        return f"{int(delta // 60)}m ago"
+        return f"{int(delta // 60)}m"
     if delta < 86400:
-        return f"{int(delta // 3600)}h ago"
-    return f"{int(delta // 86400)}d ago"
+        return f"{int(delta // 3600)}h"
+    return f"{int(delta // 86400)}d"

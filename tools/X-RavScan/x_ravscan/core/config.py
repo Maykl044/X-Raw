@@ -81,19 +81,39 @@ DEFAULT_PORT = 443
 DEFAULT_USER_AGENT = f"{APP_NAME}/{APP_VERSION} (+https://github.com/Maykl044/X-Raw)"
 
 
-# --- Theme (Modern Dark Cyberpunk) -----------------------------------------
+# --- Theme (Glassmorphism Dark — neon accents on translucent layers) -------
+#
+# Tk/CustomTkinter cannot render real backdrop-filter blur, so we approximate
+# the effect with a layered colour stack:
+#
+#     bg        -> deepest base (window root, behind everything)
+#     glass     -> faux-translucent panel ("frosted card")
+#     glass_alt -> nested card surface (one rung lighter)
+#     border    -> hairline neon edge of a glass card
+#     accent_*  -> neon highlight colours used for borders, glow, charts
+#
+# The hex deltas between bg / glass / glass_alt are deliberately small so
+# panels read as semi-transparent glass over the same dark background.
 
 THEME = {
-    "bg": "#0d1117",
-    "panel": "#11161d",
-    "panel_alt": "#161b22",
-    "border": "#1f2630",
-    "text": "#e6edf3",
-    "text_dim": "#8b949e",
-    "accent": "#00ff9c",       # toxic green
-    "accent_alt": "#1f8cff",   # electric blue
-    "success": "#3fb950",
-    "warning": "#d29922",
-    "danger": "#f85149",
-    "info": "#58a6ff",
+    "bg":          "#070a12",   # deep midnight — base behind glass cards
+    "bg_grad_top": "#0c1220",   # top of subtle vertical gradient
+    "bg_grad_bot": "#070a12",
+    "panel":       "#0f1524",   # legacy alias = glass
+    "panel_alt":   "#141b2c",   # legacy alias = glass_alt
+    "glass":       "#0f1524",
+    "glass_alt":   "#141b2c",
+    "glass_hi":    "#1a2238",   # hover / highlighted glass
+    "border":      "#23304a",   # subtle hairline
+    "border_hi":   "#3b507c",
+    "text":        "#e6edf3",
+    "text_dim":    "#8b96b3",
+    "text_muted":  "#5a6585",
+    "accent":      "#00ff9c",   # toxic-green (primary CTA)
+    "accent_alt":  "#1f8cff",   # electric-blue (secondary CTA, info)
+    "accent_pink": "#ff4dd2",   # neon-magenta (decorative)
+    "success":     "#3fb950",
+    "warning":     "#d29922",
+    "danger":      "#f85149",
+    "info":        "#58a6ff",
 }

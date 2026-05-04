@@ -184,6 +184,10 @@ def _run_gui() -> int:
     from x_ravscan.core.scanner import configure_event_loop
     configure_event_loop()
 
+    # Restore the user's saved language before any UI strings are rendered.
+    from x_ravscan.ui.app import load_persisted_language
+    load_persisted_language(db)
+
     splash.update_status("ready", 1.0)
     splash.finish()
     splash = None  # release reference before creating second Tk root

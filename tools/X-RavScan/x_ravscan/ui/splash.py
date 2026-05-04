@@ -79,7 +79,7 @@ class Splash(tk.Tk):
             w - 60,
             h - 18,
             outline=THEME["border"],
-            fill=THEME["panel"],
+            fill=THEME["glass"],
         )
         self._bar = canvas.create_rectangle(
             60, h - 30, 60, h - 18, outline="", fill=THEME["accent"]

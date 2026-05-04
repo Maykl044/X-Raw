@@ -9,6 +9,7 @@ from typing import Deque, List, Optional, Tuple
 import customtkinter as ctk
 
 from x_ravscan.core.config import THEME
+from x_ravscan.i18n import t
 from x_ravscan.ui.theme import LEVEL_COLORS, apply_matplotlib_dark
 
 
@@ -42,7 +43,8 @@ class PPSChart(ctk.CTkFrame):
     """Rolling window of packets-per-second."""
 
     def __init__(self, master, history: int = 60, **kwargs):
-        super().__init__(master, fg_color=THEME["panel"], corner_radius=10, **kwargs)
+        super().__init__(master, fg_color=THEME["glass"], corner_radius=14,
+                         border_width=1, border_color=THEME["border"], **kwargs)
         self._history = history
         self._values: Deque[float] = collections.deque([0.0] * history, maxlen=history)
         self._times: Deque[float] = collections.deque([time.time()] * history, maxlen=history)
@@ -50,7 +52,7 @@ class PPSChart(ctk.CTkFrame):
         fig, canvas_cls = _mpl.figure(figsize=(5.5, 2.4), dpi=100)
         self._fig = fig
         self._ax = fig.add_subplot(111)
-        self._ax.set_title("PPS (packets / sec)")
+        self._ax.set_title(t("dashboard.pps_chart"))
         self._ax.set_ylim(0, 100)
         self._ax.grid(True)
         self._line, = self._ax.plot(
@@ -90,11 +92,12 @@ class PPSChart(ctk.CTkFrame):
 
 class ProviderPie(ctk.CTkFrame):
     def __init__(self, master, **kwargs):
-        super().__init__(master, fg_color=THEME["panel"], corner_radius=10, **kwargs)
+        super().__init__(master, fg_color=THEME["glass"], corner_radius=14,
+                         border_width=1, border_color=THEME["border"], **kwargs)
         fig, canvas_cls = _mpl.figure(figsize=(3.6, 3.0), dpi=100)
         self._fig = fig
         self._ax = fig.add_subplot(111)
-        self._ax.set_title("Hits by provider")
+        self._ax.set_title(t("dashboard.pie_chart"))
         self._fig.tight_layout()
         self._mpl_canvas = canvas_cls(fig, master=self)
         self._mpl_canvas.get_tk_widget().pack(fill="both", expand=True, padx=8, pady=8)
@@ -102,15 +105,16 @@ class ProviderPie(ctk.CTkFrame):
 
     def _draw_empty(self) -> None:
         self._ax.clear()
-        self._ax.set_title("Hits by provider")
+        self._ax.set_title(t("dashboard.pie_chart"))
         self._ax.text(
             0.5,
             0.5,
-            "no data yet",
+            "\u2014",
             ha="center",
             va="center",
             color=THEME["text_dim"],
             transform=self._ax.transAxes,
+            fontsize=22,
         )
         self._ax.set_xticks([])
         self._ax.set_yticks([])
@@ -119,7 +123,7 @@ class ProviderPie(ctk.CTkFrame):
     def update_data(self, slices: List[Tuple[str, int, str]]) -> None:
         """``slices`` = [(label, count, color)]"""
         self._ax.clear()
-        self._ax.set_title("Hits by provider")
+        self._ax.set_title(t("dashboard.pie_chart"))
         if not slices:
             self._draw_empty()
             return
@@ -155,11 +159,12 @@ class ProviderPie(ctk.CTkFrame):
 
 class LogConsole(ctk.CTkFrame):
     def __init__(self, master, max_lines: int = 1000, **kwargs):
-        super().__init__(master, fg_color=THEME["panel"], corner_radius=10, **kwargs)
+        super().__init__(master, fg_color=THEME["glass"], corner_radius=14,
+                         border_width=1, border_color=THEME["border"], **kwargs)
         self._max = max_lines
         header = ctk.CTkLabel(
             self,
-            text="LIVE LOG",
+            text=t("dashboard.console").upper(),
             text_color=THEME["accent"],
             font=ctk.CTkFont(size=11, weight="bold"),
         )
@@ -170,7 +175,7 @@ class LogConsole(ctk.CTkFrame):
 
         self._text = tk.Text(
             self,
-            bg=THEME["bg"],
+            bg=THEME["glass_alt"],
             fg=THEME["text"],
             insertbackground=THEME["accent"],
             highlightthickness=0,

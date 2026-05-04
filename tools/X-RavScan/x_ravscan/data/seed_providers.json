@@ -73,6 +73,16 @@
       ]
     },
     {
+      "slug": "bunny",
+      "name": "Bunny CDN",
+      "color": "#ff8c1a",
+      "asns": [200325, 213035],
+      "seed_file": "bunny_ranges.txt",
+      "sources": [
+        {"type": "bunny_json", "url": "https://bunnycdn.com/api/system/edgeserverlist"}
+      ]
+    },
+    {
       "slug": "akamai",
       "name": "Akamai",
       "color": "#0099cc",
