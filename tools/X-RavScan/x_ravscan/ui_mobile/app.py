@@ -233,7 +233,23 @@ class XRavScanMobileApp(App):
             return False
 
     def _on_first_frame(self, _dt) -> None:
-        self._log("INFO", t("log.app.ready", count=len(self._db.list_providers())))
+        try:
+            self._log("INFO", t("log.app.ready", count=len(self._db.list_providers())))
+        except Exception:  # noqa: BLE001 - DB may still be empty during bootstrap
+            self._log("INFO", "X-RavScan UI ready — seeding providers in background…")
+
+    def _refresh_after_bootstrap(self) -> None:
+        """Called from mobile_main once provider bootstrap completes."""
+        try:
+            self._log("INFO", t("log.app.ready", count=len(self._db.list_providers())))
+        except Exception:  # noqa: BLE001
+            pass
+        for name, scr in self._screens.items():
+            if hasattr(scr, "refresh"):
+                try:
+                    scr.refresh()
+                except Exception:  # noqa: BLE001
+                    pass
 
     def _switch_to(self, name: str) -> None:
         if name in self._screens:

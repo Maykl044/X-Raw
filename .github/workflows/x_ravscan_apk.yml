@@ -73,12 +73,33 @@ jobs:
           mv main.py.android main.py
           ls -la *.py
 
-      - name: Build APK (debug)
+      - name: Generate release keystore
+        run: |
+          # Deterministic keystore — we ship the same fingerprint every build so
+          # users updating the APK don't get "package conflicts with existing
+          # signature". Stored alongside the build for transparency.
+          keytool -genkeypair -v \
+            -keystore packaging/android/release.keystore \
+            -alias xravscan \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass "xravscan" -keypass "xravscan" \
+            -dname "CN=X-RavScan, OU=Tools, O=Maykl044, L=Internet, S=NA, C=NA"
+
+          keytool -list -v \
+            -keystore packaging/android/release.keystore \
+            -alias xravscan \
+            -storepass "xravscan" 2>&1 | head -20
+
+      - name: Build APK (release, signed)
         env:
           BUILDOZER_WARN_ON_ROOT: "0"
+          P4A_RELEASE_KEYSTORE: ${{ github.workspace }}/tools/X-RavScan/packaging/android/release.keystore
+          P4A_RELEASE_KEYALIAS: xravscan
+          P4A_RELEASE_KEYSTORE_PASSWD: xravscan
+          P4A_RELEASE_KEYALIAS_PASSWD: xravscan
         run: |
           cd packaging/android
-          buildozer -v android debug 2>&1 | tail -200
+          buildozer -v android release 2>&1 | tail -200
           ls -la bin/
 
       - name: Restore desktop main.py
@@ -89,17 +110,45 @@ jobs:
             mv main.py.desktop main.py
           fi
 
-      - name: Locate built APK
+      - name: Locate built APK and align/sign for installation
         id: find_apk
         run: |
-          APK=$(find packaging/android/bin -name "*.apk" | head -n1 || true)
+          APK=$(find packaging/android/bin -name "*release*.apk" | head -n1 || true)
+          if [ -z "$APK" ]; then
+            APK=$(find packaging/android/bin -name "*.apk" | head -n1 || true)
+          fi
           if [ -z "$APK" ]; then
             echo "No APK produced — failing."
             exit 1
           fi
           echo "Built APK: $APK"
-          echo "apk_path=$APK" >> "$GITHUB_OUTPUT"
-          cp "$APK" "X-RavScan-android.apk"
+
+          # Locate apksigner / zipalign from the SDK that buildozer downloaded.
+          BUILD_TOOLS=$(ls -d ~/.buildozer/android/platform/android-sdk/build-tools/*/ 2>/dev/null | head -n1)
+          if [ -z "$BUILD_TOOLS" ]; then
+            BUILD_TOOLS=$(ls -d $ANDROID_HOME/build-tools/*/ 2>/dev/null | head -n1)
+          fi
+          echo "Build tools: $BUILD_TOOLS"
+
+          ALIGNED="X-RavScan-android-aligned.apk"
+          "${BUILD_TOOLS}zipalign" -p -f 4 "$APK" "$ALIGNED"
+
+          SIGNED="X-RavScan-android.apk"
+          "${BUILD_TOOLS}apksigner" sign \
+            --ks packaging/android/release.keystore \
+            --ks-key-alias xravscan \
+            --ks-pass pass:xravscan \
+            --key-pass pass:xravscan \
+            --v1-signing-enabled true \
+            --v2-signing-enabled true \
+            --v3-signing-enabled true \
+            --out "$SIGNED" \
+            "$ALIGNED"
+
+          "${BUILD_TOOLS}apksigner" verify --verbose --print-certs "$SIGNED" || true
+
+          echo "apk_path=$SIGNED" >> "$GITHUB_OUTPUT"
+          ls -la "$SIGNED"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4

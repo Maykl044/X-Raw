@@ -32,11 +32,14 @@ version = 1.0.0
 # Android; the mobile entrypoint avoids importing them.
 requirements = python3==3.10.12, kivy==2.3.1, openssl, cryptography, requests, urllib3, charset-normalizer, idna, certifi, pyjnius, pillow
 
-# (str) Presplash of the application
-#presplash.filename = %(source.dir)s/x_ravscan/assets/icon.png
+# (str) Presplash of the application — shown immediately while Python interpreter unpacks
+presplash.filename = %(source.dir)s/x_ravscan/assets/presplash.png
+
+# (str) Presplash background colour (hex without leading #) — Deep Midnight
+android.presplash_color = #070a18
 
 # (str) Icon of the application
-#icon.filename = %(source.dir)s/x_ravscan/assets/icon.png
+icon.filename = %(source.dir)s/x_ravscan/assets/icon.png
 
 # (list) Supported orientations: landscape, sensorLandscape, portrait
 orientation = portrait
