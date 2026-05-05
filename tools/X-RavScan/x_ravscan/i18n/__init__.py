@@ -85,12 +85,20 @@ def language_name(code: str) -> str:
 
 
 def t(key: str, **kwargs: object) -> str:
-    """Translate ``key``. Unknown keys fall back to English then raw key."""
+    """Translate ``key``. Unknown keys fall back to English, then the
+    optional ``default`` kwarg, then the raw key itself."""
+    fallback = kwargs.pop("default", None)
     primary = _load(_active)
     if key in primary:
         text = primary[key]
     else:
-        text = _load(DEFAULT_LANGUAGE).get(key, key)
+        eng = _load(DEFAULT_LANGUAGE).get(key)
+        if eng is not None:
+            text = eng
+        elif isinstance(fallback, str):
+            text = fallback
+        else:
+            text = key
     if kwargs:
         try:
             return text.format(**kwargs)

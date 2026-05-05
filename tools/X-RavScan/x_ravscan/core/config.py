@@ -81,39 +81,59 @@ DEFAULT_PORT = 443
 DEFAULT_USER_AGENT = f"{APP_NAME}/{APP_VERSION} (+https://github.com/Maykl044/X-Raw)"
 
 
-# --- Theme (Glassmorphism Dark — neon accents on translucent layers) -------
+# --- Theme (Deep Midnight Glass — Apple HIG aesthetic) ---------------------
 #
-# Tk/CustomTkinter cannot render real backdrop-filter blur, so we approximate
-# the effect with a layered colour stack:
+# Backdrop: a deep blue gradient (#070a18 → #0a1230 → #11183c) painted onto
+# a Tk Canvas behind every tab, with three soft blurred radial blobs to
+# imitate the iOS / iPadOS abstract background.
 #
-#     bg        -> deepest base (window root, behind everything)
-#     glass     -> faux-translucent panel ("frosted card")
-#     glass_alt -> nested card surface (one rung lighter)
-#     border    -> hairline neon edge of a glass card
-#     accent_*  -> neon highlight colours used for borders, glow, charts
+# Glass cards: rgba(255,255,255,0.05) fill + 1 px rgba(255,255,255,0.10)
+# border + 20 px corner radius.  Tk has no real backdrop-filter so we
+# approximate by layering near-white tones over the gradient.
 #
-# The hex deltas between bg / glass / glass_alt are deliberately small so
-# panels read as semi-transparent glass over the same dark background.
+# Accent palette is intentionally muted — soft sky-blue + violet —
+# matching the iOS 26 aesthetic the user requested.
 
 THEME = {
-    "bg":          "#070a12",   # deep midnight — base behind glass cards
-    "bg_grad_top": "#0c1220",   # top of subtle vertical gradient
-    "bg_grad_bot": "#070a12",
-    "panel":       "#0f1524",   # legacy alias = glass
-    "panel_alt":   "#141b2c",   # legacy alias = glass_alt
-    "glass":       "#0f1524",
-    "glass_alt":   "#141b2c",
-    "glass_hi":    "#1a2238",   # hover / highlighted glass
-    "border":      "#23304a",   # subtle hairline
-    "border_hi":   "#3b507c",
-    "text":        "#e6edf3",
-    "text_dim":    "#8b96b3",
-    "text_muted":  "#5a6585",
-    "accent":      "#00ff9c",   # toxic-green (primary CTA)
-    "accent_alt":  "#1f8cff",   # electric-blue (secondary CTA, info)
-    "accent_pink": "#ff4dd2",   # neon-magenta (decorative)
-    "success":     "#3fb950",
-    "warning":     "#d29922",
-    "danger":      "#f85149",
-    "info":        "#58a6ff",
+    # base gradient (Canvas backdrop)
+    "bg":            "#070a18",
+    "bg_grad_top":   "#070a18",
+    "bg_grad_mid":   "#0a1230",
+    "bg_grad_bot":   "#11183c",
+
+    # legacy aliases (still referenced by older widgets)
+    "panel":         "#10162e",
+    "panel_alt":     "#161d3a",
+
+    # frosted-glass surfaces (approximate alpha ≈ 0.05 over gradient)
+    "glass":         "#161c33",
+    "glass_alt":     "#1c2440",
+    "glass_hi":      "#252e54",   # hover / highlighted glass
+    "glass_strong":  "#2b3563",   # active / pressed
+
+    # 1 px hairline edges (≈ rgba(255,255,255,0.10/0.20))
+    "border":        "#2a3357",
+    "border_hi":     "#41507f",
+
+    # typography
+    "text":          "#eaecf4",
+    "text_dim":      "#9aa3c0",
+    "text_muted":    "#6b7595",
+
+    # accents — soft Apple-like palette
+    "accent":        "#7aa9ff",   # primary sky-blue
+    "accent_alt":    "#a98bff",   # secondary lavender / violet
+    "accent_pink":   "#ff7ad9",   # decorative
+    "accent_mint":   "#46d58e",   # success / "fast"
+
+    # semantic
+    "success":       "#46d58e",
+    "warning":       "#f6c453",
+    "danger":        "#ff8888",
+    "info":          "#7aa9ff",
+
+    # corner radii (Apple HIG ≈ 16–24)
+    "radius":        20,
+    "radius_pill":   28,
+    "radius_chip":   12,
 }

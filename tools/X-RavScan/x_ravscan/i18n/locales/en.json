@@ -44,6 +44,8 @@
   "discovery.header": "Smart Discovery",
   "discovery.header.desc": "Use BGPView to discover newly-announced prefixes per ASN.",
   "discovery.run": "Run Smart Discovery",
+  "discovery.deep": "Deep Discovery",
+  "discovery.deep.desc": "BGPView + RIPEstat + Hackertarget + AS-peers walk",
   "discovery.auto_sync": "Auto-sync (accept all)",
   "discovery.refresh": "Refresh",
   "discovery.empty": "No pending discoveries — run Smart Discovery to query BGPView for new prefixes.",
@@ -65,7 +67,9 @@
   "results.col.provider": "Provider",
   "results.col.issuer": "Issuer",
   "results.col.subject": "Subject",
+  "results.col.rtt": "Ping (ms)",
   "results.col.expires": "Expires",
+  "results.save_as_title": "Save report as…",
   "results.export_saved": "Saved: {path}",
   "results.export_failed": "Export failed: {error}",
 

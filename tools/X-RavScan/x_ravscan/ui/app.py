@@ -8,6 +8,7 @@ import sys
 import threading
 import time
 import tkinter as tk
+import tkinter.filedialog as filedialog
 import tkinter.messagebox as messagebox
 from typing import Dict, List, Optional, Tuple
 
@@ -410,6 +411,7 @@ class XRavScanApp(ctk.CTk):
         bar = ctk.CTkFrame(parent, fg_color="transparent")
         bar.grid(row=0, column=0, sticky="ew", pady=(4, 8))
         ctk.CTkButton(bar, text=t("discovery.run"), fg_color=THEME["accent"], text_color=THEME["bg"], hover_color="#5cffb6", corner_radius=10, command=self._on_smart_discovery).pack(side="left", padx=4)
+        ctk.CTkButton(bar, text=t("discovery.deep", default="Deep Discovery"), fg_color="#a98bff", text_color=THEME["bg"], hover_color="#beadff", corner_radius=10, command=self._on_deep_discovery).pack(side="left", padx=4)
         ctk.CTkButton(bar, text=t("discovery.auto_sync"), fg_color=THEME["accent_alt"], text_color=THEME["bg"], hover_color="#67b7ff", corner_radius=10, command=self._on_auto_sync).pack(side="left", padx=4)
         ctk.CTkButton(bar, text=t("discovery.refresh"), fg_color="transparent", border_color=THEME["border_hi"], border_width=1, text_color=THEME["text"], hover_color=THEME["glass_hi"], corner_radius=10, command=self._refresh_discoveries_panel).pack(side="left", padx=4)
 
@@ -490,17 +492,18 @@ class XRavScanApp(ctk.CTk):
         wrap.grid_rowconfigure(0, weight=1)
         wrap.grid_columnconfigure(0, weight=1)
 
-        cols = ("ip", "port", "provider", "issuer", "subject", "expires")
+        cols = ("ip", "port", "rtt", "provider", "issuer", "subject", "expires")
         col_keys = {
             "ip": "results.col.ip",
             "port": "results.col.port",
+            "rtt": "results.col.rtt",
             "provider": "results.col.provider",
             "issuer": "results.col.issuer",
             "subject": "results.col.subject",
             "expires": "results.col.expires",
         }
         self._tree = ttk.Treeview(wrap, columns=cols, show="headings", style="Cyber.Treeview")
-        for c, w in zip(cols, (140, 60, 130, 280, 280, 160)):
+        for c, w in zip(cols, (140, 60, 80, 130, 260, 260, 140)):
             self._tree.heading(c, text=t(col_keys[c]))
             self._tree.column(c, width=w, stretch=True)
         self._tree.grid(row=0, column=0, sticky="nsew", padx=8, pady=8)
@@ -513,12 +516,15 @@ class XRavScanApp(ctk.CTk):
         for r in self._tree.get_children():
             self._tree.delete(r)
         for row in self.db.list_hosts(scan_id=None):
+            rtt = row["rtt_ms"]
+            rtt_text = "" if rtt is None else f"{float(rtt):.0f}"
             self._tree.insert(
                 "",
                 "end",
                 values=(
                     row["ip"],
                     row["port"],
+                    rtt_text,
                     row["provider_name"] or "",
                     row["tls_issuer"] or "",
                     row["tls_subject"] or "",
@@ -532,13 +538,37 @@ class XRavScanApp(ctk.CTk):
         self._pie.update_data([(s["name"], int(s["hits"]), s["color"] or THEME["accent"]) for s in stats])
 
     def _export(self, fmt: str) -> None:
+        from pathlib import Path as _Path
+        import time as _time
+
+        ext_map = {
+            "json": ("JSON", "*.json"),
+            "csv": ("CSV", "*.csv"),
+            "html": ("HTML", "*.html"),
+        }
+        if fmt not in ext_map:
+            return
+        label, pattern = ext_map[fmt]
+        stamp = _time.strftime("%Y%m%d-%H%M%S")
+        suggested = f"x-ravscan-all-{stamp}.{fmt}"
+        path = filedialog.asksaveasfilename(
+            parent=self,
+            title=t("results.save_as_title", default=f"Save {label} report as…"),
+            defaultextension=f".{fmt}",
+            initialfile=suggested,
+            initialdir=str(export_dir()),
+            filetypes=[(label, pattern), ("All files", "*.*")],
+        )
+        if not path:
+            return
         try:
+            out = _Path(path)
             if fmt == "json":
-                p = exporter.export_json(self.db)
+                p = exporter.export_json(self.db, out=out)
             elif fmt == "csv":
-                p = exporter.export_csv(self.db)
+                p = exporter.export_csv(self.db, out=out)
             elif fmt == "html":
-                p = exporter.export_html(self.db)
+                p = exporter.export_html(self.db, out=out)
             else:
                 return
             messagebox.showinfo(APP_NAME, t("results.export_saved", path=str(p)))
@@ -703,10 +733,32 @@ class XRavScanApp(ctk.CTk):
     def _smart_discovery_worker(self) -> None:
         log.info("smart discovery started")
         try:
-            new = network_updater.smart_discovery(self.db)
+            new = network_updater.smart_discovery(
+                self.db, progress=lambda m: log.info("[discovery] %s", m)
+            )
             log.info("smart discovery: %d new prefixes queued", len(new))
         except Exception:
             log.exception("smart discovery failed")
+        self.after(0, self._refresh_discoveries_panel)
+
+    def _on_deep_discovery(self) -> None:
+        threading.Thread(target=self._deep_discovery_worker, daemon=True).start()
+
+    def _deep_discovery_worker(self) -> None:
+        log.info("deep discovery started — BGPView + RIPEstat + Hackertarget + peers")
+        try:
+            report = network_updater.deep_discovery(
+                self.db, progress=lambda m: log.info("[discovery] %s", m)
+            )
+            log.info(
+                "deep discovery: +%d prefixes from %d ASNs in %.1fs (sources=%s)",
+                len(report.fresh),
+                len(report.visited_asns),
+                report.duration,
+                ",".join(sorted(report.sources_used)),
+            )
+        except Exception:
+            log.exception("deep discovery failed")
         self.after(0, self._refresh_discoveries_panel)
 
     def _on_auto_sync(self) -> None:

@@ -44,6 +44,8 @@
   "discovery.header": "Smart Discovery",
   "discovery.header.desc": "BGPView arkaly ASN boýunça täze yglan edilen prefiksleri tapyň.",
   "discovery.run": "Smart Discovery işe goş",
+  "discovery.deep": "Deep Discovery",
+  "discovery.deep.desc": "BGPView + RIPEstat + Hackertarget + AS-peer aýlanyşy",
   "discovery.auto_sync": "Auto-sync (hemmesini kabul et)",
   "discovery.refresh": "Täzelemek",
   "discovery.empty": "Garaşylýan tapyndy ýok — täze prefiksleri sorag etmek üçin Smart Discovery işe goşuň.",
@@ -65,7 +67,9 @@
   "results.col.provider": "Üpjün ediji",
   "results.col.issuer": "Çykaryjy",
   "results.col.subject": "Subject",
+  "results.col.rtt": "Ping (ms)",
   "results.col.expires": "Möhleti",
+  "results.save_as_title": "Hasabat saklamak…",
   "results.export_saved": "Saklandy: {path}",
   "results.export_failed": "Eksport şowsuz: {error}",
 
