@@ -35,7 +35,14 @@ from x_ravscan.i18n import (
     t,
 )
 from x_ravscan.ui.dashboard import LogConsole, PPSChart, ProviderPie
-from x_ravscan.ui.theme import GlassCard, SectionHeader
+from x_ravscan.ui.theme import (
+    FrostedTile,
+    GlassCard,
+    GradientBackdrop,
+    SectionHeader,
+    StatTile,
+    font,
+)
 from x_ravscan.utils.logger import add_ui_handler, get_logger
 
 
@@ -69,11 +76,12 @@ class XRavScanApp(ctk.CTk):
         super().__init__()
         self.db = db
         self.title(f"{APP_NAME} v{__version__}")
-        self.geometry("1320x840")
-        self.minsize(1160, 720)
+        self.geometry("1340x860")
+        self.minsize(1180, 740)
         self.configure(fg_color=THEME["bg"])
+        # System fonts: prefer SF Pro / Inter, fall back to Segoe UI.
         try:
-            self.option_add("*Font", ("Segoe UI", 10))
+            self.option_add("*Font", ("SF Pro Display", 10))
         except tk.TclError:
             pass
 
@@ -93,13 +101,17 @@ class XRavScanApp(ctk.CTk):
     # Layout
     # ------------------------------------------------------------------
     def _build_layout(self) -> None:
-        self.grid_columnconfigure(0, weight=0, minsize=260)
+        self.grid_columnconfigure(0, weight=0, minsize=270)
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
+        # Gradient backdrop spans the whole window (behind sidebar + body).
+        self._backdrop = GradientBackdrop(self)
+        self._backdrop.place(x=0, y=0, relwidth=1, relheight=1)
+
         self._build_sidebar()
 
-        body = ctk.CTkFrame(self, fg_color=THEME["bg"], corner_radius=0)
+        body = ctk.CTkFrame(self, fg_color="transparent", corner_radius=0)
         body.grid(row=0, column=1, sticky="nsew")
         body.grid_columnconfigure(0, weight=1)
         body.grid_rowconfigure(0, weight=1)
@@ -109,16 +121,16 @@ class XRavScanApp(ctk.CTk):
             fg_color=THEME["glass"],
             border_color=THEME["border"],
             border_width=1,
-            corner_radius=14,
+            corner_radius=THEME["radius"],
             segmented_button_fg_color=THEME["glass_alt"],
             segmented_button_unselected_color=THEME["glass_alt"],
             segmented_button_unselected_hover_color=THEME["glass_hi"],
             segmented_button_selected_color=THEME["accent"],
-            segmented_button_selected_hover_color=THEME["accent"],
+            segmented_button_selected_hover_color="#9bbeff",
             text_color=THEME["text"],
             text_color_disabled=THEME["text_muted"],
         )
-        self._tabs.grid(row=0, column=0, padx=14, pady=14, sticky="nsew")
+        self._tabs.grid(row=0, column=0, padx=18, pady=18, sticky="nsew")
 
         self._tab_keys = [
             ("Dashboard", "tab.dashboard"),
@@ -145,9 +157,9 @@ class XRavScanApp(ctk.CTk):
             fg_color=THEME["glass"],
             border_color=THEME["border"],
             border_width=1,
-            corner_radius=0,
+            corner_radius=THEME["radius"],
         )
-        side.grid(row=0, column=0, sticky="nsw", padx=(14, 0), pady=14)
+        side.grid(row=0, column=0, sticky="nsw", padx=(18, 0), pady=18)
         side.grid_rowconfigure(99, weight=1)
         side.grid_columnconfigure(0, weight=1)
 
@@ -263,16 +275,17 @@ class XRavScanApp(ctk.CTk):
     def _build_dashboard_tab(self, parent) -> None:
         parent.grid_rowconfigure(2, weight=1)
         parent.grid_columnconfigure(0, weight=1)
-        parent.grid_columnconfigure(1, weight=0, minsize=400)
+        parent.grid_columnconfigure(1, weight=0, minsize=420)
 
-        stats = GlassCard(parent)
-        stats.grid(row=0, column=0, columnspan=2, sticky="ew", padx=4, pady=(4, 12))
+        # Stats row — four floating glass tiles
+        stats_row = ctk.CTkFrame(parent, fg_color="transparent")
+        stats_row.grid(row=0, column=0, columnspan=2, sticky="ew", padx=4, pady=(4, 14))
         for c in range(4):
-            stats.grid_columnconfigure(c, weight=1, uniform="stats")
-        self._stat_total = self._make_stat(stats, 0, t("stat.targets"), "0", THEME["accent"])
-        self._stat_done = self._make_stat(stats, 1, t("stat.completed"), "0", THEME["accent_alt"])
-        self._stat_alive = self._make_stat(stats, 2, t("stat.alive"), "0", THEME["accent"])
-        self._stat_pps = self._make_stat(stats, 3, t("stat.pps"), "0.0", THEME["accent_pink"])
+            stats_row.grid_columnconfigure(c, weight=1, uniform="stats")
+        self._stat_total = self._make_stat(stats_row, 0, t("stat.targets"), "0", THEME["accent"])
+        self._stat_done = self._make_stat(stats_row, 1, t("stat.completed"), "0", THEME["accent_alt"])
+        self._stat_alive = self._make_stat(stats_row, 2, t("stat.alive"), "0", THEME["accent_mint"])
+        self._stat_pps = self._make_stat(stats_row, 3, t("stat.pps"), "0.0", THEME["accent_pink"])
 
         # Charts row
         self._pps_chart = PPSChart(parent)
@@ -283,25 +296,13 @@ class XRavScanApp(ctk.CTk):
 
         # Activity log under the charts
         self._console = LogConsole(parent)
-        self._console.grid(row=2, column=0, columnspan=2, sticky="nsew", padx=4, pady=(12, 4))
+        self._console.grid(row=2, column=0, columnspan=2, sticky="nsew", padx=4, pady=(14, 4))
 
     def _make_stat(self, parent, col: int, label: str, value: str, color: str) -> ctk.CTkLabel:
-        cell = GlassCard(parent, nested=True, corner_radius=12)
-        cell.grid(row=0, column=col, padx=8, pady=10, sticky="nsew")
-        ctk.CTkLabel(
-            cell,
-            text=label,
-            text_color=THEME["text_dim"],
-            font=ctk.CTkFont(size=10, weight="bold"),
-        ).pack(anchor="w", padx=14, pady=(10, 0))
-        v = ctk.CTkLabel(
-            cell,
-            text=value,
-            text_color=color,
-            font=ctk.CTkFont(size=22, weight="bold"),
-        )
-        v.pack(anchor="w", padx=14, pady=(0, 12))
-        return v
+        tile = StatTile(parent, label, value, accent=color)
+        tile.grid(row=0, column=col, padx=8, pady=4, sticky="nsew")
+        # Backwards-compat: callers expect a CTkLabel they can ``.configure(text=...)`` on.
+        return tile._value
 
     # ------------------------------------------------------------------
     # Providers
@@ -585,24 +586,25 @@ class XRavScanApp(ctk.CTk):
         parent.grid_rowconfigure(99, weight=1)
 
         # Two-column grid of frosted cards
-        # Left column: Appearance, Engine
+        # Left column: Appearance, Engine, External Engines
         # Right column: Language, Paths, About
         self._build_appearance_card(parent, row=0, col=0)
         self._build_language_card(parent, row=0, col=1)
         self._build_engine_card(parent, row=1, col=0)
         self._build_paths_card(parent, row=1, col=1)
-        self._build_about_card(parent, row=2, col=0, span=2)
+        self._build_external_engines_card(parent, row=2, col=0, span=2)
+        self._build_about_card(parent, row=3, col=0, span=2)
 
         # Save button at the bottom
         save_bar = ctk.CTkFrame(parent, fg_color="transparent")
-        save_bar.grid(row=3, column=0, columnspan=2, sticky="ew", padx=8, pady=(8, 6))
+        save_bar.grid(row=4, column=0, columnspan=2, sticky="ew", padx=8, pady=(8, 6))
         ctk.CTkButton(
             save_bar,
             text=t("settings.action.save"),
             fg_color=THEME["accent"],
             text_color=THEME["bg"],
-            hover_color="#5cffb6",
-            corner_radius=10,
+            hover_color="#9bbeff",
+            corner_radius=14,
             font=ctk.CTkFont(weight="bold"),
             command=self._on_save_settings,
         ).pack(side="right", padx=4)
@@ -677,6 +679,76 @@ class XRavScanApp(ctk.CTk):
         self._add_field(card, 2, t("settings.field.version"), "frozen" if getattr(sys, "frozen", False) else "from source")
         self._add_field(card, 3, t("settings.field.python"), f"{platform.python_implementation()} {platform.python_version()} · {platform.system()} {platform.release()}")
         ctk.CTkLabel(card, text="", height=10).grid(row=4, column=0)
+
+    def _build_external_engines_card(self, parent, *, row: int, col: int, span: int) -> None:
+        import shutil
+
+        card = self._settings_card(parent, row, col, span=span, accent=THEME["accent_pink"])
+        SectionHeader(
+            card,
+            t("settings.section.external_engines", default="External engines"),
+            t(
+                "settings.section.external_engines.desc",
+                default="masscan & zmap are external C scanners for extreme-rate raw-socket sweeps. They are NOT bundled — install separately and ensure the binary is on PATH.",
+            ),
+            accent=THEME["accent_pink"],
+        ).grid(row=0, column=0, columnspan=2, sticky="ew", padx=18, pady=(14, 10))
+        card.grid_columnconfigure(1, weight=1)
+
+        masscan_bin = shutil.which("masscan")
+        zmap_bin = shutil.which("zmap")
+        masscan_status = (
+            f"{t('settings.engine.found', default='found at')} {masscan_bin}"
+            if masscan_bin
+            else t("settings.engine.missing", default="not installed")
+        )
+        zmap_status = (
+            f"{t('settings.engine.found', default='found at')} {zmap_bin}"
+            if zmap_bin
+            else t("settings.engine.missing", default="not installed")
+        )
+        masscan_color = THEME["success"] if masscan_bin else THEME["danger"]
+        zmap_color = THEME["success"] if zmap_bin else THEME["danger"]
+
+        ctk.CTkLabel(card, text="masscan", text_color=THEME["text"], font=ctk.CTkFont(size=12, weight="bold")).grid(row=1, column=0, sticky="w", padx=18, pady=(2, 0))
+        ctk.CTkLabel(card, text=masscan_status, text_color=masscan_color, font=ctk.CTkFont(size=11)).grid(row=1, column=1, sticky="w", padx=18, pady=(2, 0))
+        ctk.CTkLabel(
+            card,
+            text=t(
+                "settings.engine.masscan.desc",
+                default="C-based SYN scanner, ~10M pps. Requires raw sockets + admin/root. On Windows install Npcap. On Android NOT supported.",
+            ),
+            text_color=THEME["text_dim"],
+            font=ctk.CTkFont(size=11),
+            wraplength=900,
+            justify="left",
+        ).grid(row=2, column=0, columnspan=2, sticky="w", padx=18, pady=(0, 10))
+
+        ctk.CTkLabel(card, text="zmap", text_color=THEME["text"], font=ctk.CTkFont(size=12, weight="bold")).grid(row=3, column=0, sticky="w", padx=18, pady=(2, 0))
+        ctk.CTkLabel(card, text=zmap_status, text_color=zmap_color, font=ctk.CTkFont(size=11)).grid(row=3, column=1, sticky="w", padx=18, pady=(2, 0))
+        ctk.CTkLabel(
+            card,
+            text=t(
+                "settings.engine.zmap.desc",
+                default="Stateless internet-wide scanner. Linux/BSD only. Used to sweep entire IPv4 in seconds — overkill for CDN diapasones; use the bundled asyncio engine.",
+            ),
+            text_color=THEME["text_dim"],
+            font=ctk.CTkFont(size=11),
+            wraplength=900,
+            justify="left",
+        ).grid(row=4, column=0, columnspan=2, sticky="w", padx=18, pady=(0, 10))
+
+        ctk.CTkLabel(
+            card,
+            text=t(
+                "settings.engine.install_hint",
+                default="Linux: sudo apt install masscan zmap   |   macOS: brew install masscan zmap   |   Windows: download masscan from github.com/robertdavidgraham/masscan + install Npcap",
+            ),
+            text_color=THEME["text_muted"],
+            font=ctk.CTkFont(size=10, family="JetBrains Mono"),
+            wraplength=900,
+            justify="left",
+        ).grid(row=5, column=0, columnspan=2, sticky="w", padx=18, pady=(0, 14))
 
     def _on_save_settings(self) -> None:
         self.db.set_setting("ui.language", current_language())
