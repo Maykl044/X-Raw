@@ -12,7 +12,7 @@ from kivy.uix.label import Label
 from kivy.uix.scrollview import ScrollView
 
 from x_ravscan.core.database import Database
-from x_ravscan.core import network_updater
+from x_ravscan.core import network_updater, data_manager
 from x_ravscan.i18n import t
 from x_ravscan.ui_mobile.theme import rgba
 from x_ravscan.ui_mobile.widgets import GlassCard, NeonButton, SectionHeader
@@ -65,7 +65,7 @@ class DiscoveryScreen(BoxLayout):
         self._db = db
         self._on_log = on_log
 
-        header = GlassCard(size_hint_y=None, height="120dp")
+        header = GlassCard(size_hint_y=None, height="170dp")
         header.add_widget(
             SectionHeader(
                 t("discovery.header"),
@@ -73,7 +73,7 @@ class DiscoveryScreen(BoxLayout):
                 accent="accent_pink",
             )
         )
-        action_row = GridLayout(cols=2, spacing=8, size_hint_y=None, height="44dp")
+        action_row = GridLayout(cols=2, spacing=8, size_hint_y=None, height="92dp")
         self._btn_run = NeonButton(
             text=t("discovery.run"),
             accent="accent",
@@ -86,8 +86,22 @@ class DiscoveryScreen(BoxLayout):
             on_press=self._auto_sync,
             height="44dp",
         )
+        self._btn_smart = NeonButton(
+            text=t("discovery.smart_append", default="Smart Append"),
+            accent="accent",
+            on_press=self._smart_append,
+            height="44dp",
+        )
+        self._btn_optimize = NeonButton(
+            text=t("discovery.optimize", default="Clean & Optimize"),
+            accent="accent_pink",
+            on_press=self._clean_optimize,
+            height="44dp",
+        )
         action_row.add_widget(self._btn_run)
         action_row.add_widget(self._btn_auto)
+        action_row.add_widget(self._btn_smart)
+        action_row.add_widget(self._btn_optimize)
         header.add_widget(action_row)
         self.add_widget(header)
 
@@ -164,6 +178,58 @@ class DiscoveryScreen(BoxLayout):
         self.refresh()
         self._on_log("SUCCESS", t("log.discovery.auto_done", count=added))
 
+    # ---- Smart Append (ASN-based, multi-threaded) -----------------------
+    def _smart_append(self) -> None:
+        self._on_log("INFO", "Smart Append (ASN) started")
+        threading.Thread(target=self._smart_append_worker, daemon=True).start()
+
+    def _smart_append_worker(self) -> None:
+        def _ui_log(level: str, msg: str) -> None:
+            Clock.schedule_once(lambda _dt, lv=level, m=msg: self._on_log(lv, m), 0)
+
+        try:
+            report = data_manager.sync_all_via_asn(self._db, log_fn=_ui_log)
+        except Exception as exc:  # noqa: BLE001
+            Clock.schedule_once(
+                lambda _dt, e=exc: self._on_log("ERROR", f"smart append: {e}"), 0
+            )
+            return
+        Clock.schedule_once(
+            lambda _dt, r=report: self._on_log(
+                "SUCCESS",
+                f"Smart Append: +{r.total_added} new across "
+                f"{r.providers_touched} providers in {r.duration:.1f}s",
+            ),
+            0,
+        )
+        Clock.schedule_once(lambda _dt: self.refresh(), 0)
+
+    # ---- Clean & Optimize (Route Summarisation) -------------------------
+    def _clean_optimize(self) -> None:
+        self._on_log("INFO", "Clean & Optimize started")
+        threading.Thread(target=self._clean_optimize_worker, daemon=True).start()
+
+    def _clean_optimize_worker(self) -> None:
+        def _ui_log(level: str, msg: str) -> None:
+            Clock.schedule_once(lambda _dt, lv=level, m=msg: self._on_log(lv, m), 0)
+
+        try:
+            removed = data_manager.clean_and_optimize(self._db, log_fn=_ui_log)
+        except Exception as exc:  # noqa: BLE001
+            Clock.schedule_once(
+                lambda _dt, e=exc: self._on_log("ERROR", f"optimize: {e}"), 0
+            )
+            return
+        Clock.schedule_once(
+            lambda _dt, r=removed: self._on_log(
+                "SUCCESS",
+                f"Clean & Optimize: {sum(r.values())} prefixes merged across "
+                f"{len(r)} providers",
+            ),
+            0,
+        )
+        Clock.schedule_once(lambda _dt: self.refresh(), 0)
+
     def refresh(self, *_args) -> None:
         self._list.clear_widgets()
         try:
@@ -187,4 +253,9 @@ class DiscoveryScreen(BoxLayout):
     def relabel(self) -> None:
         self._btn_run.update_text(t("discovery.run"))
         self._btn_auto.update_text(t("discovery.auto_sync"))
+        try:
+            self._btn_smart.update_text(t("discovery.smart_append", default="Smart Append"))
+            self._btn_optimize.update_text(t("discovery.optimize", default="Clean & Optimize"))
+        except Exception:  # noqa: BLE001
+            pass
         self.refresh()

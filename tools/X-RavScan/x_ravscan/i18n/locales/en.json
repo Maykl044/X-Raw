@@ -45,6 +45,8 @@
   "discovery.header.desc": "Use BGPView to discover newly-announced prefixes per ASN.",
   "discovery.run": "Run Smart Discovery",
   "discovery.deep": "Deep Discovery",
+  "discovery.smart_append": "Smart Append (ASN)",
+  "discovery.optimize": "Clean & Optimize",
   "discovery.deep.desc": "BGPView + RIPEstat + Hackertarget + AS-peers walk",
   "discovery.auto_sync": "Auto-sync (accept all)",
   "discovery.refresh": "Refresh",

@@ -413,6 +413,8 @@ class XRavScanApp(ctk.CTk):
         bar.grid(row=0, column=0, sticky="ew", pady=(4, 8))
         ctk.CTkButton(bar, text=t("discovery.run"), fg_color=THEME["accent"], text_color=THEME["bg"], hover_color="#5cffb6", corner_radius=10, command=self._on_smart_discovery).pack(side="left", padx=4)
         ctk.CTkButton(bar, text=t("discovery.deep", default="Deep Discovery"), fg_color="#a98bff", text_color=THEME["bg"], hover_color="#beadff", corner_radius=10, command=self._on_deep_discovery).pack(side="left", padx=4)
+        ctk.CTkButton(bar, text=t("discovery.smart_append", default="Smart Append (ASN)"), fg_color="#46d58e", text_color=THEME["bg"], hover_color="#6ee0a8", corner_radius=10, command=self._on_smart_append).pack(side="left", padx=4)
+        ctk.CTkButton(bar, text=t("discovery.optimize", default="Clean & Optimize"), fg_color=THEME["accent_pink"], text_color=THEME["bg"], hover_color="#ff9be0", corner_radius=10, command=self._on_clean_optimize).pack(side="left", padx=4)
         ctk.CTkButton(bar, text=t("discovery.auto_sync"), fg_color=THEME["accent_alt"], text_color=THEME["bg"], hover_color="#67b7ff", corner_radius=10, command=self._on_auto_sync).pack(side="left", padx=4)
         ctk.CTkButton(bar, text=t("discovery.refresh"), fg_color="transparent", border_color=THEME["border_hi"], border_width=1, text_color=THEME["text"], hover_color=THEME["glass_hi"], corner_radius=10, command=self._refresh_discoveries_panel).pack(side="left", padx=4)
 
@@ -832,6 +834,49 @@ class XRavScanApp(ctk.CTk):
         except Exception:
             log.exception("deep discovery failed")
         self.after(0, self._refresh_discoveries_panel)
+
+    def _on_smart_append(self) -> None:
+        threading.Thread(target=self._smart_append_worker, daemon=True).start()
+
+    def _smart_append_worker(self) -> None:
+        from x_ravscan.core import data_manager
+
+        log.info("Smart Append (ASN) started")
+
+        def _ui_log(level: str, msg: str) -> None:
+            getattr(log, level.lower(), log.info)(msg)
+
+        try:
+            report = data_manager.sync_all_via_asn(self.db, log_fn=_ui_log)
+            log.info(
+                "Smart Append done: +%d new across %d providers in %.1fs",
+                report.total_added, report.providers_touched, report.duration,
+            )
+        except Exception:
+            log.exception("smart append failed")
+        self.after(0, self._refresh_providers_panel)
+        self.after(0, self._refresh_discoveries_panel)
+
+    def _on_clean_optimize(self) -> None:
+        threading.Thread(target=self._clean_optimize_worker, daemon=True).start()
+
+    def _clean_optimize_worker(self) -> None:
+        from x_ravscan.core import data_manager
+
+        log.info("Clean & Optimize started — collapsing redundant prefixes")
+
+        def _ui_log(level: str, msg: str) -> None:
+            getattr(log, level.lower(), log.info)(msg)
+
+        try:
+            removed = data_manager.clean_and_optimize(self.db, log_fn=_ui_log)
+            log.info(
+                "Clean & Optimize done — %d prefixes merged across %d providers",
+                sum(removed.values()), len(removed),
+            )
+        except Exception:
+            log.exception("clean & optimize failed")
+        self.after(0, self._refresh_providers_panel)
 
     def _on_auto_sync(self) -> None:
         threading.Thread(target=self._auto_sync_worker, daemon=True).start()
