@@ -85,6 +85,13 @@ android.add_aars =
 # (str) Bootstrap to use for android builds (sdl2 is the modern default)
 p4a.bootstrap = sdl2
 
+# (str) Format of the release artifact — APK for direct installation, AAB
+# for Google Play. We always want APK so users can sideload directly.
+android.release_artifact = apk
+
+# (str) Format of the debug artifact — APK is the only sensible choice.
+android.debug_artifact = apk
+
 [buildozer]
 
 # (int) Log level (0 = error, 1 = info, 2 = debug)
