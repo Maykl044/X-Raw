@@ -91,11 +91,70 @@ class XRavScanApp(ctk.CTk):
         self._provider_vars: Dict[str, tk.BooleanVar] = {}
         self._language_var = tk.StringVar(value=current_language())
 
-        self._build_layout()
-        self._wire_logging()
-        self._refresh_providers_panel()
-        self._refresh_results_panel()
+        # Build the real layout with a fallback safety net: if anything in
+        # the layout / refresh chain throws (e.g. a DPI race in CTk, a
+        # missing locale file, a corrupt SQLite row), surface the
+        # traceback in a still-visible CTk window instead of letting the
+        # process die silently. This is what "logo → close" used to look
+        # like with PyInstaller's ``--windowed`` mode.
+        try:
+            self._build_layout()
+            self._wire_logging()
+            self._refresh_providers_panel()
+            self._refresh_results_panel()
+        except Exception:  # noqa: BLE001
+            import traceback as _tb
+
+            text = _tb.format_exc()
+            log.exception("XRavScanApp layout failed")
+            try:
+                self._show_layout_error(text)
+            except Exception:  # noqa: BLE001
+                # If even the fallback widget cannot render we re-raise so
+                # the global excepthook in main.py can pop the MessageBox.
+                raise
         self.protocol("WM_DELETE_WINDOW", self._on_close)
+
+    # ------------------------------------------------------------------
+    # Fallback error UI
+    # ------------------------------------------------------------------
+    def _show_layout_error(self, text: str) -> None:
+        for child in list(self.winfo_children()):
+            try:
+                child.destroy()
+            except Exception:  # noqa: BLE001
+                pass
+        wrap = ctk.CTkFrame(self, fg_color=THEME["bg"])
+        wrap.pack(fill="both", expand=True, padx=16, pady=16)
+        ctk.CTkLabel(
+            wrap,
+            text="X-RavScan failed to build its main window",
+            text_color="#ff7c8e",
+            font=ctk.CTkFont(size=18, weight="bold"),
+        ).pack(anchor="w", pady=(0, 8))
+        ctk.CTkLabel(
+            wrap,
+            text=(
+                "The error below has been written to "
+                f"{log_path().parent / 'crash.txt'} — please send a "
+                "screenshot or that file to support."
+            ),
+            text_color=THEME["text_dim"],
+            justify="left",
+            wraplength=900,
+        ).pack(anchor="w", pady=(0, 12))
+        box = ctk.CTkTextbox(
+            wrap,
+            fg_color=THEME["glass"],
+            text_color=THEME["text"],
+            border_width=1,
+            border_color=THEME["border"],
+            corner_radius=12,
+            font=ctk.CTkFont(family="Consolas", size=11),
+        )
+        box.pack(fill="both", expand=True)
+        box.insert("1.0", text)
+        box.configure(state="disabled")
 
     # ------------------------------------------------------------------
     # Layout

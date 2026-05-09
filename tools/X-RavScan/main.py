@@ -175,10 +175,15 @@ def _run_gui() -> int:
     # Boot splash first so users see something while heavy imports happen.
     # We isolate the splash inside its own scope so its Tk root is fully
     # destroyed before we instantiate the main ``ctk.CTk`` root.
-    from x_ravscan.ui.splash import Splash
+    splash = None
+    try:
+        from x_ravscan.ui.splash import Splash
 
-    splash = Splash()
-    splash.update_status("loading providers…", 0.15)
+        splash = Splash()
+        splash.update_status("loading providers…", 0.15)
+    except Exception:  # noqa: BLE001
+        # Splash is purely cosmetic — never let it block the app from starting.
+        splash = None
 
     from x_ravscan.core import providers_manager
     from x_ravscan.core.database import Database
@@ -186,26 +191,111 @@ def _run_gui() -> int:
 
     init_logging()
     db = Database()
-    splash.update_status("seeding bundled CIDR ranges…", 0.45)
-    providers_manager.bootstrap(db)
-    splash.update_status("warming up UI…", 0.85)
+    if splash is not None:
+        try:
+            splash.update_status("seeding bundled CIDR ranges…", 0.45)
+        except Exception:  # noqa: BLE001
+            splash = None
+    try:
+        providers_manager.bootstrap(db)
+    except Exception:  # noqa: BLE001
+        # A bad seed file shouldn't block the UI from rendering. The user
+        # can always re-sync from the cloud after the window is up.
+        traceback.print_exc()
+    if splash is not None:
+        try:
+            splash.update_status("warming up UI…", 0.85)
+        except Exception:  # noqa: BLE001
+            splash = None
 
-    from x_ravscan.core.scanner import configure_event_loop
-    configure_event_loop()
+    try:
+        from x_ravscan.core.scanner import configure_event_loop
+        configure_event_loop()
+    except Exception:  # noqa: BLE001
+        traceback.print_exc()
 
-    # Restore the user's saved language before any UI strings are rendered.
-    from x_ravscan.ui.app import load_persisted_language
-    load_persisted_language(db)
+    try:
+        # Restore the user's saved language before any UI strings are rendered.
+        from x_ravscan.ui.app import load_persisted_language
+        load_persisted_language(db)
+    except Exception:  # noqa: BLE001
+        traceback.print_exc()
 
-    splash.update_status("ready", 1.0)
-    splash.finish()
-    splash = None  # release reference before creating second Tk root
+    if splash is not None:
+        try:
+            splash.update_status("ready", 1.0)
+            splash.finish()
+        except Exception:  # noqa: BLE001
+            pass
+        splash = None  # release reference before creating second Tk root
 
-    from x_ravscan.ui.app import XRavScanApp
+    # Construct the real CTk window. Wrapped so that even if ``__init__``
+    # crashes outright (rare — it has its own internal try/except now), we
+    # spin up a *fallback* CTk window with the traceback so the user sees
+    # an error instead of a silent splash → close.
+    try:
+        from x_ravscan.ui.app import XRavScanApp
 
-    app = XRavScanApp(db)
-    app.mainloop()
-    return 0
+        app = XRavScanApp(db)
+        app.mainloop()
+        return 0
+    except Exception:
+        text = traceback.format_exc()
+        _safe_stderr_write(text)
+        _show_crash(text)
+        try:
+            _show_fallback_ctk(text)
+        except Exception:  # noqa: BLE001
+            pass
+        return 1
+
+
+def _show_fallback_ctk(text: str) -> None:
+    """Open a minimal CTk window showing the traceback.
+
+    Used as a last resort when ``XRavScanApp.__init__`` raises before its
+    own internal fallback can render. Keeps the user from seeing a silent
+    "splash → close" pattern with no diagnostic.
+    """
+    try:
+        import customtkinter as ctk
+    except Exception:  # noqa: BLE001
+        return
+    ctk.set_appearance_mode("dark")
+    root = ctk.CTk()
+    root.title("X-RavScan — startup failure")
+    root.geometry("980x620")
+    head = ctk.CTkLabel(
+        root,
+        text="X-RavScan failed to start",
+        text_color="#ff7c8e",
+        font=ctk.CTkFont(size=18, weight="bold"),
+    )
+    head.pack(anchor="w", padx=18, pady=(16, 4))
+    sub = ctk.CTkLabel(
+        root,
+        text=(
+            "Full traceback below. A copy was also written to "
+            f"{_crash_log_path()}."
+        ),
+        text_color="#a0a4b8",
+        justify="left",
+        wraplength=920,
+    )
+    sub.pack(anchor="w", padx=18, pady=(0, 12))
+    box = ctk.CTkTextbox(
+        root,
+        fg_color="#11183c",
+        text_color="#eef0fa",
+        border_width=1,
+        border_color="#2a3360",
+        corner_radius=12,
+        font=ctk.CTkFont(family="Consolas", size=11),
+    )
+    box.pack(fill="both", expand=True, padx=18, pady=(0, 18))
+    box.insert("1.0", text)
+    box.configure(state="disabled")
+    root.mainloop()
 
 
 def main() -> int:
