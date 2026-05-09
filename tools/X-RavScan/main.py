@@ -80,10 +80,19 @@ def _show_crash(message: str) -> None:
             pass
 
 
+def _safe_stderr_write(text: str) -> None:
+    """Write to stderr if available — PyInstaller --windowed sets it to None."""
+    try:
+        if sys.stderr is not None:
+            sys.stderr.write(text)
+    except Exception:  # noqa: BLE001
+        pass
+
+
 def _install_excepthook() -> None:
     def hook(exc_type, exc, tb):
         text = "".join(traceback.format_exception(exc_type, exc, tb))
-        sys.stderr.write(text)
+        _safe_stderr_write(text)
         _show_crash(text)
 
     sys.excepthook = hook
@@ -211,7 +220,7 @@ def main() -> int:
         raise
     except Exception:
         text = traceback.format_exc()
-        sys.stderr.write(text)
+        _safe_stderr_write(text)
         _show_crash(text)
         return 1
 

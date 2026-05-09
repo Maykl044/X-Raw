@@ -425,21 +425,46 @@ class XRavScanApp(ctk.CTk):
         self._discovery_box = ctk.CTkScrollableFrame(wrap, fg_color="transparent", corner_radius=0)
         self._discovery_box.grid(row=0, column=0, padx=8, pady=8, sticky="nsew")
         self._discovery_box.grid_columnconfigure(0, weight=1)
-        self._refresh_discoveries_panel()
+        self._discovery_widgets: List = []
+        # Defer initial refresh so the widget tree is fully realised before we
+        # start placing children inside the scrollable frame (Windows DPI/grid
+        # initialisation race).
+        self.after(50, self._refresh_discoveries_panel)
 
     def _refresh_discoveries_panel(self) -> None:
-        for c in self._discovery_box.winfo_children():
-            c.destroy()
-        rows = self.db.list_pending_discoveries()
+        try:
+            self._do_refresh_discoveries_panel()
+        except Exception:  # noqa: BLE001
+            log.exception("refresh discovery panel failed")
+
+    def _do_refresh_discoveries_panel(self) -> None:
+        # Destroy only widgets WE added — not the CTkScrollableFrame's internal
+        # canvas/scrollbar widgets which can confuse winfo_children().
+        for w in list(getattr(self, "_discovery_widgets", []) or []):
+            try:
+                w.destroy()
+            except Exception:  # noqa: BLE001
+                pass
+        self._discovery_widgets = []
+
+        try:
+            rows = self.db.list_pending_discoveries()
+        except Exception:  # noqa: BLE001
+            log.exception("list_pending_discoveries failed")
+            rows = []
+
         if not rows:
-            ctk.CTkLabel(
+            empty = ctk.CTkLabel(
                 self._discovery_box,
                 text=t("discovery.empty"),
                 text_color=THEME["text_dim"],
                 wraplength=720,
                 justify="left",
-            ).grid(row=0, column=0, padx=14, pady=14, sticky="w")
+            )
+            empty.grid(row=0, column=0, padx=14, pady=14, sticky="w")
+            self._discovery_widgets.append(empty)
             return
+
         for i, r in enumerate(rows):
             box = GlassCard(self._discovery_box, nested=True, corner_radius=10)
             box.grid(row=i, column=0, sticky="ew", padx=4, pady=4)
@@ -448,6 +473,7 @@ class XRavScanApp(ctk.CTk):
             desc = r["description"] or ""
             ctk.CTkLabel(box, text=f"AS{r['asn']} · {r['provider_name']} · {desc}", text_color=THEME["text_dim"], anchor="w").grid(row=0, column=1, padx=4, pady=10, sticky="w")
             ctk.CTkButton(box, text=t("discovery.accept"), fg_color=THEME["accent"], text_color=THEME["bg"], width=90, corner_radius=8, hover_color="#5cffb6", command=lambda pid=r["provider_id"]: self._accept_discoveries(pid)).grid(row=0, column=2, padx=10, pady=8)
+            self._discovery_widgets.append(box)
 
     def _accept_discoveries(self, provider_id: int) -> None:
         n = self.db.accept_discoveries(provider_id)
