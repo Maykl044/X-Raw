@@ -401,12 +401,32 @@ class XRavScanApp(ctk.CTk):
         self._providers_box.grid_columnconfigure(0, weight=1)
 
     def _refresh_providers_panel(self) -> None:
-        for child in self._providers_box.winfo_children():
-            child.destroy()
+        try:
+            self._do_refresh_providers_panel()
+        except Exception:  # noqa: BLE001
+            log.exception("refresh providers panel failed")
+
+    def _do_refresh_providers_panel(self) -> None:
+        # Use ``pack`` for the outer rows. CTkScrollableFrame's internal
+        # canvas/inner-frame combo can throw ``TclError: row out of bounds``
+        # when grid is called repeatedly with sparse rows after children
+        # were destroyed. Pack has no row state so it's bulletproof.
+        for child in list(self._providers_box.winfo_children()):
+            try:
+                child.destroy()
+            except Exception:  # noqa: BLE001
+                pass
         self._provider_vars.clear()
-        for i, prov in enumerate(self.db.list_providers()):
+
+        try:
+            providers = self.db.list_providers()
+        except Exception:  # noqa: BLE001
+            log.exception("list_providers failed")
+            providers = []
+
+        for prov in providers:
             row = GlassCard(self._providers_box, nested=True, accent=prov.color, corner_radius=10)
-            row.grid(row=i, column=0, sticky="ew", padx=4, pady=4)
+            row.pack(fill="x", padx=4, pady=4)
             row.grid_columnconfigure(1, weight=1)
 
             var = tk.BooleanVar(value=prov.enabled)
@@ -431,8 +451,10 @@ class XRavScanApp(ctk.CTk):
                 anchor="w",
             ).grid(row=0, column=1, sticky="w", padx=4, pady=(8, 0))
 
-            assert prov.id is not None
-            cidr_count = len(self.db.list_ranges(prov.id))
+            try:
+                cidr_count = len(self.db.list_ranges(prov.id)) if prov.id is not None else 0
+            except Exception:  # noqa: BLE001
+                cidr_count = 0
             asns = ", ".join(map(str, prov.asns)) or "—"
             sub = " · ".join([
                 t("providers.row.cidrs", count=cidr_count),
@@ -497,8 +519,10 @@ class XRavScanApp(ctk.CTk):
             log.exception("refresh discovery panel failed")
 
     def _do_refresh_discoveries_panel(self) -> None:
-        # Destroy only widgets WE added — not the CTkScrollableFrame's internal
-        # canvas/scrollbar widgets which can confuse winfo_children().
+        # Destroy only widgets WE added. We use ``pack`` instead of ``grid``
+        # for the outer rows because ``CTkScrollableFrame`` repeatedly
+        # gridded with sparse rows triggers ``TclError: row out of bounds``
+        # when its internal frame is rebuilt — pack has no row state.
         for w in list(getattr(self, "_discovery_widgets", []) or []):
             try:
                 w.destroy()
@@ -520,18 +544,40 @@ class XRavScanApp(ctk.CTk):
                 wraplength=720,
                 justify="left",
             )
-            empty.grid(row=0, column=0, padx=14, pady=14, sticky="w")
+            empty.pack(anchor="w", padx=14, pady=14, fill="x")
             self._discovery_widgets.append(empty)
             return
 
-        for i, r in enumerate(rows):
+        for r in rows:
             box = GlassCard(self._discovery_box, nested=True, corner_radius=10)
-            box.grid(row=i, column=0, sticky="ew", padx=4, pady=4)
+            box.pack(fill="x", padx=4, pady=4)
+            # Inside the card we grid 3 fixed columns — that grid is brand
+            # new (the GlassCard was just created) so it can never be
+            # "row out of bounds".
             box.grid_columnconfigure(1, weight=1)
-            ctk.CTkLabel(box, text=r["cidr"], text_color=THEME["accent"], font=ctk.CTkFont(weight="bold", family="Consolas")).grid(row=0, column=0, padx=14, pady=10, sticky="w")
+            ctk.CTkLabel(
+                box,
+                text=r["cidr"],
+                text_color=THEME["accent"],
+                font=ctk.CTkFont(weight="bold", family="Consolas"),
+            ).grid(row=0, column=0, padx=14, pady=10, sticky="w")
             desc = r["description"] or ""
-            ctk.CTkLabel(box, text=f"AS{r['asn']} · {r['provider_name']} · {desc}", text_color=THEME["text_dim"], anchor="w").grid(row=0, column=1, padx=4, pady=10, sticky="w")
-            ctk.CTkButton(box, text=t("discovery.accept"), fg_color=THEME["accent"], text_color=THEME["bg"], width=90, corner_radius=8, hover_color="#5cffb6", command=lambda pid=r["provider_id"]: self._accept_discoveries(pid)).grid(row=0, column=2, padx=10, pady=8)
+            ctk.CTkLabel(
+                box,
+                text=f"AS{r['asn']} · {r['provider_name']} · {desc}",
+                text_color=THEME["text_dim"],
+                anchor="w",
+            ).grid(row=0, column=1, padx=4, pady=10, sticky="w")
+            ctk.CTkButton(
+                box,
+                text=t("discovery.accept"),
+                fg_color=THEME["accent"],
+                text_color=THEME["bg"],
+                width=90,
+                corner_radius=8,
+                hover_color="#5cffb6",
+                command=lambda pid=r["provider_id"]: self._accept_discoveries(pid),
+            ).grid(row=0, column=2, padx=10, pady=8)
             self._discovery_widgets.append(box)
 
     def _accept_discoveries(self, provider_id: int) -> None:
@@ -601,9 +647,20 @@ class XRavScanApp(ctk.CTk):
         scroll.grid(row=0, column=1, sticky="ns")
 
     def _refresh_results_panel(self) -> None:
+        try:
+            self._do_refresh_results_panel()
+        except Exception:  # noqa: BLE001
+            log.exception("refresh results panel failed")
+
+    def _do_refresh_results_panel(self) -> None:
         for r in self._tree.get_children():
             self._tree.delete(r)
-        for row in self.db.list_hosts(scan_id=None):
+        try:
+            rows = self.db.list_hosts(scan_id=None)
+        except Exception:  # noqa: BLE001
+            log.exception("list_hosts failed")
+            rows = []
+        for row in rows:
             rtt = row["rtt_ms"]
             rtt_text = "" if rtt is None else f"{float(rtt):.0f}"
             self._tree.insert(
@@ -619,7 +676,10 @@ class XRavScanApp(ctk.CTk):
                     row["tls_expires"] or "",
                 ),
             )
-        self._refresh_pie()
+        try:
+            self._refresh_pie()
+        except Exception:  # noqa: BLE001
+            log.exception("refresh pie failed")
 
     def _refresh_pie(self) -> None:
         stats = self.db.stats_by_provider(scan_id=None)
