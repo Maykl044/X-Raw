@@ -28,7 +28,9 @@
     <!-- Discovery -->
     <string name="discovery_title">Discovery</string>
     <string name="discovery_subtitle">Find new subnets via BGPView, RIPEstat and Hackertarget.</string>
-    <string name="discovery_placeholder_body">Discovery results will be listed here. Each entry shows the suggested CIDR, the ASN it came from and a button to merge it into the local index.</string>
+    <string name="discovery_placeholder_body">No new ranges yet. Press Smart Append to fan out across enabled providers in parallel.</string>
+    <string name="discovery_log_title">Activity</string>
+    <string name="discovery_pending_title">Pending discoveries · %1$d</string>
 
     <!-- Results -->
     <string name="results_title">Results</string>

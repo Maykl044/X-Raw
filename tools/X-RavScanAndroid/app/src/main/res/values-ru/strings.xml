@@ -24,7 +24,9 @@
 
     <string name="discovery_title">Поиск подсетей</string>
     <string name="discovery_subtitle">Поиск новых подсетей через BGPView, RIPEstat и Hackertarget.</string>
-    <string name="discovery_placeholder_body">Найденные подсети появятся здесь. Каждая строка покажет CIDR, ASN-источник и кнопку добавления в локальный индекс.</string>
+    <string name="discovery_placeholder_body">Пока ничего не найдено. Нажмите «Smart Append», чтобы параллельно опросить включённых провайдеров.</string>
+    <string name="discovery_log_title">Журнал</string>
+    <string name="discovery_pending_title">Ожидают применения · %1$d</string>
 
     <string name="results_title">Результаты</string>
     <string name="results_subtitle">Доступные хосты с TLS-отпечатком и RTT.</string>

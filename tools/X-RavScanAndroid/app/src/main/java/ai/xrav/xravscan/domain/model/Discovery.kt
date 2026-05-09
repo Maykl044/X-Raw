@@ -6,6 +6,6 @@ data class Discovery(
     val asn: Long?,
     val cidr: String,
     val sourceApi: String,
-    val foundAt: Long,
+    val foundAtMillis: Long,
     val applied: Boolean,
 )

@@ -142,15 +142,16 @@ def _parse_network(cidr: str) -> Optional[ipaddress._BaseNetwork]:
 def smart_append(
     existing: Sequence[str],
     incoming: Iterable[str],
-) -> Tuple[List[str], int, int, List[str]]:
+) -> Tuple[List[str], List[str], int, List[str]]:
     """Merge ``incoming`` into ``existing`` using the Smart-Append rules.
 
     Returns:
         merged, added, skipped, superseded
-    where ``merged`` is the deduplicated list, ``added`` is the count of
-    truly new entries, ``skipped`` is the number of incoming entries that
-    were already covered, and ``superseded`` lists previously-known small
-    prefixes whose space is now covered by a freshly-added larger one.
+    where ``merged`` is the deduplicated list, ``added`` is the list of
+    truly new entries that survived the subset / superset checks,
+    ``skipped`` is the number of incoming entries that were already
+    covered, and ``superseded`` lists previously-known small prefixes
+    whose space is now covered by a freshly-added larger one.
     """
     by_family: Dict[int, List[ipaddress._BaseNetwork]] = {4: [], 6: []}
     raw_existing: List[str] = []
@@ -206,7 +207,7 @@ def smart_append(
         int(_parse_network(c).network_address),
         _parse_network(c).prefixlen,
     ))
-    return merged, len(added), skipped, superseded
+    return merged, added, skipped, superseded
 
 
 def collapse_provider(existing: Sequence[str]) -> Tuple[List[str], int]:
@@ -251,34 +252,23 @@ def smart_append_for_provider(
     Returns ``(added, skipped, superseded)``.
     """
     existing = db.list_ranges(provider_id)
-    _, added, skipped, superseded = smart_append(existing, incoming)
-    if added:
+    _, added_keys, skipped, superseded = smart_append(existing, incoming)
+    truly_new = sorted(set(added_keys))
+    if truly_new:
         # We can't use replace_ranges() (it nukes provider's CIDRs); instead
-        # we INSERT OR IGNORE just the truly new prefixes via an internal
-        # connection.  We piggy-back on Database._cursor().
-        merged_existing = set(existing)
-        truly_new = []
-        for cidr in incoming:
-            net = _parse_network(cidr)
-            if net is None:
-                continue
-            key = str(net)
-            if key in merged_existing:
-                continue
-            truly_new.append(key)
-        # de-dup truly_new in case incoming had duplicates
-        truly_new = sorted(set(truly_new))
-        if truly_new:
-            with db._cursor() as cur:  # noqa: SLF001 — same package
-                now = time.time()
-                cur.executemany(
-                    """
-                    INSERT OR IGNORE INTO cidr_ranges(provider_id, cidr, source, discovered, added_at)
-                    VALUES (?, ?, ?, 1, ?)
-                    """,
-                    [(provider_id, c, source, now) for c in truly_new],
-                )
-    return added, skipped, superseded
+        # we INSERT OR IGNORE just the truly new prefixes — those that
+        # smart_append already validated as not being a subset / duplicate
+        # of any existing range. We piggy-back on Database._cursor().
+        with db._cursor() as cur:  # noqa: SLF001 — same package
+            now = time.time()
+            cur.executemany(
+                """
+                INSERT OR IGNORE INTO cidr_ranges(provider_id, cidr, source, discovered, added_at)
+                VALUES (?, ?, ?, 1, ?)
+                """,
+                [(provider_id, c, source, now) for c in truly_new],
+            )
+    return len(added_keys), skipped, superseded
 
 
 # ---------------------------------------------------------------------------

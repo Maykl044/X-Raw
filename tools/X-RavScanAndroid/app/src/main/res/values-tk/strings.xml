@@ -24,7 +24,9 @@
 
     <string name="discovery_title">Ulgam gözlegi</string>
     <string name="discovery_subtitle">BGPView, RIPEstat we Hackertarget arkaly täze ulgamlary tap.</string>
-    <string name="discovery_placeholder_body">Tapylan ulgamlar şu ýerde görkeziler.</string>
+    <string name="discovery_placeholder_body">Şu wagt täze ulgam ýok. «Smart Append» basyň — parallel barlag başlanar.</string>
+    <string name="discovery_log_title">Žurnal</string>
+    <string name="discovery_pending_title">Garaşylýan tapyndylar · %1$d</string>
 
     <string name="results_title">Netijeler</string>
     <string name="results_subtitle">Tapylan hostlar — TLS yz we RTT bilen.</string>
