@@ -26,7 +26,7 @@ object DatabaseModule {
             XRavScanDatabase::class.java,
             "x_ravscan.db",
         )
-            .fallbackToDestructiveMigration(dropAllTables = true)
+            .fallbackToDestructiveMigration()
             .build()
 
     @Provides
