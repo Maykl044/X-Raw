@@ -15,7 +15,7 @@
     <string name="stat_providers">Провайдеры</string>
     <string name="stat_cidr_loaded">Подсетей загружено</string>
     <string name="stat_results">Результатов</string>
-    <string name="stat_active_scan">Активных сканов</string>
+    <string name="stat_discoveries">Найденных подсетей</string>
 
     <string name="providers_title">Провайдеры</string>
     <string name="providers_subtitle">CDN / Cloud ASN-диапазоны (29 по умолчанию).</string>

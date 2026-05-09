@@ -141,7 +141,7 @@ class ResultsScreen(BoxLayout):
                 _HostRow(
                     ip=str(row["ip"]),
                     provider=str(row["provider_name"] or row["provider_slug"] or "?"),
-                    issuer=str(row["issuer"] or ""),
+                    issuer=str(row["tls_issuer"] or ""),
                 )
             )
 

@@ -17,7 +17,7 @@
     <string name="stat_providers">Providers</string>
     <string name="stat_cidr_loaded">CIDR loaded</string>
     <string name="stat_results">Results</string>
-    <string name="stat_active_scan">Active scans</string>
+    <string name="stat_discoveries">Discoveries</string>
 
     <!-- Providers -->
     <string name="providers_title">Providers</string>

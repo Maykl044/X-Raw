@@ -460,12 +460,9 @@ class XRavScanMobileApp(App):
                 lambda _dt, e=exc: self._log("ERROR", f"cloud sync: {e}"), 0
             )
             return
-        added_total = sum(
-            getattr(r, "added", 0) for r in results
-            if not getattr(r, "error", None)
-        )
-        ok = sum(1 for r in results if not getattr(r, "error", None))
-        failed = sum(1 for r in results if getattr(r, "error", None))
+        added_total = sum(r.count for r in results if r.ok)
+        ok = sum(1 for r in results if r.ok)
+        failed = sum(1 for r in results if not r.ok)
         Clock.schedule_once(
             lambda _dt: self._log(
                 "SUCCESS",

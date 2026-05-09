@@ -22,6 +22,7 @@ import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -30,9 +31,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ai.xrav.xravscan.R
 import ai.xrav.xravscan.ui.components.GlassCard
 import ai.xrav.xravscan.ui.components.NeonButton
+import ai.xrav.xravscan.ui.screens.dashboard.DashboardViewModel
 import ai.xrav.xravscan.ui.theme.Mint
 import ai.xrav.xravscan.ui.theme.SkyBlue
 import ai.xrav.xravscan.ui.theme.TextPrimary
@@ -40,7 +44,9 @@ import ai.xrav.xravscan.ui.theme.TextSecondary
 import ai.xrav.xravscan.ui.theme.Violet
 
 @Composable
-fun DashboardScreen() {
+fun DashboardScreen(viewModel: DashboardViewModel = hiltViewModel()) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -63,14 +69,14 @@ fun DashboardScreen() {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             StatTile(
                 modifier = Modifier.weight(1f),
-                value = "29",
+                value = state.providers.toString(),
                 label = stringResource(R.string.stat_providers),
                 icon = Icons.Outlined.Cloud,
                 accent = SkyBlue,
             )
             StatTile(
                 modifier = Modifier.weight(1f),
-                value = "—",
+                value = formatCount(state.cidrLoaded),
                 label = stringResource(R.string.stat_cidr_loaded),
                 icon = Icons.Outlined.Public,
                 accent = Violet,
@@ -79,15 +85,15 @@ fun DashboardScreen() {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             StatTile(
                 modifier = Modifier.weight(1f),
-                value = "—",
+                value = formatCount(state.results),
                 label = stringResource(R.string.stat_results),
                 icon = Icons.Outlined.Insights,
                 accent = Mint,
             )
             StatTile(
                 modifier = Modifier.weight(1f),
-                value = "0",
-                label = stringResource(R.string.stat_active_scan),
+                value = formatCount(state.discoveries),
+                label = stringResource(R.string.stat_discoveries),
                 icon = Icons.Outlined.Speed,
                 accent = SkyBlue,
             )
@@ -185,4 +191,10 @@ private fun StatTile(
             )
         }
     }
+}
+
+private fun formatCount(value: Int): String = when {
+    value < 1_000 -> value.toString()
+    value < 1_000_000 -> String.format("%.1fk", value / 1_000.0)
+    else -> String.format("%.1fM", value / 1_000_000.0)
 }

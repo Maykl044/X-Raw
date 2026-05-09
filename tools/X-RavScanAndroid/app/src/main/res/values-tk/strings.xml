@@ -15,7 +15,7 @@
     <string name="stat_providers">Üpjünçilikler</string>
     <string name="stat_cidr_loaded">CIDR ýüklendi</string>
     <string name="stat_results">Netijeler</string>
-    <string name="stat_active_scan">Aktiw skanler</string>
+    <string name="stat_discoveries">Tapylan ulgamlar</string>
 
     <string name="providers_title">Üpjünçilikler</string>
     <string name="providers_subtitle">29 sany CDN/Cloud üpjünçiliginiň ASN aralyklary.</string>

@@ -2,21 +2,45 @@ package ai.xrav.xravscan
 
 import android.app.Application
 import android.util.Log
+import ai.xrav.xravscan.data.seed.ProviderSeeder
 import dagger.hilt.android.HiltAndroidApp
+import javax.inject.Inject
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 /**
- * Hilt entry point. Installed as ``android:name`` in the manifest.
+ * Application entry point. Hilt installs DI here; we additionally:
  *
- * Also installs a default uncaught-exception handler that *logs* the
- * crash to logcat instead of letting Android show the system crash
- * dialog (which on some launchers looks like a silent close).
+ * 1. Install a default uncaught-exception handler that logs every crash to
+ *    logcat under the ``XRavScan`` tag *before* the system handler runs —
+ *    so even a fatal Kotlin exception leaves a breadcrumb in ``adb logcat``.
+ * 2. Spin up the bundled provider seeder on a background scope so the very
+ *    first launch populates Room without blocking the Compose draw thread.
  */
 @HiltAndroidApp
 class XRavScanApp : Application() {
 
+    @Inject lateinit var providerSeeder: ProviderSeeder
+
+    private val appScope = CoroutineScope(
+        SupervisorJob() +
+            Dispatchers.IO +
+            CoroutineExceptionHandler { _, t -> Log.e(TAG, "appScope coroutine failed", t) },
+    )
+
     override fun onCreate() {
         super.onCreate()
         installFallbackUncaughtHandler()
+        appScope.launch {
+            try {
+                providerSeeder.ensureSeeded()
+            } catch (t: Throwable) {
+                Log.e(TAG, "seeder threw", t)
+            }
+        }
     }
 
     private fun installFallbackUncaughtHandler() {
