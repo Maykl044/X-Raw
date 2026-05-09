@@ -18,28 +18,22 @@ buildozer recipes required).
 
 from __future__ import annotations
 
-import asyncio
 import threading
+import traceback
 from typing import Optional
 
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.graphics import Color, Rectangle
+from kivy.logger import Logger as KLog
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.uix.screenmanager import NoTransition, Screen, ScreenManager
+from kivy.uix.scrollview import ScrollView
 
-from x_ravscan.core import providers_manager
 from x_ravscan.core.config import APP_NAME, APP_VERSION
-from x_ravscan.core.database import Database
-from x_ravscan.core.scanner import ScanProgress, ScanResult, run_scan
 from x_ravscan.i18n import t
-from x_ravscan.ui_mobile.screens.dashboard import DashboardScreen
-from x_ravscan.ui_mobile.screens.discovery import DiscoveryScreen
-from x_ravscan.ui_mobile.screens.providers import ProvidersScreen
-from x_ravscan.ui_mobile.screens.results import ResultsScreen
-from x_ravscan.ui_mobile.screens.settings import SettingsScreen
 from x_ravscan.ui_mobile.theme import rgba
 from x_ravscan.ui_mobile.widgets import NeonButton
 
@@ -150,17 +144,100 @@ class _RootBackground(BoxLayout):
 class XRavScanMobileApp(App):
     title = APP_NAME
 
-    def __init__(self, db: Database, **kwargs) -> None:
+    def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        self._db = db
+        # All heavy state — DB, screens, scanner threads — is created
+        # inside ``build()`` so any failure surfaces *after* Kivy has a
+        # window up (no more silent splash → close).
+        self._db = None  # type: ignore[assignment]
         self._scan_thread: Optional[threading.Thread] = None
         self._scan_cancel: Optional[threading.Event] = None
+        self._screens: dict = {}
+        self._sm: Optional[ScreenManager] = None
+        self._dashboard = None
+        self._providers = None
+        self._discovery = None
+        self._results = None
+        self._settings = None
+        self._bottom = None
 
+    # ------------------------------------------------------------------
+    # build() entry — wrap so any error renders a traceback on-screen
+    # ------------------------------------------------------------------
     def build(self):
+        try:
+            return self._build_real()
+        except Exception:  # noqa: BLE001
+            text = traceback.format_exc()
+            try:
+                KLog.error("XRavScan: %s", text)
+            except Exception:  # noqa: BLE001
+                pass
+            return self._build_fallback(text)
+
+    def _build_fallback(self, text: str) -> BoxLayout:
+        """Render a scrollable traceback when the real UI cannot start.
+
+        This guarantees we never hand back ``None`` from ``build()`` (which
+        would force Kivy to close the window) and gives the user something
+        to screenshot/share so we can debug the failure.
+        """
+        Window.clearcolor = (0.03, 0.04, 0.10, 1.0)
+        root = BoxLayout(orientation="vertical", padding=16, spacing=10)
+        head = Label(
+            text="X-RavScan failed to initialise",
+            color=(1.0, 0.45, 0.5, 1.0),
+            bold=True,
+            font_size="18sp",
+            size_hint_y=None,
+            height="36dp",
+            halign="left",
+            valign="middle",
+        )
+        head.bind(size=lambda lb, *_: setattr(lb, "text_size", lb.size))
+        root.add_widget(head)
+        body = Label(
+            text=text,
+            color=(0.93, 0.93, 0.97, 1.0),
+            halign="left",
+            valign="top",
+            font_size="11sp",
+            size_hint_y=None,
+        )
+        body.bind(
+            width=lambda lb, w: setattr(lb, "text_size", (w - 8, None)),
+            texture_size=lambda lb, sz: setattr(lb, "height", sz[1]),
+        )
+        sv = ScrollView()
+        sv.add_widget(body)
+        root.add_widget(sv)
+        return root
+
+    def _build_real(self):
         # Start in mobile-friendly portrait; adjust on desktop runs.
         Window.clearcolor = rgba("bg")
         if not self._is_android():
             Window.size = (420, 820)
+
+        # ---- Heavy imports happen here (after the Kivy window exists) ----
+        from x_ravscan.core.database import Database
+        from x_ravscan.ui_mobile.screens.dashboard import DashboardScreen
+        from x_ravscan.ui_mobile.screens.discovery import DiscoveryScreen
+        from x_ravscan.ui_mobile.screens.providers import ProvidersScreen
+        from x_ravscan.ui_mobile.screens.results import ResultsScreen
+        from x_ravscan.ui_mobile.screens.settings import SettingsScreen
+
+        self._db = Database()
+
+        # Restore the user's saved language before any UI text is rendered.
+        try:
+            from x_ravscan.i18n import set_language
+
+            saved = self._db.get_setting("ui.language")
+            if saved:
+                set_language(saved)
+        except Exception:  # noqa: BLE001
+            pass
 
         root = _RootBackground()
         root.add_widget(_TopBar())
@@ -220,7 +297,28 @@ class XRavScanMobileApp(App):
 
         sm.current = "dashboard"
         Clock.schedule_once(self._on_first_frame, 0.1)
+        # Provider seeding is deferred so the splash doesn't linger 10–15 s
+        # while we ingest 37 k CIDRs on a cold install.
+        Clock.schedule_once(self._kick_off_bootstrap, 0.5)
         return root
+
+    def _kick_off_bootstrap(self, _dt) -> None:
+        threading.Thread(target=self._bootstrap_worker, name="bootstrap", daemon=True).start()
+
+    def _bootstrap_worker(self) -> None:
+        try:
+            from x_ravscan.core import providers_manager
+
+            KLog.info("XRavScan: starting deferred provider bootstrap")
+            providers_manager.bootstrap(self._db)
+            count = len(self._db.list_providers())
+            KLog.info("XRavScan: provider bootstrap done — %d providers", count)
+            try:
+                Clock.schedule_once(lambda _dt2: self._refresh_after_bootstrap(), 0)
+            except Exception:  # noqa: BLE001
+                pass
+        except Exception:  # noqa: BLE001
+            KLog.exception("XRavScan: deferred bootstrap failed")
 
     # ------------------------------------------------------------------
     @staticmethod
@@ -292,6 +390,10 @@ class XRavScanMobileApp(App):
             self._log("WARNING", t("log.scan.stop_requested"))
 
     def _scan_worker(self) -> None:
+        import asyncio
+
+        from x_ravscan.core.scanner import ScanProgress, run_scan
+
         cancel = self._scan_cancel
         try:
             loop = asyncio.new_event_loop()
@@ -349,6 +451,8 @@ class XRavScanMobileApp(App):
         threading.Thread(target=self._cloud_sync_worker, daemon=True).start()
 
     def _cloud_sync_worker(self) -> None:
+        from x_ravscan.core import providers_manager
+
         try:
             results = providers_manager.cloud_sync(self._db)
         except Exception as exc:  # noqa: BLE001

@@ -12,7 +12,6 @@ from kivy.uix.label import Label
 from kivy.uix.scrollview import ScrollView
 
 from x_ravscan.core.database import Database
-from x_ravscan.core import network_updater, data_manager
 from x_ravscan.i18n import t
 from x_ravscan.ui_mobile.theme import rgba
 from x_ravscan.ui_mobile.widgets import GlassCard, NeonButton, SectionHeader
@@ -138,6 +137,8 @@ class DiscoveryScreen(BoxLayout):
         threading.Thread(target=self._discovery_worker, daemon=True).start()
 
     def _discovery_worker(self) -> None:
+        from x_ravscan.core import network_updater
+
         try:
             fresh = network_updater.smart_discovery(self._db)
         except Exception as exc:  # noqa: BLE001
@@ -162,6 +163,8 @@ class DiscoveryScreen(BoxLayout):
         threading.Thread(target=self._auto_sync_worker, daemon=True).start()
 
     def _auto_sync_worker(self) -> None:
+        from x_ravscan.core import network_updater
+
         try:
             added = network_updater.auto_sync(self._db)
         except Exception as exc:  # noqa: BLE001
@@ -186,6 +189,8 @@ class DiscoveryScreen(BoxLayout):
     def _smart_append_worker(self) -> None:
         def _ui_log(level: str, msg: str) -> None:
             Clock.schedule_once(lambda _dt, lv=level, m=msg: self._on_log(lv, m), 0)
+
+        from x_ravscan.core import data_manager
 
         try:
             report = data_manager.sync_all_via_asn(self._db, log_fn=_ui_log)
@@ -212,6 +217,8 @@ class DiscoveryScreen(BoxLayout):
     def _clean_optimize_worker(self) -> None:
         def _ui_log(level: str, msg: str) -> None:
             Clock.schedule_once(lambda _dt, lv=level, m=msg: self._on_log(lv, m), 0)
+
+        from x_ravscan.core import data_manager
 
         try:
             removed = data_manager.clean_and_optimize(self._db, log_fn=_ui_log)

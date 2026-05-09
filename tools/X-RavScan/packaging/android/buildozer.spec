@@ -30,7 +30,7 @@ version = 1.0.0
 # (list) Application requirements — pure-python and supported recipes only.
 # Heavyweight desktop UIs (customtkinter, matplotlib, tk) are NOT shipped on
 # Android; the mobile entrypoint avoids importing them.
-requirements = python3==3.10.12, kivy==2.3.1, openssl, cryptography, requests, urllib3, charset-normalizer, idna, certifi, pyjnius, pillow
+requirements = python3==3.10.12, kivy==2.3.1, openssl, cryptography, requests, urllib3, charset-normalizer, idna, certifi, pyjnius
 
 # (str) Presplash of the application — shown immediately while Python interpreter unpacks
 presplash.filename = %(source.dir)s/x_ravscan/assets/presplash.png
