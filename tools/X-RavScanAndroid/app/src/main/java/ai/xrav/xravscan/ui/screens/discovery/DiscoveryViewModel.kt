@@ -96,7 +96,7 @@ class DiscoveryViewModel @Inject constructor(
         log.value = emptyList()
     }
 
-    private suspend fun appendLog(line: String) {
+    private fun appendLog(line: String) {
         log.update { it + line }
     }
 }
