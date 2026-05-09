@@ -1,0 +1,51 @@
+<resources>
+    <string name="app_name">X-RavScan</string>
+
+    <!-- Bottom navigation tabs -->
+    <string name="tab_dashboard">Dashboard</string>
+    <string name="tab_providers">Providers</string>
+    <string name="tab_discovery">Discovery</string>
+    <string name="tab_results">Results</string>
+    <string name="tab_settings">Settings</string>
+
+    <!-- Dashboard -->
+    <string name="dashboard_title">Dashboard</string>
+    <string name="dashboard_subtitle">Live overview of providers, scans and discoveries.</string>
+    <string name="dashboard_quick_actions">Quick actions</string>
+    <string name="dashboard_status">Scanner status</string>
+    <string name="dashboard_status_idle">Idle — press Start scan to begin.</string>
+    <string name="stat_providers">Providers</string>
+    <string name="stat_cidr_loaded">CIDR loaded</string>
+    <string name="stat_results">Results</string>
+    <string name="stat_active_scan">Active scans</string>
+
+    <!-- Providers -->
+    <string name="providers_title">Providers</string>
+    <string name="providers_subtitle">Cloud / CDN ASN ranges (29 included by default).</string>
+    <string name="providers_placeholder_title">Loading providers…</string>
+    <string name="providers_placeholder_body">The Room database will populate this list on the next phase. Pull-to-refresh and per-provider toggles will appear here.</string>
+
+    <!-- Discovery -->
+    <string name="discovery_title">Discovery</string>
+    <string name="discovery_subtitle">Find new subnets via BGPView, RIPEstat and Hackertarget.</string>
+    <string name="discovery_placeholder_body">Discovery results will be listed here. Each entry shows the suggested CIDR, the ASN it came from and a button to merge it into the local index.</string>
+
+    <!-- Results -->
+    <string name="results_title">Results</string>
+    <string name="results_subtitle">Reachable hosts found by the scanner with their TLS fingerprint and RTT.</string>
+    <string name="results_placeholder_body">Once a scan completes, reachable IPs and SNI hosts will appear here. Each row shows RTT (colour coded) and supports tap-to-export.</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_subtitle">Language, export paths and external engines.</string>
+    <string name="settings_external_engines">External engines</string>
+    <string name="settings_external_engines_body">masscan / zmap need to be installed separately and require RAW socket privileges; they are not bundled with the app.</string>
+    <string name="settings_about">About</string>
+    <string name="settings_about_body">X-RavScan — IP / CDN reconnaissance tool. Native Kotlin + Jetpack Compose build.</string>
+
+    <!-- Action buttons -->
+    <string name="action_start_scan">Start scan</string>
+    <string name="action_smart_append">Smart Append (ASN)</string>
+    <string name="action_clean_optimize">Clean &amp; Optimize</string>
+    <string name="action_deep_discovery">Deep Discovery</string>
+</resources>

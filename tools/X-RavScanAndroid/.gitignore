@@ -1,0 +1,21 @@
+# Gradle
+.gradle/
+build/
+**/build/
+
+# Android Studio
+.idea/
+*.iml
+local.properties
+
+# Captured profiling data
+captures/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Keystore (signed release will be wired in Phase 5)
+*.jks
+*.keystore
+release/keystore.properties

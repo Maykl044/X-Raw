@@ -1,0 +1,44 @@
+<resources>
+    <string name="app_name">X-RavScan</string>
+
+    <string name="tab_dashboard">Sähypa</string>
+    <string name="tab_providers">Üpjünçilik</string>
+    <string name="tab_discovery">Gözleg</string>
+    <string name="tab_results">Netijeler</string>
+    <string name="tab_settings">Sazlamalar</string>
+
+    <string name="dashboard_title">Sähypa</string>
+    <string name="dashboard_subtitle">Üpjünçilikleriň, skanleriň we tapylan ulgamlaryň gysgaça syny.</string>
+    <string name="dashboard_quick_actions">Çalt amallar</string>
+    <string name="dashboard_status">Skanleýji ýagdaýy</string>
+    <string name="dashboard_status_idle">Garaşýar — «Skanleme» basyň.</string>
+    <string name="stat_providers">Üpjünçilikler</string>
+    <string name="stat_cidr_loaded">CIDR ýüklendi</string>
+    <string name="stat_results">Netijeler</string>
+    <string name="stat_active_scan">Aktiw skanler</string>
+
+    <string name="providers_title">Üpjünçilikler</string>
+    <string name="providers_subtitle">29 sany CDN/Cloud üpjünçiliginiň ASN aralyklary.</string>
+    <string name="providers_placeholder_title">Üpjünçilikler ýüklenýär…</string>
+    <string name="providers_placeholder_body">Room maglumat bazasy bu sanawy indiki tapgyrda doldurar.</string>
+
+    <string name="discovery_title">Ulgam gözlegi</string>
+    <string name="discovery_subtitle">BGPView, RIPEstat we Hackertarget arkaly täze ulgamlary tap.</string>
+    <string name="discovery_placeholder_body">Tapylan ulgamlar şu ýerde görkeziler.</string>
+
+    <string name="results_title">Netijeler</string>
+    <string name="results_subtitle">Tapylan hostlar — TLS yz we RTT bilen.</string>
+    <string name="results_placeholder_body">Skan tamamlanandan soň şu ýerde görkeziler.</string>
+
+    <string name="settings_title">Sazlamalar</string>
+    <string name="settings_subtitle">Dil, eksport ýollary we daşarky hereketlendirijiler.</string>
+    <string name="settings_external_engines">Daşarky hereketlendirijiler</string>
+    <string name="settings_external_engines_body">masscan / zmap aýratyn gurnamak gerek — RAW soketleri talap edýär, programma bilen birikdirilmedik.</string>
+    <string name="settings_about">Programma barada</string>
+    <string name="settings_about_body">X-RavScan — IP / CDN gözleg guraly. Doly Kotlin + Jetpack Compose ýasalan.</string>
+
+    <string name="action_start_scan">Skanleme</string>
+    <string name="action_smart_append">Smart Append (ASN)</string>
+    <string name="action_clean_optimize">Clean &amp; Optimize</string>
+    <string name="action_deep_discovery">Çuňňur gözleg</string>
+</resources>
