@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.venv/
+venv/
+
+# PyInstaller / Nuitka
+build/
+dist/
+release/
+packaging/.venv/
+*.spec.bak
+*.dist/
+*.build/
+
+# Source-controlled packaging files (everything else under packaging/)
+!packaging/
+!packaging/*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.idea/
+.vscode/
+*.swp
