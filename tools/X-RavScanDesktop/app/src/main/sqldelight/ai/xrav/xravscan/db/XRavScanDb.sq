@@ -94,6 +94,12 @@ VALUES (?, ?, ?);
 deleteCidrsForProvider:
 DELETE FROM cidr_ranges WHERE providerId = ?;
 
+-- Used by Phase D3 Discovery's "Apply" path: insert a CIDR for a provider
+-- looked up by slug, atomically.
+insertCidrBySlug:
+INSERT OR IGNORE INTO cidr_ranges(providerId, cidr, family)
+SELECT id, :cidr, :family FROM providers WHERE slug = :slug;
+
 -- ===== Scan results =====
 
 countScanResults:

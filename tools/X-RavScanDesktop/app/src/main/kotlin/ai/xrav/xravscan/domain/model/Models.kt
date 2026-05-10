@@ -34,3 +34,19 @@ data class DashboardStats(
     val results: Int,
     val discoveries: Int,
 )
+
+data class SmartAppendReport(
+    val providerSlug: String,
+    val providerName: String,
+    val added: Int,
+    val skipped: Int,
+    val superseded: Int,
+    val error: String? = null,
+) {
+    fun iosLine(): String = when {
+        error != null && added == 0 -> "$providerName: error — $error"
+        added > 0 -> "$providerName: $added added, $skipped skipped" +
+            if (superseded > 0) ", $superseded superseded" else ""
+        else -> "$providerName: up to date — no new networks"
+    }
+}
