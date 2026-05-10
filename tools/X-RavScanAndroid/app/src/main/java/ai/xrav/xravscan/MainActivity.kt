@@ -1,5 +1,12 @@
 package ai.xrav.xravscan
 
+import ai.xrav.xravscan.navigation.AppRoot
+import ai.xrav.xravscan.ui.components.GlobalErrorScreen
+import ai.xrav.xravscan.ui.localization.LocalizationManager
+import ai.xrav.xravscan.ui.localization.ProvideAppLocale
+import ai.xrav.xravscan.ui.network.NetworkMonitor
+import ai.xrav.xravscan.ui.network.ProvideNetworkState
+import ai.xrav.xravscan.ui.theme.XRavScanTheme
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -12,25 +19,34 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import ai.xrav.xravscan.navigation.AppRoot
-import ai.xrav.xravscan.ui.components.GlobalErrorScreen
-import ai.xrav.xravscan.ui.theme.XRavScanTheme
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject lateinit var localizationManager: LocalizationManager
+    @Inject lateinit var networkMonitor: NetworkMonitor
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        // Apply persisted locale before Compose composes so the very first
+        // frame already renders in the correct language.
+        localizationManager.applyPersisted()
+
         setContent {
-            XRavScanTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = androidx.compose.ui.graphics.Color.Transparent,
-                ) {
-                    SafeRoot()
+            ProvideAppLocale(localizationManager) {
+                ProvideNetworkState(networkMonitor) {
+                    XRavScanTheme {
+                        Surface(
+                            modifier = Modifier.fillMaxSize(),
+                            color = androidx.compose.ui.graphics.Color.Transparent,
+                        ) {
+                            SafeRoot()
+                        }
+                    }
                 }
             }
         }

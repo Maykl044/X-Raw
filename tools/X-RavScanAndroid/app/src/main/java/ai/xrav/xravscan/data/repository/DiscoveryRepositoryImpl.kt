@@ -12,6 +12,7 @@ import ai.xrav.xravscan.domain.model.SmartAppendReport
 import ai.xrav.xravscan.domain.repository.DiscoveryRepository
 import ai.xrav.xravscan.domain.util.Cidr
 import ai.xrav.xravscan.domain.util.smartAppend
+import ai.xrav.xravscan.ui.network.NetworkMonitor
 import android.util.Log
 import androidx.room.withTransaction
 import javax.inject.Inject
@@ -32,6 +33,7 @@ class DiscoveryRepositoryImpl @Inject constructor(
     private val cidrRangeDao: CidrRangeDao,
     private val discoveryDao: DiscoveryDao,
     private val bgpView: BgpViewService,
+    private val networkMonitor: NetworkMonitor,
 ) : DiscoveryRepository {
 
     override fun observeAll(): Flow<List<Discovery>> =
@@ -39,6 +41,16 @@ class DiscoveryRepositoryImpl @Inject constructor(
 
     override suspend fun runSmartAppend(onLog: suspend (String) -> Unit): List<SmartAppendReport> =
         withContext(Dispatchers.IO) {
+            val net = networkMonitor.state.value
+            if (net.isVpn) {
+                onLog("VPN active — Smart Append paused. Disable the VPN to continue.")
+                return@withContext emptyList()
+            }
+            if (!net.available) {
+                onLog("Offline — Smart Append paused until connectivity returns.")
+                return@withContext emptyList()
+            }
+
             val providers = providerDao.observeAllWithCount().firstValue()
                 .filter { it.enabled }
             if (providers.isEmpty()) {
@@ -159,6 +171,15 @@ class DiscoveryRepositoryImpl @Inject constructor(
                 if (!resp.status.equals("ok", ignoreCase = true)) continue
                 collected += resp.data.ipv4_prefixes.map { it.prefix }
                 collected += resp.data.ipv6_prefixes.map { it.prefix }
+            } catch (t: java.net.UnknownHostException) {
+                Log.w(TAG, "BGPView DNS lookup failed for ASN $asn ($name)", t)
+                error = error ?: "DNS lookup failed (api.bgpview.io)"
+            } catch (t: java.net.SocketTimeoutException) {
+                Log.w(TAG, "BGPView timed out for ASN $asn ($name)", t)
+                error = error ?: "API timed out — please retry"
+            } catch (t: java.io.IOException) {
+                Log.w(TAG, "BGPView I/O error for ASN $asn ($name)", t)
+                error = error ?: (t.message ?: "I/O error")
             } catch (t: Throwable) {
                 Log.w(TAG, "BGPView failed for ASN $asn ($name)", t)
                 error = error ?: (t.message ?: t::class.simpleName ?: "unknown error")

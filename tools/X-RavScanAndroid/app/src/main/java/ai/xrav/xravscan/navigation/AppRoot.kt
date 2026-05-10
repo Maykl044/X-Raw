@@ -12,6 +12,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import ai.xrav.xravscan.ui.components.AnimatedBackground
+import ai.xrav.xravscan.ui.components.NetworkTopBar
 import ai.xrav.xravscan.ui.screens.DashboardScreen
 import ai.xrav.xravscan.ui.screens.DiscoveryScreen
 import ai.xrav.xravscan.ui.screens.ProvidersScreen
@@ -27,6 +28,7 @@ fun AppRoot() {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             containerColor = Color.Transparent,
+            topBar = { NetworkTopBar() },
             bottomBar = {
                 GlassBottomBar(
                     items = destinations,

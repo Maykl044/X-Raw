@@ -3,14 +3,16 @@ package ai.xrav.xravscan.ui.screens.settings
 import ai.xrav.xravscan.data.export.Exporter
 import ai.xrav.xravscan.domain.repository.DiscoveryRepository
 import ai.xrav.xravscan.domain.repository.ScanRepository
-import ai.xrav.xravscan.util.LocaleManager
+import ai.xrav.xravscan.ui.localization.LocalizationManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -21,18 +23,27 @@ data class SettingsUiState(
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val localeManager: LocaleManager,
+    private val localizationManager: LocalizationManager,
     private val exporter: Exporter,
     private val scanRepository: ScanRepository,
     private val discoveryRepository: DiscoveryRepository,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(SettingsUiState(languageTag = localeManager.currentTag()))
-    val state: StateFlow<SettingsUiState> = _state.asStateFlow()
+    private val log = MutableStateFlow<List<String>>(emptyList())
+
+    val state: StateFlow<SettingsUiState> = combine(
+        localizationManager.state,
+        log,
+    ) { locale, log ->
+        SettingsUiState(languageTag = locale.tag, log = log)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.Eagerly,
+        initialValue = SettingsUiState(languageTag = localizationManager.currentTag()),
+    )
 
     fun pickLanguage(tag: String?) {
-        localeManager.setLanguage(tag)
-        _state.update { it.copy(languageTag = tag) }
+        localizationManager.setLanguage(tag)
     }
 
     fun exportHosts() {
@@ -76,6 +87,6 @@ class SettingsViewModel @Inject constructor(
     }
 
     private fun appendLog(line: String) {
-        _state.update { it.copy(log = (it.log + line).takeLast(20)) }
+        log.update { (it + line).takeLast(20) }
     }
 }

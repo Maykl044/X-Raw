@@ -7,6 +7,7 @@ import ai.xrav.xravscan.data.local.entity.ScanResultEntity
 import ai.xrav.xravscan.domain.model.ScanResult
 import ai.xrav.xravscan.domain.repository.ScanRepository
 import ai.xrav.xravscan.domain.util.Cidr
+import ai.xrav.xravscan.ui.network.NetworkMonitor
 import android.util.Log
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -31,6 +32,7 @@ class ScanRepositoryImpl @Inject constructor(
     private val providerDao: ProviderDao,
     private val cidrRangeDao: CidrRangeDao,
     private val scanResultDao: ScanResultDao,
+    private val networkMonitor: NetworkMonitor,
 ) : ScanRepository {
 
     override fun observeRecent(limit: Int): Flow<List<ScanResult>> =
@@ -40,6 +42,16 @@ class ScanRepositoryImpl @Inject constructor(
         sampleSize: Int,
         onLog: (String) -> Unit,
     ): Int = withContext(Dispatchers.IO) {
+        val net = networkMonitor.state.value
+        if (net.isVpn) {
+            onLog("VPN active — Quick scan paused. Disable the VPN to continue.")
+            return@withContext 0
+        }
+        if (!net.available) {
+            onLog("Offline — Quick scan paused until connectivity returns.")
+            return@withContext 0
+        }
+
         val providers = providerDao.observeAllWithCount().first().filter { it.enabled }
         if (providers.isEmpty()) {
             onLog("No enabled providers — nothing to scan")
