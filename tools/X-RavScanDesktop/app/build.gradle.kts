@@ -5,6 +5,7 @@ plugins {
     kotlin("plugin.serialization")
     id("org.jetbrains.compose")
     id("org.jetbrains.kotlin.plugin.compose")
+    id("app.cash.sqldelight")
 }
 
 kotlin {
@@ -26,9 +27,24 @@ dependencies {
     // Serialization for seed JSON parsing in later phases.
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
 
+    // SQLDelight — typed Kotlin queries on top of JDBC SQLite for Phase D2.
+    implementation("app.cash.sqldelight:sqlite-driver:2.0.2")
+    implementation("app.cash.sqldelight:coroutines-extensions:2.0.2")
+
     // Logging
     implementation("org.slf4j:slf4j-api:2.0.16")
     runtimeOnly("org.slf4j:slf4j-simple:2.0.16")
+}
+
+sqldelight {
+    databases {
+        create("XRavScanDb") {
+            packageName.set("ai.xrav.xravscan.db")
+            // Need sqlite >= 3.24 for `INSERT ... ON CONFLICT DO UPDATE`. The JDBC
+            // driver bundles xerial sqlite-jdbc 3.45+, so 3.38 dialect is safe.
+            dialect("app.cash.sqldelight:sqlite-3-38-dialect:2.0.2")
+        }
+    }
 }
 
 compose.desktop {

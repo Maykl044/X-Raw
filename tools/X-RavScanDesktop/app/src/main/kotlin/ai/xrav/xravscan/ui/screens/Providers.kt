@@ -1,35 +1,152 @@
 package ai.xrav.xravscan.ui.screens
 
+import ai.xrav.xravscan.AppContainer
+import ai.xrav.xravscan.domain.model.Provider
 import ai.xrav.xravscan.ui.components.GlassCard
+import ai.xrav.xravscan.ui.theme.GlassStroke
+import ai.xrav.xravscan.ui.theme.SkyBlue
+import ai.xrav.xravscan.ui.theme.TextMuted
 import ai.xrav.xravscan.ui.theme.TextPrimary
 import ai.xrav.xravscan.ui.theme.TextSecondary
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.background
+import kotlinx.coroutines.launch
 
 @Composable
 fun ProvidersScreen(modifier: Modifier = Modifier) {
+    var providers by remember { mutableStateOf<List<Provider>>(emptyList()) }
+    val container = remember { runCatching { AppContainer.get() }.getOrNull() }
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(container) {
+        container?.let { providers = it.providerRepository.listAll() }
+    }
+
+    val enabled = providers.count { it.enabled }
     Column(modifier = modifier) {
         Text("Providers", color = TextPrimary, fontSize = 28.sp, fontWeight = FontWeight.SemiBold)
-        Text("Enable cloud providers, edit ASN sets, view CIDR counts.", color = TextSecondary, fontSize = 13.sp)
+        Text(
+            "$enabled of ${providers.size} enabled",
+            color = TextSecondary,
+            fontSize = 13.sp,
+        )
         Spacer(Modifier.height(20.dp))
-        GlassCard(modifier = Modifier.fillMaxWidth()) {
-            Column {
-                Text("0 providers loaded", color = TextPrimary, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    "Wired in Phase D2 — providers seeded from JSON on first launch (29 providers, ~38k CIDR).",
-                    color = TextSecondary,
-                    fontSize = 12.sp,
-                )
+        if (providers.isEmpty()) {
+            GlassCard(modifier = Modifier.fillMaxWidth()) {
+                Column {
+                    Text("Loading providers…", color = TextPrimary, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "On first launch the seed file is imported into SQLite (29 providers, ~38k CIDR).",
+                        color = TextSecondary,
+                        fontSize = 12.sp,
+                    )
+                }
+            }
+        } else {
+            LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                items(providers, key = { it.id }) { p ->
+                    ProviderRow(
+                        provider = p,
+                        onToggle = { newEnabled ->
+                            scope.launch {
+                                container?.providerRepository?.setEnabled(p.id, newEnabled)
+                                providers = container?.providerRepository?.listAll().orEmpty()
+                            }
+                        },
+                    )
+                    Spacer(Modifier.height(8.dp))
+                }
             }
         }
     }
+}
+
+@Composable
+private fun ProviderRow(
+    provider: Provider,
+    onToggle: (Boolean) -> Unit,
+) {
+    GlassCard(modifier = Modifier.fillMaxWidth(), contentPadding = 14.dp) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+            ProviderDot(provider.color)
+            Spacer(Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(provider.name, color = TextPrimary, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                Text(
+                    text = if (provider.asns.isEmpty()) provider.slug
+                    else "AS " + provider.asns.joinToString(", "),
+                    color = TextMuted,
+                    fontSize = 11.sp,
+                )
+            }
+            Spacer(Modifier.width(12.dp))
+            Text(
+                text = "${provider.cidrCount} CIDR",
+                color = TextSecondary,
+                fontSize = 12.sp,
+            )
+            Spacer(Modifier.width(14.dp))
+            Switch(
+                checked = provider.enabled,
+                onCheckedChange = onToggle,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = TextPrimary,
+                    checkedTrackColor = SkyBlue,
+                    uncheckedThumbColor = TextMuted,
+                    uncheckedTrackColor = Color.Transparent,
+                    uncheckedBorderColor = GlassStroke,
+                ),
+            )
+        }
+    }
+}
+
+@Composable
+private fun ProviderDot(hex: String) {
+    val parsed = remember(hex) { runCatching { parseHexColor(hex) }.getOrDefault(SkyBlue) }
+    Box(
+        modifier = Modifier
+            .size(12.dp)
+            .clip(CircleShape)
+            .background(parsed),
+    )
+}
+
+private fun parseHexColor(hex: String): Color {
+    val cleaned = hex.removePrefix("#")
+    val argb = when (cleaned.length) {
+        6 -> "FF$cleaned".toLong(16)
+        8 -> cleaned.toLong(16)
+        else -> error("invalid hex colour: $hex")
+    }
+    return Color(argb.toInt())
 }

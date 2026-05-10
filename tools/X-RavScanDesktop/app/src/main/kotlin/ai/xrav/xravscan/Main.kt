@@ -22,6 +22,8 @@ fun main() {
     Thread.setDefaultUncaughtExceptionHandler { t, e ->
         log.error("Uncaught exception on thread ${t.name}", e)
     }
+    runCatching { AppContainer.get() }
+        .onFailure { log.error("AppContainer init failed", it) }
     application {
         Window(
             onCloseRequest = ::exitApplication,
