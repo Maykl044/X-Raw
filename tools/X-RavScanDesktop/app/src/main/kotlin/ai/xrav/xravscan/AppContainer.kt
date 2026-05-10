@@ -8,6 +8,7 @@ import ai.xrav.xravscan.data.repository.ProviderRepository
 import ai.xrav.xravscan.data.repository.ScanRepository
 import ai.xrav.xravscan.data.seed.ProviderSeeder
 import ai.xrav.xravscan.db.XRavScanDb
+import ai.xrav.xravscan.ui.network.NetworkMonitor
 import org.slf4j.LoggerFactory
 
 /**
@@ -22,6 +23,7 @@ class AppContainer private constructor(
     val discoveryRepository: DiscoveryRepository,
     val scanRepository: ScanRepository,
     val exporter: Exporter,
+    val networkMonitor: NetworkMonitor,
 ) {
     companion object {
         @Volatile private var instance: AppContainer? = null
@@ -50,6 +52,7 @@ class AppContainer private constructor(
                 discoveryRepository = DiscoveryRepository(db, bgpView),
                 scanRepository = ScanRepository(db),
                 exporter = Exporter(db),
+                networkMonitor = NetworkMonitor(),
             )
         }
     }

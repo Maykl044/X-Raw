@@ -1,6 +1,8 @@
 package ai.xrav.xravscan
 
 import ai.xrav.xravscan.ui.AppRoot
+import ai.xrav.xravscan.ui.localization.ProvideAppLocale
+import ai.xrav.xravscan.ui.network.ProvideNetworkState
 import ai.xrav.xravscan.ui.theme.XRavScanDesktopTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -31,8 +33,12 @@ fun main() {
             state = rememberWindowState(size = DpSize(1180.dp, 760.dp)),
             undecorated = false,
         ) {
-            XRavScanDesktopTheme {
-                AppShell()
+            ProvideAppLocale {
+                ProvideNetworkState(monitor = AppContainer.get().networkMonitor) {
+                    XRavScanDesktopTheme {
+                        AppShell()
+                    }
+                }
             }
         }
     }

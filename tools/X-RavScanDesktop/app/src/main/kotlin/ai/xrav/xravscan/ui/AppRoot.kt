@@ -2,6 +2,8 @@ package ai.xrav.xravscan.ui
 
 import ai.xrav.xravscan.ui.components.AnimatedBackground
 import ai.xrav.xravscan.ui.components.GlassCard
+import ai.xrav.xravscan.ui.components.NetworkTopBar
+import ai.xrav.xravscan.ui.localization.LocalAppStrings
 import ai.xrav.xravscan.ui.screens.DashboardScreen
 import ai.xrav.xravscan.ui.screens.DiscoveryScreen
 import ai.xrav.xravscan.ui.screens.ProvidersScreen
@@ -67,23 +69,27 @@ fun AppRoot() {
     var current by remember { mutableStateOf(Destination.Dashboard) }
     Box(modifier = Modifier.fillMaxSize()) {
         AnimatedBackground(modifier = Modifier.fillMaxSize())
-        Row(modifier = Modifier.fillMaxSize().padding(20.dp)) {
-            SidebarNav(current = current, onSelect = { current = it })
-            Spacer(Modifier.width(20.dp))
-            Box(modifier = Modifier.fillMaxSize()) {
-                AnimatedContent(
-                    targetState = current,
-                    label = "screen-switch",
-                    transitionSpec = {
-                        fadeIn(animationSpec = tween(220)) togetherWith fadeOut(animationSpec = tween(160))
-                    },
-                ) { dest ->
-                    when (dest) {
-                        Destination.Dashboard -> DashboardScreen(modifier = Modifier.fillMaxSize())
-                        Destination.Providers -> ProvidersScreen(modifier = Modifier.fillMaxSize())
-                        Destination.Discovery -> DiscoveryScreen(modifier = Modifier.fillMaxSize())
-                        Destination.Results -> ResultsScreen(modifier = Modifier.fillMaxSize())
-                        Destination.Settings -> SettingsScreen(modifier = Modifier.fillMaxSize())
+        Column(modifier = Modifier.fillMaxSize().padding(20.dp)) {
+            NetworkTopBar()
+            Spacer(Modifier.height(12.dp))
+            Row(modifier = Modifier.fillMaxSize()) {
+                SidebarNav(current = current, onSelect = { current = it })
+                Spacer(Modifier.width(20.dp))
+                Box(modifier = Modifier.fillMaxSize()) {
+                    AnimatedContent(
+                        targetState = current,
+                        label = "screen-switch",
+                        transitionSpec = {
+                            fadeIn(animationSpec = tween(220)) togetherWith fadeOut(animationSpec = tween(160))
+                        },
+                    ) { dest ->
+                        when (dest) {
+                            Destination.Dashboard -> DashboardScreen(modifier = Modifier.fillMaxSize())
+                            Destination.Providers -> ProvidersScreen(modifier = Modifier.fillMaxSize())
+                            Destination.Discovery -> DiscoveryScreen(modifier = Modifier.fillMaxSize())
+                            Destination.Results -> ResultsScreen(modifier = Modifier.fillMaxSize())
+                            Destination.Settings -> SettingsScreen(modifier = Modifier.fillMaxSize())
+                        }
                     }
                 }
             }
@@ -93,13 +99,14 @@ fun AppRoot() {
 
 @Composable
 private fun SidebarNav(current: Destination, onSelect: (Destination) -> Unit) {
+    val s = LocalAppStrings.current
     GlassCard(
         modifier = Modifier.fillMaxHeight().width(232.dp),
         contentPadding = 16.dp,
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             Text(
-                "X-RavScan",
+                s.brandTagline,
                 color = TextPrimary,
                 fontSize = 22.sp,
                 fontWeight = FontWeight.SemiBold,
@@ -111,8 +118,16 @@ private fun SidebarNav(current: Destination, onSelect: (Destination) -> Unit) {
             )
             Spacer(Modifier.height(20.dp))
             Destination.entries.forEach { d ->
+                val label = when (d) {
+                    Destination.Dashboard -> s.sidebarDashboard
+                    Destination.Providers -> s.sidebarProviders
+                    Destination.Discovery -> s.sidebarDiscovery
+                    Destination.Results -> s.sidebarResults
+                    Destination.Settings -> s.sidebarSettings
+                }
                 NavItem(
                     destination = d,
+                    label = label,
                     selected = d == current,
                     onClick = { onSelect(d) },
                 )
@@ -123,7 +138,7 @@ private fun SidebarNav(current: Destination, onSelect: (Destination) -> Unit) {
 }
 
 @Composable
-private fun NavItem(destination: Destination, selected: Boolean, onClick: () -> Unit) {
+private fun NavItem(destination: Destination, label: String, selected: Boolean, onClick: () -> Unit) {
     val accent = SkyBlue
     val targetAlpha = if (selected) 0.20f else 0.0f
     val pad by animateDpAsState(if (selected) 14.dp else 12.dp, tween(140), label = "nav-pad")
@@ -146,12 +161,12 @@ private fun NavItem(destination: Destination, selected: Boolean, onClick: () -> 
     ) {
         Icon(
             destination.icon,
-            contentDescription = destination.label,
+            contentDescription = label,
             tint = if (selected) accent else TextSecondary,
         )
         Spacer(Modifier.width(12.dp))
         Text(
-            destination.label,
+            label,
             color = if (selected) TextPrimary else TextSecondary,
             fontSize = 14.sp,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,

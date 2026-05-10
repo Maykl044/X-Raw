@@ -4,6 +4,8 @@ import ai.xrav.xravscan.AppContainer
 import ai.xrav.xravscan.data.export.ExportOutcome
 import ai.xrav.xravscan.ui.components.GlassCard
 import ai.xrav.xravscan.ui.components.NeonButton
+import ai.xrav.xravscan.ui.localization.LocalAppLocale
+import ai.xrav.xravscan.ui.localization.LocalAppStrings
 import ai.xrav.xravscan.ui.theme.Mint
 import ai.xrav.xravscan.ui.theme.SkyBlue
 import ai.xrav.xravscan.ui.theme.TextPrimary
@@ -37,6 +39,8 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
     val scope = rememberCoroutineScope()
     var status by remember { mutableStateOf<String?>(null) }
     var working by remember { mutableStateOf(false) }
+    val s = LocalAppStrings.current
+    val locale = LocalAppLocale.current
 
     fun runExport(block: suspend () -> ExportOutcome) {
         if (working || container == null) return
@@ -53,14 +57,51 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
     }
 
     Column(modifier = modifier.fillMaxWidth()) {
-        Text("Settings", color = TextPrimary, fontSize = 28.sp, fontWeight = FontWeight.SemiBold)
-        Text("Export, data management, app info.", color = TextSecondary, fontSize = 13.sp)
+        Text(s.settingsTitle, color = TextPrimary, fontSize = 28.sp, fontWeight = FontWeight.SemiBold)
+        Text(s.settingsSubtitle, color = TextSecondary, fontSize = 13.sp)
         Spacer(Modifier.height(20.dp))
 
         GlassCard(modifier = Modifier.fillMaxWidth()) {
             Column {
                 Text(
-                    "Export",
+                    s.settingsLanguage,
+                    color = TextPrimary,
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Spacer(Modifier.height(10.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    NeonButton(
+                        text = s.settingsLanguageSystem,
+                        accent = if (locale.tag == null) SkyBlue else TextSecondary,
+                        leadingIcon = null,
+                        enabled = true,
+                        onClick = { locale.setLanguage(null) },
+                    )
+                    NeonButton(
+                        text = s.settingsLanguageEn,
+                        accent = if (locale.tag == "en") SkyBlue else TextSecondary,
+                        leadingIcon = null,
+                        enabled = true,
+                        onClick = { locale.setLanguage("en") },
+                    )
+                    NeonButton(
+                        text = s.settingsLanguageRu,
+                        accent = if (locale.tag == "ru") SkyBlue else TextSecondary,
+                        leadingIcon = null,
+                        enabled = true,
+                        onClick = { locale.setLanguage("ru") },
+                    )
+                }
+            }
+        }
+
+        Spacer(Modifier.height(18.dp))
+
+        GlassCard(modifier = Modifier.fillMaxWidth()) {
+            Column {
+                Text(
+                    s.settingsExport,
                     color = TextPrimary,
                     fontSize = 17.sp,
                     fontWeight = FontWeight.SemiBold,
@@ -74,14 +115,14 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
                 Spacer(Modifier.height(14.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     NeonButton(
-                        text = "Export hosts (TXT)",
+                        text = s.settingsExportHostsTxt,
                         accent = SkyBlue,
                         leadingIcon = Icons.Outlined.SaveAlt,
                         enabled = !working,
                         onClick = { runExport { container!!.exporter.exportHostsTxt() } },
                     )
                     NeonButton(
-                        text = "Export ranges (JSON)",
+                        text = s.settingsExportRangesJson,
                         accent = Violet,
                         leadingIcon = Icons.Outlined.SaveAlt,
                         enabled = !working,
@@ -100,7 +141,7 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
         GlassCard(modifier = Modifier.fillMaxWidth()) {
             Column {
                 Text(
-                    "Data management",
+                    s.settingsData,
                     color = TextPrimary,
                     fontSize = 17.sp,
                     fontWeight = FontWeight.SemiBold,
@@ -114,7 +155,7 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
                 Spacer(Modifier.height(14.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     NeonButton(
-                        text = "Clear scan results",
+                        text = s.settingsClearScanResults,
                         accent = TextSecondary,
                         leadingIcon = Icons.Outlined.Delete,
                         enabled = !working,
@@ -126,7 +167,7 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
                         },
                     )
                     NeonButton(
-                        text = "Clear pending discoveries",
+                        text = s.settingsClearPending,
                         accent = Mint,
                         leadingIcon = Icons.Outlined.Delete,
                         enabled = !working,
@@ -145,7 +186,7 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
 
         GlassCard(modifier = Modifier.fillMaxWidth()) {
             Column {
-                Text("About", color = TextPrimary, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                Text(s.settingsAbout, color = TextPrimary, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.height(4.dp))
                 Text(
                     "X-RavScan Desktop — Compose Multiplatform 1.7.3 + Kotlin 2.0.21. " +
