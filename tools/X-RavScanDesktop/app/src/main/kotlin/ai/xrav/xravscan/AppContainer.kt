@@ -1,5 +1,6 @@
 package ai.xrav.xravscan
 
+import ai.xrav.xravscan.data.export.Exporter
 import ai.xrav.xravscan.data.local.DatabaseFactory
 import ai.xrav.xravscan.data.remote.BgpViewService
 import ai.xrav.xravscan.data.repository.DiscoveryRepository
@@ -20,6 +21,7 @@ class AppContainer private constructor(
     val providerRepository: ProviderRepository,
     val discoveryRepository: DiscoveryRepository,
     val scanRepository: ScanRepository,
+    val exporter: Exporter,
 ) {
     companion object {
         @Volatile private var instance: AppContainer? = null
@@ -47,6 +49,7 @@ class AppContainer private constructor(
                 providerRepository = ProviderRepository(db),
                 discoveryRepository = DiscoveryRepository(db, bgpView),
                 scanRepository = ScanRepository(db),
+                exporter = Exporter(db),
             )
         }
     }

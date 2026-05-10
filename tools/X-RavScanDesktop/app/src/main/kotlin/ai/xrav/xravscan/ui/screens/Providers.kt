@@ -8,6 +8,7 @@ import ai.xrav.xravscan.ui.theme.SkyBlue
 import ai.xrav.xravscan.ui.theme.TextMuted
 import ai.xrav.xravscan.ui.theme.TextPrimary
 import ai.xrav.xravscan.ui.theme.TextSecondary
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,11 +21,17 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,10 +41,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.background
 import kotlinx.coroutines.launch
 
 @Composable
@@ -50,15 +58,33 @@ fun ProvidersScreen(modifier: Modifier = Modifier) {
         container?.let { providers = it.providerRepository.listAll() }
     }
 
+    var query by remember { mutableStateOf("") }
+    val filtered by remember(providers, query) {
+        derivedStateOf {
+            val q = query.trim().lowercase()
+            if (q.isEmpty()) providers
+            else providers.filter { p ->
+                q in p.name.lowercase() ||
+                    q in p.slug.lowercase() ||
+                    p.asns.any { q in it.toString() }
+            }
+        }
+    }
+
     val enabled = providers.count { it.enabled }
     Column(modifier = modifier) {
         Text("Providers", color = TextPrimary, fontSize = 28.sp, fontWeight = FontWeight.SemiBold)
         Text(
-            "$enabled of ${providers.size} enabled",
+            "$enabled of ${providers.size} enabled" +
+                if (query.isNotBlank()) " · ${filtered.size} match" else "",
             color = TextSecondary,
             fontSize = 13.sp,
         )
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(14.dp))
+
+        SearchField(query = query, onChange = { query = it })
+
+        Spacer(Modifier.height(14.dp))
         if (providers.isEmpty()) {
             GlassCard(modifier = Modifier.fillMaxWidth()) {
                 Column {
@@ -71,9 +97,17 @@ fun ProvidersScreen(modifier: Modifier = Modifier) {
                     )
                 }
             }
+        } else if (filtered.isEmpty()) {
+            GlassCard(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    "No providers match \"$query\".",
+                    color = TextSecondary,
+                    fontSize = 13.sp,
+                )
+            }
         } else {
             LazyColumn(modifier = Modifier.fillMaxWidth()) {
-                items(providers, key = { it.id }) { p ->
+                items(filtered, key = { it.id }) { p ->
                     ProviderRow(
                         provider = p,
                         onToggle = { newEnabled ->
@@ -85,6 +119,44 @@ fun ProvidersScreen(modifier: Modifier = Modifier) {
                     )
                     Spacer(Modifier.height(8.dp))
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SearchField(query: String, onChange: (String) -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(Color(0xFF1B2233))
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                Icons.Outlined.Search,
+                contentDescription = null,
+                tint = TextMuted,
+                modifier = Modifier.size(18.dp),
+            )
+            Spacer(Modifier.width(8.dp))
+            Box(modifier = Modifier.fillMaxWidth()) {
+                if (query.isEmpty()) {
+                    Text(
+                        "Search by name, slug, or ASN…",
+                        color = TextMuted,
+                        fontSize = 13.sp,
+                    )
+                }
+                BasicTextField(
+                    value = query,
+                    onValueChange = onChange,
+                    singleLine = true,
+                    cursorBrush = SolidColor(SkyBlue),
+                    textStyle = TextStyle(color = TextPrimary, fontSize = 13.sp),
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
         }
     }
