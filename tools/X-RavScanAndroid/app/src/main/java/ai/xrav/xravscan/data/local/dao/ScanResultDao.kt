@@ -19,6 +19,9 @@ interface ScanResultDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(result: ScanResultEntity): Long
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(results: List<ScanResultEntity>): List<Long>
+
     @Query("DELETE FROM scan_results")
     suspend fun deleteAll()
 }

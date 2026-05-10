@@ -70,4 +70,15 @@
     <string name="action_deep_discovery">Deep Discovery</string>
     <string name="action_quick_scan">Quick scan</string>
     <string name="action_clear_results">Clear results</string>
+    <string name="action_full_scan">Full provider scan</string>
+    <string name="action_cancel">Cancel</string>
+
+    <!-- Full provider scan -->
+    <string name="full_scan_title">Full provider scan</string>
+    <string name="full_scan_subtitle">Probe every IP in every CIDR for one provider — paginated lazily, capped to keep the device sane.</string>
+    <string name="full_scan_pick">Pick a provider</string>
+    <string name="full_scan_progress">%1$s · %2$d / %3$d · %4$s</string>
+    <string name="full_scan_progress_no_cidr">%1$s · %2$d / %3$d</string>
+    <string name="full_scan_eta">ETA %1$s</string>
+    <string name="full_scan_complete">Done · %1$d hits</string>
 </resources>

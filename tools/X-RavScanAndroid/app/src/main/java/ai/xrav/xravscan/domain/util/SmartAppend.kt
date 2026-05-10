@@ -81,6 +81,48 @@ data class Cidr(
         return matchesPrefix(network, other.network, other.prefixLen)
     }
 
+    /**
+     * Total addressable IPs in this prefix.
+     *  - IPv4: ``2^(32-prefixLen)`` — capped at [Long.MAX_VALUE] for the
+     *    pathological ``/0`` case (which we'd never actually scan).
+     *  - IPv6: only meaningful for ``/112`` and narrower; wider prefixes
+     *    return [Long.MAX_VALUE] so callers can refuse to expand them.
+     */
+    val size: Long get() = when (version) {
+        4 -> 1L shl (32 - prefixLen)
+        6 -> if (prefixLen >= 64) 1L shl (128 - prefixLen).coerceAtMost(62) else Long.MAX_VALUE
+        else -> 0L
+    }
+
+    /**
+     * Lazily yields every IPv4 address in the prefix, **excluding** the
+     * network and broadcast addresses for prefixes ≤ /30. ``/31`` and
+     * ``/32`` yield both addresses (RFC 3021 / single host).
+     *
+     * Returns an empty sequence for IPv6 — full IPv6 expansion is never
+     * a sensible scan target.
+     */
+    fun expandIpv4(): Sequence<String> = sequence {
+        if (version != 4 || prefixLen < 8) return@sequence
+        val baseInt = ((network[0].toInt() and 0xFF) shl 24) or
+            ((network[1].toInt() and 0xFF) shl 16) or
+            ((network[2].toInt() and 0xFF) shl 8) or
+            (network[3].toInt() and 0xFF)
+        val hostBits = 32 - prefixLen
+        val total = 1L shl hostBits
+        val skipNetworkAndBroadcast = prefixLen in 8..30
+        val start = if (skipNetworkAndBroadcast) 1L else 0L
+        val endExclusive = if (skipNetworkAndBroadcast) total - 1 else total
+        for (i in start until endExclusive) {
+            val ipInt = (baseInt.toLong() and 0xFFFFFFFFL) or i
+            val a = (ipInt shr 24) and 0xFF
+            val b = (ipInt shr 16) and 0xFF
+            val c = (ipInt shr 8) and 0xFF
+            val d = ipInt and 0xFF
+            yield("$a.$b.$c.$d")
+        }
+    }
+
     override fun equals(other: Any?): Boolean =
         other is Cidr && version == other.version && prefixLen == other.prefixLen &&
             network.contentEquals(other.network)

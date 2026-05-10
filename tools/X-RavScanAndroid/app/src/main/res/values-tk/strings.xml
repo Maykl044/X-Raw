@@ -63,4 +63,15 @@
     <string name="action_deep_discovery">Çuňňur gözleg</string>
     <string name="action_quick_scan">Çalt skan</string>
     <string name="action_clear_results">Arassala</string>
+    <string name="action_full_scan">Doly üpjün ediji skan</string>
+    <string name="action_cancel">Ýatyr</string>
+
+    <!-- Doly skan -->
+    <string name="full_scan_title">Doly skan</string>
+    <string name="full_scan_subtitle">Saýlanan üpjün edijiniň ähli CIDR-leri boýunça her IP-ni barlaýar.</string>
+    <string name="full_scan_pick">Üpjün edijini saýlaň</string>
+    <string name="full_scan_progress">%1$s · %2$d / %3$d · %4$s</string>
+    <string name="full_scan_progress_no_cidr">%1$s · %2$d / %3$d</string>
+    <string name="full_scan_eta">≈%1$s</string>
+    <string name="full_scan_complete">Taýýar · %1$d jogap</string>
 </resources>

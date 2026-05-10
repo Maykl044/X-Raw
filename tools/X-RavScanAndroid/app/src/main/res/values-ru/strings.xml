@@ -63,4 +63,15 @@
     <string name="action_deep_discovery">Глубокий поиск</string>
     <string name="action_quick_scan">Быстрый скан</string>
     <string name="action_clear_results">Очистить</string>
+    <string name="action_full_scan">Полный скан провайдера</string>
+    <string name="action_cancel">Отмена</string>
+
+    <!-- Полное сканирование -->
+    <string name="full_scan_title">Полное сканирование</string>
+    <string name="full_scan_subtitle">Прозванивает каждый IP во всех CIDR выбранного провайдера. Адреса генерируются лениво, с лимитом сверху чтобы не уронить устройство.</string>
+    <string name="full_scan_pick">Выберите провайдера</string>
+    <string name="full_scan_progress">%1$s · %2$d / %3$d · %4$s</string>
+    <string name="full_scan_progress_no_cidr">%1$s · %2$d / %3$d</string>
+    <string name="full_scan_eta">≈%1$s</string>
+    <string name="full_scan_complete">Готово · %1$d отвечает</string>
 </resources>
