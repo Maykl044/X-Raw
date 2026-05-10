@@ -24,4 +24,7 @@ interface DiscoveryDao {
 
     @Query("DELETE FROM discoveries WHERE id = :id")
     suspend fun deleteById(id: Long)
+
+    @Query("DELETE FROM discoveries WHERE applied = 0")
+    suspend fun deletePending()
 }

@@ -3,6 +3,7 @@ package ai.xrav.xravscan
 import android.app.Application
 import android.util.Log
 import ai.xrav.xravscan.data.seed.ProviderSeeder
+import ai.xrav.xravscan.util.LocaleManager
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -24,6 +25,7 @@ import kotlinx.coroutines.launch
 class XRavScanApp : Application() {
 
     @Inject lateinit var providerSeeder: ProviderSeeder
+    @Inject lateinit var localeManager: LocaleManager
 
     private val appScope = CoroutineScope(
         SupervisorJob() +
@@ -34,6 +36,8 @@ class XRavScanApp : Application() {
     override fun onCreate() {
         super.onCreate()
         installFallbackUncaughtHandler()
+        runCatching { localeManager.applyPersisted() }
+            .onFailure { Log.e(TAG, "applyPersisted locale failed", it) }
         appScope.launch {
             try {
                 providerSeeder.ensureSeeded()

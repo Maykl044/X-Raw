@@ -13,11 +13,19 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,6 +49,7 @@ import androidx.compose.foundation.shape.CircleShape
 @Composable
 fun ProvidersScreen(viewModel: ProvidersViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    var query by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -60,6 +69,39 @@ fun ProvidersScreen(viewModel: ProvidersViewModel = hiltViewModel()) {
             fontSize = 14.sp,
         )
 
+        if (state.providers.isNotEmpty()) {
+            val enabledCount = state.providers.count { it.enabled }
+            Text(
+                text = stringResource(
+                    R.string.providers_enabled_count,
+                    enabledCount,
+                    state.providers.size,
+                ),
+                color = TextSecondary,
+                fontSize = 12.sp,
+            )
+
+            OutlinedTextField(
+                value = query,
+                onValueChange = { query = it },
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = {
+                    Text(stringResource(R.string.providers_search_hint), color = TextSecondary)
+                },
+                leadingIcon = {
+                    Icon(Icons.Outlined.Search, contentDescription = null, tint = TextSecondary)
+                },
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = TextPrimary,
+                    unfocusedTextColor = TextPrimary,
+                    focusedBorderColor = SkyBlue.copy(alpha = 0.6f),
+                    unfocusedBorderColor = TextSecondary.copy(alpha = 0.35f),
+                    cursorColor = SkyBlue,
+                ),
+            )
+        }
+
         if (state.providers.isEmpty()) {
             GlassCard(modifier = Modifier.fillMaxWidth()) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -77,10 +119,17 @@ fun ProvidersScreen(viewModel: ProvidersViewModel = hiltViewModel()) {
                 }
             }
         } else {
+            val needle = query.trim().lowercase()
+            val filtered = if (needle.isEmpty()) state.providers
+            else state.providers.filter {
+                it.name.lowercase().contains(needle) ||
+                    it.slug.lowercase().contains(needle) ||
+                    it.asns.any { asn -> asn.toString().contains(needle) }
+            }
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                items(items = state.providers, key = { it.slug }) { p ->
+                items(items = filtered, key = { it.slug }) { p ->
                     ProviderRow(
                         provider = p,
                         onToggle = { viewModel.toggle(p.slug, it) },

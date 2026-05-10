@@ -135,6 +135,10 @@ class DiscoveryRepositoryImpl @Inject constructor(
         withContext(Dispatchers.IO) { discoveryDao.deleteById(id) }
     }
 
+    override suspend fun dismissAllPending() {
+        withContext(Dispatchers.IO) { discoveryDao.deletePending() }
+    }
+
     // ------------------------------------------------------------------
     // internals
     // ------------------------------------------------------------------

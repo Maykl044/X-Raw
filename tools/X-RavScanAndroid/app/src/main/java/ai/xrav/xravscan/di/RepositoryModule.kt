@@ -2,8 +2,10 @@ package ai.xrav.xravscan.di
 
 import ai.xrav.xravscan.data.repository.DiscoveryRepositoryImpl
 import ai.xrav.xravscan.data.repository.ProviderRepositoryImpl
+import ai.xrav.xravscan.data.repository.ScanRepositoryImpl
 import ai.xrav.xravscan.domain.repository.DiscoveryRepository
 import ai.xrav.xravscan.domain.repository.ProviderRepository
+import ai.xrav.xravscan.domain.repository.ScanRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -20,4 +22,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindDiscoveryRepository(impl: DiscoveryRepositoryImpl): DiscoveryRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindScanRepository(impl: ScanRepositoryImpl): ScanRepository
 }

@@ -32,4 +32,7 @@ interface DiscoveryRepository {
 
     /** Drop a discovery row outright. */
     suspend fun dismiss(id: Long)
+
+    /** Clear every pending (unapplied) discovery row. */
+    suspend fun dismissAllPending()
 }

@@ -1,12 +1,14 @@
 package ai.xrav.xravscan.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -19,6 +21,7 @@ import androidx.compose.material.icons.outlined.Insights
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Speed
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -118,7 +121,8 @@ fun DashboardScreen(viewModel: DashboardViewModel = hiltViewModel()) {
                             modifier = Modifier.size(18.dp),
                         )
                     },
-                    onClick = {},
+                    onClick = viewModel::startScan,
+                    enabled = !state.running,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 NeonButton(
@@ -132,7 +136,8 @@ fun DashboardScreen(viewModel: DashboardViewModel = hiltViewModel()) {
                             modifier = Modifier.size(18.dp),
                         )
                     },
-                    onClick = {},
+                    onClick = viewModel::runSmartAppend,
+                    enabled = !state.running,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -140,17 +145,41 @@ fun DashboardScreen(viewModel: DashboardViewModel = hiltViewModel()) {
 
         GlassCard(modifier = Modifier.fillMaxWidth()) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    text = stringResource(R.string.dashboard_status),
-                    color = TextPrimary,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 16.sp,
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = stringResource(R.string.dashboard_status),
+                        color = TextPrimary,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 16.sp,
+                        modifier = Modifier.weight(1f),
+                    )
+                    if (state.running) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp,
+                            color = Violet,
+                        )
+                    }
+                }
                 Text(
                     text = stringResource(R.string.dashboard_status_idle),
                     color = TextSecondary,
                     fontSize = 13.sp,
                 )
+                if (state.log.isNotEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 120.dp)
+                            .verticalScroll(rememberScrollState()),
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            state.log.takeLast(20).forEach { line ->
+                                Text(line, color = TextSecondary, fontSize = 11.sp)
+                            }
+                        }
+                    }
+                }
             }
         }
 

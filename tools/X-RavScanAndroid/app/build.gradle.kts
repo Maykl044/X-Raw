@@ -23,6 +23,32 @@ android {
         }
     }
 
+    signingConfigs {
+        // Lightweight release signing using the standard Android debug
+        // keystore. It is regenerated on a fresh CI runner if missing.
+        // Real Play-Store signing should plug a proper keystore in here
+        // via env vars or a Gradle property — but for sideloaded APKs the
+        // debug keystore is sufficient.
+        create("releaseDebugKey") {
+            val ksPath = System.getenv("RELEASE_KEYSTORE_PATH")
+            if (!ksPath.isNullOrBlank() && file(ksPath).exists()) {
+                storeFile = file(ksPath)
+                storePassword = System.getenv("RELEASE_KEYSTORE_PASSWORD") ?: "android"
+                keyAlias = System.getenv("RELEASE_KEY_ALIAS") ?: "androiddebugkey"
+                keyPassword = System.getenv("RELEASE_KEY_PASSWORD") ?: "android"
+            } else {
+                val home = System.getProperty("user.home")
+                val ks = file("$home/.android/debug.keystore")
+                if (ks.exists()) {
+                    storeFile = ks
+                    storePassword = "android"
+                    keyAlias = "androiddebugkey"
+                    keyPassword = "android"
+                }
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -30,6 +56,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
+            signingConfig = signingConfigs.findByName("releaseDebugKey")
         }
         debug {
             applicationIdSuffix = ".debug"
@@ -97,4 +124,5 @@ dependencies {
     implementation(libs.retrofit.kotlinx.serialization)
 
     implementation(libs.datastore.preferences)
+    implementation(libs.androidx.appcompat)
 }
