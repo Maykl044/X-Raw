@@ -90,7 +90,7 @@ class DashboardViewModel @Inject constructor(
         appendLog("Smart Append starting…")
         viewModelScope.launch {
             try {
-                discoveryRepository.runSmartAppend { line -> appendLog(line) }
+                discoveryRepository.runSmartAppend(onLog = { line -> appendLog(line) })
             } catch (t: Throwable) {
                 appendLog("smart append failed: ${t.message ?: t::class.simpleName}")
             } finally {

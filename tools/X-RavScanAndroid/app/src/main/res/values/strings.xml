@@ -85,4 +85,17 @@
     <string name="bunny_loading_via_api">Loading Bunny CDN ranges via direct API…</string>
     <string name="bunny_received_grouped">Bunny: %1$d IPs received, grouped into %2$d CIDRs</string>
     <string name="bunny_fallback_used">Bunny CDN: fell back to built-in list (%1$d CIDR)</string>
+    <string name="direct_api_badge">Direct API</string>
+    <string name="full_scan_offline">Offline — Smart Append paused until connectivity returns.</string>
+    <string name="update_using_doh_bypass">VPN active — using DoH + bypass for update fetches.</string>
+    <string name="smart_append_no_providers">No enabled providers — nothing to do</string>
+    <string name="smart_append_starting">Smart Append starting — %1$d providers</string>
+    <string name="smart_append_no_asn">%1$s: no ASN configured</string>
+    <string name="smart_append_error">%1$s: error — %2$s</string>
+    <string name="smart_append_no_prefixes">%1$s: no prefixes</string>
+    <string name="smart_append_provider_line">%1$s: found %2$d, duplicates %3$d, added %4$d</string>
+    <string name="smart_append_provider_line_invalid">%1$s: found %2$d, duplicates %3$d, added %4$d · %5$d invalid</string>
+    <string name="smart_append_fallback_used">%1$s: fallback to built-in list (%2$d CIDR)</string>
+    <string name="smart_append_fallback_used_reason">%1$s: fallback to built-in list (%2$d CIDR) — %3$s</string>
+    <string name="smart_append_summary">Smart Append complete · %1$d new across %2$d providers</string>
 </resources>

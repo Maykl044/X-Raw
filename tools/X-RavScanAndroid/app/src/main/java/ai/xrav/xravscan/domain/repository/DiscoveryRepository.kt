@@ -19,7 +19,10 @@ interface DiscoveryRepository {
      * inserted into `discoveries` — the user can then merge them into
      * `cidr_ranges` via [applyDiscovery] / [applyAllForProvider].
      */
-    suspend fun runSmartAppend(onLog: suspend (String) -> Unit): List<SmartAppendReport>
+    suspend fun runSmartAppend(
+        messages: SmartAppendMessages = SmartAppendMessages(),
+        onLog: suspend (String) -> Unit,
+    ): List<SmartAppendReport>
 
     /** Collapse all `cidr_ranges` per provider in place (Route Summarisation). */
     suspend fun cleanAndOptimize(onLog: suspend (String) -> Unit): Int

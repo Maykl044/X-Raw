@@ -78,4 +78,17 @@
     <string name="bunny_loading_via_api">Bunny CDN diapazonlary göni API arkaly ýüklenýär…</string>
     <string name="bunny_received_grouped">Bunny: %1$d IP alyndy, %2$d CIDR-e birleşdirildi</string>
     <string name="bunny_fallback_used">Bunny CDN: gurlan goşmaça sanawa geçildi (%1$d CIDR)</string>
+    <string name="direct_api_badge">Göni API</string>
+    <string name="full_scan_offline">Aragatnaşyk ýok — Smart Append diňe ýagdaý gowulanýança dur.</string>
+    <string name="update_using_doh_bypass">VPN aktiw — täzelenmeler üçin DoH + VPN-den daşary.</string>
+    <string name="smart_append_no_providers">Açyk üpjün ediji ýok — täzelemek üçin hiç zat ýok</string>
+    <string name="smart_append_starting">Smart Append başlady — %1$d üpjün ediji</string>
+    <string name="smart_append_no_asn">%1$s: ASN sazlanmadyk</string>
+    <string name="smart_append_error">%1$s: ýalňyşlyk — %2$s</string>
+    <string name="smart_append_no_prefixes">%1$s: prefiks ýok</string>
+    <string name="smart_append_provider_line">%1$s: tapyldy %2$d, gaýtalanýan %3$d, goşuldy %4$d</string>
+    <string name="smart_append_provider_line_invalid">%1$s: tapyldy %2$d, gaýtalanýan %3$d, goşuldy %4$d · %5$d nädogry</string>
+    <string name="smart_append_fallback_used">%1$s: gurlan goşmaça sanawa geçildi (%2$d CIDR)</string>
+    <string name="smart_append_fallback_used_reason">%1$s: gurlan goşmaça sanawa geçildi (%2$d CIDR) — %3$s</string>
+    <string name="smart_append_summary">Smart Append tamamlandy · %2$d üpjün edijiden %1$d täze</string>
 </resources>

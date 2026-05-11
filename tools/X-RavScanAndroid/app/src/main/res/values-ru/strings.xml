@@ -78,4 +78,17 @@
     <string name="bunny_loading_via_api">Загрузка диапазонов Bunny CDN через прямой API…</string>
     <string name="bunny_received_grouped">Bunny: получено %1$d IP, объединены в %2$d CIDR</string>
     <string name="bunny_fallback_used">Bunny CDN: fallback на встроенный список (%1$d CIDR)</string>
+    <string name="direct_api_badge">Прямой API</string>
+    <string name="full_scan_offline">Нет связи — Smart Append приостановлен до восстановления.</string>
+    <string name="update_using_doh_bypass">VPN активен — обновление через DoH в обход VPN.</string>
+    <string name="smart_append_no_providers">Нет включённых провайдеров — нечего обновлять</string>
+    <string name="smart_append_starting">Smart Append запущен — %1$d провайдеров</string>
+    <string name="smart_append_no_asn">%1$s: ASN не настроен</string>
+    <string name="smart_append_error">%1$s: ошибка — %2$s</string>
+    <string name="smart_append_no_prefixes">%1$s: префиксы не найдены</string>
+    <string name="smart_append_provider_line">%1$s: найдено %2$d, дубликатов %3$d, добавлено %4$d</string>
+    <string name="smart_append_provider_line_invalid">%1$s: найдено %2$d, дубликатов %3$d, добавлено %4$d · %5$d невалидных</string>
+    <string name="smart_append_fallback_used">%1$s: fallback на встроенный список (%2$d CIDR)</string>
+    <string name="smart_append_fallback_used_reason">%1$s: fallback на встроенный список (%2$d CIDR) — %3$s</string>
+    <string name="smart_append_summary">Smart Append завершён · %1$d новых из %2$d провайдеров</string>
 </resources>

@@ -1,10 +1,14 @@
 package ai.xrav.xravscan.ui.screens.discovery
 
+import ai.xrav.xravscan.R
 import ai.xrav.xravscan.domain.model.Discovery
 import ai.xrav.xravscan.domain.repository.DiscoveryRepository
+import ai.xrav.xravscan.domain.repository.SmartAppendMessages
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -25,7 +29,34 @@ data class DiscoveryUiState(
 @HiltViewModel
 class DiscoveryViewModel @Inject constructor(
     private val repo: DiscoveryRepository,
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
+
+    private fun smartAppendMessages(): SmartAppendMessages = SmartAppendMessages(
+        offlinePaused = context.getString(R.string.full_scan_offline),
+        vpnActiveNote = context.getString(R.string.update_using_doh_bypass),
+        noProviders = context.getString(R.string.smart_append_no_providers),
+        starting = { n -> context.getString(R.string.smart_append_starting, n) },
+        bunnyLoading = context.getString(R.string.bunny_loading_via_api),
+        noAsnConfigured = { name -> context.getString(R.string.smart_append_no_asn, name) },
+        errorLine = { name, err -> context.getString(R.string.smart_append_error, name, err) },
+        noPrefixes = { name -> context.getString(R.string.smart_append_no_prefixes, name) },
+        fallback = { name, count ->
+            context.getString(R.string.smart_append_fallback_used, name, count)
+        },
+        fallbackWithReason = { name, count, reason ->
+            context.getString(R.string.smart_append_fallback_used_reason, name, count, reason)
+        },
+        providerLine = { name, found, dup, added ->
+            context.getString(R.string.smart_append_provider_line, name, found, dup, added)
+        },
+        providerLineWithInvalid = { name, found, dup, added, invalid ->
+            context.getString(
+                R.string.smart_append_provider_line_invalid,
+                name, found, dup, added, invalid,
+            )
+        },
+    )
 
     private val log = MutableStateFlow<List<String>>(emptyList())
     private val running = MutableStateFlow(false)
@@ -53,7 +84,7 @@ class DiscoveryViewModel @Inject constructor(
         appendLog("Smart Append starting…")
         viewModelScope.launch {
             try {
-                repo.runSmartAppend(::appendLog)
+                repo.runSmartAppend(smartAppendMessages(), ::appendLog)
             } catch (t: Throwable) {
                 appendLog("Smart Append failed: ${t.message ?: t::class.simpleName}")
             } finally {

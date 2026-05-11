@@ -175,7 +175,7 @@ private fun ProviderRow(
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 15.sp,
                     )
-                    if (provider.slug.equals("bunny", ignoreCase = true)) {
+                    if (provider.slug.lowercase() in DIRECT_API_SLUGS) {
                         Spacer(Modifier.width(8.dp))
                         DirectApiBadge()
                     }
@@ -228,6 +228,20 @@ private fun DirectApiBadge() {
         )
     }
 }
+
+/**
+ * Provider slugs whose Smart Append uses a direct vendor API instead
+ * of BGPView. Mirrors `DiscoveryRepositoryImpl.directProviders`.
+ */
+private val DIRECT_API_SLUGS: Set<String> = setOf(
+    "cloudflare",
+    "gcp",
+    "aws",
+    "cloudfront",
+    "fastly",
+    "akamai",
+    "bunny",
+)
 
 private fun parseHexColor(hex: String): Color? = runCatching {
     val cleaned = hex.removePrefix("#")
