@@ -81,4 +81,8 @@
     <string name="full_scan_progress_no_cidr">%1$s · %2$d / %3$d</string>
     <string name="full_scan_eta">ETA %1$s</string>
     <string name="full_scan_complete">Done · %1$d hits</string>
+    <string name="bunny_direct_api_badge">Direct API</string>
+    <string name="bunny_loading_via_api">Loading Bunny CDN ranges via direct API…</string>
+    <string name="bunny_received_grouped">Bunny: %1$d IPs received, grouped into %2$d CIDRs</string>
+    <string name="bunny_fallback_used">Bunny CDN: fell back to built-in list (%1$d CIDR)</string>
 </resources>

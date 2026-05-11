@@ -120,6 +120,7 @@ dependencies {
 
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
+    implementation(libs.okhttp.dnsoverhttps)
     implementation(libs.retrofit)
     implementation(libs.retrofit.kotlinx.serialization)
 

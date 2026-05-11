@@ -40,9 +40,12 @@ import ai.xrav.xravscan.R
 import ai.xrav.xravscan.domain.model.Provider
 import ai.xrav.xravscan.ui.components.GlassCard
 import ai.xrav.xravscan.ui.screens.providers.ProvidersViewModel
+import ai.xrav.xravscan.ui.theme.Mint
 import ai.xrav.xravscan.ui.theme.SkyBlue
 import ai.xrav.xravscan.ui.theme.TextPrimary
 import ai.xrav.xravscan.ui.theme.TextSecondary
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.CircleShape
 
@@ -165,12 +168,18 @@ private fun ProviderRow(
             }
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = provider.name,
-                    color = TextPrimary,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 15.sp,
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = provider.name,
+                        color = TextPrimary,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 15.sp,
+                    )
+                    if (provider.slug.equals("bunny", ignoreCase = true)) {
+                        Spacer(Modifier.width(8.dp))
+                        DirectApiBadge()
+                    }
+                }
                 Text(
                     text = "${provider.cidrCount} CIDR · ASN " +
                         provider.asns.take(3).joinToString(", ") +
@@ -190,6 +199,33 @@ private fun ProviderRow(
                 ),
             )
         }
+    }
+}
+
+/**
+ * Compact "Direct API" pill shown next to Bunny CDN (and anything else
+ * we eventually wire up to a vendor-specific endpoint instead of
+ * BGPView). Uses the Mint accent so it reads as "good / extended".
+ */
+@Composable
+private fun DirectApiBadge() {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(Mint.copy(alpha = 0.18f))
+            .border(
+                width = 0.5.dp,
+                color = Mint.copy(alpha = 0.45f),
+                shape = RoundedCornerShape(8.dp),
+            )
+            .padding(horizontal = 8.dp, vertical = 2.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.bunny_direct_api_badge),
+            color = Mint,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 10.sp,
+        )
     }
 }
 

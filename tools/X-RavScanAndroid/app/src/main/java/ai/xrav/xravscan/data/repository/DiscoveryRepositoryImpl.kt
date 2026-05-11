@@ -6,6 +6,7 @@ import ai.xrav.xravscan.data.local.dao.DiscoveryDao
 import ai.xrav.xravscan.data.local.dao.ProviderDao
 import ai.xrav.xravscan.data.local.entity.CidrRangeEntity
 import ai.xrav.xravscan.data.local.entity.DiscoveryEntity
+import ai.xrav.xravscan.data.remote.BunnyRangeProvider
 import ai.xrav.xravscan.data.remote.api.BgpViewService
 import ai.xrav.xravscan.domain.model.Discovery
 import ai.xrav.xravscan.domain.model.SmartAppendReport
@@ -33,6 +34,7 @@ class DiscoveryRepositoryImpl @Inject constructor(
     private val cidrRangeDao: CidrRangeDao,
     private val discoveryDao: DiscoveryDao,
     private val bgpView: BgpViewService,
+    private val bunnyRangeProvider: BunnyRangeProvider,
     private val networkMonitor: NetworkMonitor,
 ) : DiscoveryRepository {
 
@@ -41,14 +43,18 @@ class DiscoveryRepositoryImpl @Inject constructor(
 
     override suspend fun runSmartAppend(onLog: suspend (String) -> Unit): List<SmartAppendReport> =
         withContext(Dispatchers.IO) {
+            // NB: we deliberately do NOT pause Smart Append for a live VPN.
+            // Update traffic goes through [UpdateClientFactory] which uses
+            // DNS-over-HTTPS and, when possible, pins to a non-VPN network
+            // so the user can keep their VPN active and still refresh
+            // databases. Only Quick / Full scanning pauses on VPN.
             val net = networkMonitor.state.value
-            if (net.isVpn) {
-                onLog("VPN active — Smart Append paused. Disable the VPN to continue.")
-                return@withContext emptyList()
-            }
             if (!net.available) {
                 onLog("Offline — Smart Append paused until connectivity returns.")
                 return@withContext emptyList()
+            }
+            if (net.isVpn) {
+                onLog("VPN active — using DoH + bypass for update fetches.")
             }
 
             val providers = providerDao.observeAllWithCount().firstValue()
@@ -64,7 +70,11 @@ class DiscoveryRepositoryImpl @Inject constructor(
                     async {
                         val asns = row.asnsCsv.split(',')
                             .mapNotNull { it.trim().toLongOrNull() }
-                        val report = syncProvider(row.slug, row.name, asns)
+                        val report = if (row.slug.equals("bunny", ignoreCase = true)) {
+                            syncBunny(row.slug, row.name, onLog)
+                        } else {
+                            syncProvider(row.slug, row.name, asns)
+                        }
                         onLog(report.iosLine())
                         report
                     }
@@ -154,6 +164,81 @@ class DiscoveryRepositoryImpl @Inject constructor(
     // ------------------------------------------------------------------
     // internals
     // ------------------------------------------------------------------
+
+    /**
+     * Specialised Smart-Append path for Bunny CDN. BGPView returns
+     * essentially nothing for AS200325 because Bunny's edges live on
+     * Datacamp parent networks. Instead we hit Bunny's public
+     * edge-server JSON directly, group the IPs into /24s, and fall
+     * back to a hardcoded curated list of RADB routes if the API is
+     * unreachable.
+     */
+    private suspend fun syncBunny(
+        slug: String,
+        name: String,
+        onLog: suspend (String) -> Unit,
+    ): SmartAppendReport {
+        onLog("Bunny CDN: загрузка диапазонов через прямой API…")
+        val result = runCatching { bunnyRangeProvider.fetchAll() }
+            .getOrElse { t ->
+                Log.w(TAG, "Bunny fetch failed entirely", t)
+                BunnyRangeProvider.Result(
+                    cidrs = BunnyRangeProvider.HARDCODED_RANGES,
+                    source = BunnyRangeProvider.Result.Source.HARDCODED_FALLBACK,
+                    edgeIpCount = 0,
+                    fallbackReason = t.message ?: t::class.simpleName,
+                )
+            }
+
+        when (result.source) {
+            BunnyRangeProvider.Result.Source.DIRECT_API -> onLog(
+                "Bunny: получено ${result.edgeIpCount} IP, объединены в ${result.cidrs.size} CIDR"
+            )
+            BunnyRangeProvider.Result.Source.HARDCODED_FALLBACK -> onLog(
+                "Bunny CDN: fallback на встроенный список (${result.cidrs.size} CIDR)" +
+                    (result.fallbackReason?.let { " — $it" } ?: "")
+            )
+            BunnyRangeProvider.Result.Source.MIXED -> onLog(
+                "Bunny: API + fallback — ${result.cidrs.size} CIDR"
+            )
+        }
+
+        if (result.cidrs.isEmpty()) {
+            return SmartAppendReport(slug, name, 0, 0, 0, error = "empty CIDR list")
+        }
+
+        val existingRanges = cidrRangeDao.rangesForProvider(slug).map { it.cidr }
+        val outcome = smartAppend(existingRanges, result.cidrs)
+
+        if (outcome.added.isNotEmpty()) {
+            val now = System.currentTimeMillis()
+            discoveryDao.insertAll(
+                outcome.added.map { cidr ->
+                    DiscoveryEntity(
+                        providerSlug = slug,
+                        asn = null,
+                        cidr = cidr,
+                        sourceApi = when (result.source) {
+                            BunnyRangeProvider.Result.Source.DIRECT_API -> "bunny_api"
+                            BunnyRangeProvider.Result.Source.HARDCODED_FALLBACK -> "bunny_fallback"
+                            BunnyRangeProvider.Result.Source.MIXED -> "bunny_mixed"
+                        },
+                        foundAt = now,
+                        applied = false,
+                    )
+                },
+            )
+        }
+
+        return SmartAppendReport(
+            providerSlug = slug,
+            providerName = name,
+            added = outcome.added.size,
+            skipped = outcome.skipped,
+            superseded = outcome.superseded.size,
+            error = null,
+        )
+    }
 
     private suspend fun syncProvider(
         slug: String,
