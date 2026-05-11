@@ -35,6 +35,21 @@ data class DashboardStats(
     val discoveries: Int,
 )
 
+data class FullScanProgress(
+    val providerSlug: String,
+    val providerName: String,
+    val ipsScanned: Long,
+    val ipsTotal: Long,
+    val hits: Int,
+    val currentCidr: String?,
+    val message: String? = null,
+    val done: Boolean = false,
+    val cancelled: Boolean = false,
+) {
+    val percent: Float
+        get() = if (ipsTotal <= 0) 0f else (ipsScanned.toFloat() / ipsTotal.toFloat()).coerceIn(0f, 1f)
+}
+
 data class SmartAppendReport(
     val providerSlug: String,
     val providerName: String,

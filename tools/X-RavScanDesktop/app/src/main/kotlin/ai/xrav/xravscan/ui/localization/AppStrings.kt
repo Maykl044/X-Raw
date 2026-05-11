@@ -54,6 +54,19 @@ data class AppStrings(
     val settingsAbout: String,
     val settingsTitle: String,
     val settingsSubtitle: String,
+    val fullScanTitle: String,
+    val fullScanSubtitle: String,
+    val fullScanPick: String,
+    val fullScanStart: String,
+    val fullScanCancel: String,
+    val fullScanNoCidr: String,
+    val fullScanStarting: String,
+    val fullScanCompleting: String,
+    val fullScanComplete: String,
+    val fullScanCancelled: String,
+    val fullScanPausedVpn: String,
+    val fullScanPausedOffline: String,
+    val fullScanDismiss: String,
 ) {
     companion object {
         val EN = AppStrings(
@@ -91,6 +104,19 @@ data class AppStrings(
             settingsAbout = "About",
             settingsTitle = "Settings",
             settingsSubtitle = "Language, export and data management",
+            fullScanTitle = "Full provider scan",
+            fullScanSubtitle = "Walk every IP in every CIDR for the selected provider.",
+            fullScanPick = "Pick a provider…",
+            fullScanStart = "Full provider scan",
+            fullScanCancel = "Cancel",
+            fullScanNoCidr = "Pick an enabled provider with at least one CIDR.",
+            fullScanStarting = "Full scan starting",
+            fullScanCompleting = "Finalising…",
+            fullScanComplete = "Full scan complete",
+            fullScanCancelled = "Full scan cancelled",
+            fullScanPausedVpn = "VPN active — Full scan paused.",
+            fullScanPausedOffline = "Offline — Full scan paused.",
+            fullScanDismiss = "Dismiss",
         )
 
         val RU = AppStrings(
@@ -128,6 +154,19 @@ data class AppStrings(
             settingsAbout = "О приложении",
             settingsTitle = "Настройки",
             settingsSubtitle = "Язык, экспорт и управление данными",
+            fullScanTitle = "Полное сканирование провайдера",
+            fullScanSubtitle = "Перебрать каждый IP во всех CIDR выбранного провайдера.",
+            fullScanPick = "Выберите провайдера…",
+            fullScanStart = "Полный скан провайдера",
+            fullScanCancel = "Отмена",
+            fullScanNoCidr = "Выберите включённого провайдера с хотя бы одним CIDR.",
+            fullScanStarting = "Полный скан запускается",
+            fullScanCompleting = "Завершение…",
+            fullScanComplete = "Полный скан завершён",
+            fullScanCancelled = "Полный скан отменён",
+            fullScanPausedVpn = "VPN активен — полный скан на паузе.",
+            fullScanPausedOffline = "Нет сети — полный скан на паузе.",
+            fullScanDismiss = "Скрыть",
         )
 
         /** Resolve a tag (`null` = system default) into the matching table. */

@@ -45,14 +45,15 @@ class AppContainer private constructor(
                 report.skipped, report.providers, report.cidrs,
             )
             val bgpView = BgpViewService()
+            val monitor = NetworkMonitor()
             return AppContainer(
                 db = db,
                 bgpViewService = bgpView,
                 providerRepository = ProviderRepository(db),
                 discoveryRepository = DiscoveryRepository(db, bgpView),
-                scanRepository = ScanRepository(db),
+                scanRepository = ScanRepository(db, monitor),
                 exporter = Exporter(db),
-                networkMonitor = NetworkMonitor(),
+                networkMonitor = monitor,
             )
         }
     }

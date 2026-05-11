@@ -78,6 +78,46 @@ data class Cidr(
         return matchesPrefix(network, other.network, other.prefixLen)
     }
 
+    /**
+     * Total addressable IPs in this prefix.
+     * IPv6 prefixes > /64 short-circuit to [Long.MAX_VALUE] because no
+     * scanner should ever try to enumerate them exhaustively.
+     */
+    val size: Long get() = when (version) {
+        4 -> 1L shl (32 - prefixLen)
+        6 -> if (prefixLen >= 64) 1L shl ((128 - prefixLen).coerceAtMost(62)) else Long.MAX_VALUE
+        else -> 0L
+    }
+
+    /**
+     * Lazy [Sequence] of every IPv4 host string in the prefix.
+     *  - Skips network + broadcast for ``/8 .. /30``.
+     *  - Yields both addresses for ``/31`` (RFC 3021) and the single
+     *    host for ``/32``.
+     *  - IPv6 returns an empty sequence — full IPv6 expansion is never
+     *    a realistic scan target.
+     */
+    fun expandIpv4(): Sequence<String> = sequence {
+        if (version != 4 || prefixLen < 8) return@sequence
+        val baseInt = ((network[0].toInt() and 0xFF) shl 24) or
+            ((network[1].toInt() and 0xFF) shl 16) or
+            ((network[2].toInt() and 0xFF) shl 8) or
+            (network[3].toInt() and 0xFF)
+        val hostBits = 32 - prefixLen
+        val total = 1L shl hostBits
+        val skipNetworkAndBroadcast = prefixLen in 8..30
+        val start = if (skipNetworkAndBroadcast) 1L else 0L
+        val endExclusive = if (skipNetworkAndBroadcast) total - 1 else total
+        for (i in start until endExclusive) {
+            val ipInt = (baseInt.toLong() and 0xFFFFFFFFL) or i
+            val a = (ipInt shr 24) and 0xFF
+            val b = (ipInt shr 16) and 0xFF
+            val c = (ipInt shr 8) and 0xFF
+            val d = ipInt and 0xFF
+            yield("$a.$b.$c.$d")
+        }
+    }
+
     override fun equals(other: Any?): Boolean =
         other is Cidr && version == other.version && prefixLen == other.prefixLen &&
             network.contentEquals(other.network)

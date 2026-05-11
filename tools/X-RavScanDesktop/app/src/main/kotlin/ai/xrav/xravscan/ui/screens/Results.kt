@@ -1,15 +1,22 @@
 package ai.xrav.xravscan.ui.screens
 
 import ai.xrav.xravscan.AppContainer
+import ai.xrav.xravscan.domain.model.FullScanProgress
+import ai.xrav.xravscan.domain.model.Provider
 import ai.xrav.xravscan.domain.model.ScanResult
 import ai.xrav.xravscan.ui.components.GlassCard
 import ai.xrav.xravscan.ui.components.NeonButton
+import ai.xrav.xravscan.ui.localization.LocalAppStrings
+import ai.xrav.xravscan.ui.theme.GlassStrokeStrong
 import ai.xrav.xravscan.ui.theme.Mint
 import ai.xrav.xravscan.ui.theme.SkyBlue
 import ai.xrav.xravscan.ui.theme.TextPrimary
 import ai.xrav.xravscan.ui.theme.TextSecondary
 import ai.xrav.xravscan.ui.theme.Violet
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,15 +26,22 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Bolt
+import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,19 +56,37 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.launch
 
 @Composable
 fun ResultsScreen(modifier: Modifier = Modifier) {
     val container = remember { AppContainer.get() }
     val scope = rememberCoroutineScope()
+    val strings = LocalAppStrings.current
     var running by remember { mutableStateOf(false) }
 
     val logState = remember { MutableStateFlow<List<String>>(emptyList()) }
     val log by logState.asStateFlow().collectAsState()
     val results by container.scanRepository.observeRecent().collectAsState(initial = emptyList())
+
+    // Full scan state
+    var providers by remember { mutableStateOf<List<Provider>>(emptyList()) }
+    var pickedSlug by remember { mutableStateOf<String?>(null) }
+    var dropdownOpen by remember { mutableStateOf(false) }
+    var fullScanJob by remember { mutableStateOf<Job?>(null) }
+    var fullScanProgress by remember { mutableStateOf<FullScanProgress?>(null) }
+
+    LaunchedEffect(Unit) {
+        providers = container.providerRepository.listAll()
+            .filter { it.enabled && it.cidrCount > 0 }
+        if (pickedSlug == null) {
+            pickedSlug = providers.firstOrNull()?.slug
+        }
+    }
 
     fun appendLog(line: String) {
         logState.value = (logState.value + line).takeLast(40)
@@ -79,6 +111,32 @@ fun ResultsScreen(modifier: Modifier = Modifier) {
         scope.launch { container.scanRepository.clearAll() }
     }
 
+    fun startFullScan() {
+        val slug = pickedSlug ?: return
+        if (fullScanJob?.isActive == true) return
+        fullScanProgress = null
+        fullScanJob = scope.launch {
+            try {
+                container.scanRepository.runFullProviderScan(
+                    providerSlug = slug,
+                    maxIps = 50_000L,
+                ).conflate().collect { p ->
+                    fullScanProgress = p
+                    p.message?.let { appendLog(it) }
+                }
+            } catch (t: Throwable) {
+                appendLog("Full scan failed: ${t.message}")
+            }
+        }
+    }
+
+    fun cancelFullScan() {
+        fullScanJob?.cancel()
+        fullScanJob = null
+        appendLog("Full scan cancelled")
+        fullScanProgress = fullScanProgress?.copy(done = true, cancelled = true)
+    }
+
     Column(modifier = modifier.fillMaxSize()) {
         Text("Results", color = TextPrimary, fontSize = 28.sp, fontWeight = FontWeight.SemiBold)
         Text(
@@ -88,18 +146,19 @@ fun ResultsScreen(modifier: Modifier = Modifier) {
         )
         Spacer(Modifier.height(20.dp))
 
+        // Quick scan card
         GlassCard(modifier = Modifier.fillMaxWidth()) {
             Column {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     NeonButton(
-                        text = "Quick scan",
+                        text = strings.actionQuickScan,
                         accent = Violet,
                         leadingIcon = Icons.Outlined.Bolt,
                         enabled = !running,
                         onClick = ::launchScan,
                     )
                     NeonButton(
-                        text = "Clear results",
+                        text = strings.actionClearResults,
                         accent = TextSecondary,
                         leadingIcon = Icons.Outlined.Delete,
                         enabled = !running && results.isNotEmpty(),
@@ -135,6 +194,26 @@ fun ResultsScreen(modifier: Modifier = Modifier) {
             }
         }
 
+        Spacer(Modifier.height(14.dp))
+
+        // Full scan card
+        FullScanCard(
+            providers = providers,
+            pickedSlug = pickedSlug,
+            dropdownOpen = dropdownOpen,
+            running = fullScanJob?.isActive == true,
+            progress = fullScanProgress,
+            onPick = { slug ->
+                pickedSlug = slug
+                dropdownOpen = false
+            },
+            onToggleDropdown = { dropdownOpen = !dropdownOpen },
+            onCloseDropdown = { dropdownOpen = false },
+            onStart = ::startFullScan,
+            onCancel = ::cancelFullScan,
+            onDismiss = { fullScanProgress = null },
+        )
+
         Spacer(Modifier.height(18.dp))
 
         Text(
@@ -159,6 +238,168 @@ fun ResultsScreen(modifier: Modifier = Modifier) {
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 items(results, key = { it.id }) { ResultRow(it) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FullScanCard(
+    providers: List<Provider>,
+    pickedSlug: String?,
+    dropdownOpen: Boolean,
+    running: Boolean,
+    progress: FullScanProgress?,
+    onPick: (String) -> Unit,
+    onToggleDropdown: () -> Unit,
+    onCloseDropdown: () -> Unit,
+    onStart: () -> Unit,
+    onCancel: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val strings = LocalAppStrings.current
+    val picked = providers.firstOrNull { it.slug == pickedSlug }
+
+    GlassCard(modifier = Modifier.fillMaxWidth()) {
+        Column {
+            Text(
+                strings.fullScanTitle,
+                color = TextPrimary,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                strings.fullScanSubtitle,
+                color = TextSecondary,
+                fontSize = 12.sp,
+            )
+            Spacer(Modifier.height(12.dp))
+
+            // Dropdown
+            Box {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(Color.White.copy(alpha = 0.04f))
+                        .border(BorderStroke(1.dp, GlassStrokeStrong), RoundedCornerShape(14.dp))
+                        .clickable(enabled = !running) { onToggleDropdown() }
+                        .padding(horizontal = 14.dp, vertical = 12.dp),
+                ) {
+                    val label = picked?.let { "${it.name} · ${it.cidrCount} CIDR" }
+                        ?: strings.fullScanPick
+                    Text(label, color = TextPrimary, fontSize = 13.sp)
+                }
+                DropdownMenu(
+                    expanded = dropdownOpen,
+                    onDismissRequest = onCloseDropdown,
+                ) {
+                    if (providers.isEmpty()) {
+                        DropdownMenuItem(
+                            text = { Text(strings.fullScanNoCidr, color = TextSecondary) },
+                            onClick = onCloseDropdown,
+                        )
+                    } else {
+                        for (p in providers) {
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        "${p.name} · ${p.cidrCount} CIDR",
+                                        color = TextPrimary,
+                                    )
+                                },
+                                onClick = { onPick(p.slug) },
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                NeonButton(
+                    text = strings.fullScanStart,
+                    accent = Violet,
+                    leadingIcon = Icons.Outlined.PlayArrow,
+                    enabled = !running && picked != null,
+                    onClick = onStart,
+                )
+                if (running) {
+                    NeonButton(
+                        text = strings.fullScanCancel,
+                        accent = Color(0xFFFF6B6B),
+                        leadingIcon = Icons.Outlined.Cancel,
+                        enabled = true,
+                        onClick = onCancel,
+                    )
+                }
+            }
+
+            if (progress != null) {
+                Spacer(Modifier.height(12.dp))
+                FullScanProgressView(progress = progress, onDismiss = onDismiss)
+            }
+        }
+    }
+}
+
+@Composable
+private fun FullScanProgressView(
+    progress: FullScanProgress,
+    onDismiss: () -> Unit,
+) {
+    val strings = LocalAppStrings.current
+    val barColor: Color = when {
+        progress.cancelled -> Color(0xFFFF6B6B)
+        progress.done -> Mint
+        else -> Violet
+    }
+    Column {
+        LinearProgressIndicator(
+            progress = { progress.percent.coerceIn(0f, 1f) },
+            modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
+            color = barColor,
+            trackColor = Color.White.copy(alpha = 0.08f),
+        )
+        Spacer(Modifier.height(8.dp))
+        val label = buildString {
+            append(progress.providerName)
+            append(" · ")
+            append(progress.ipsScanned)
+            append(" / ")
+            append(progress.ipsTotal)
+            progress.currentCidr?.let {
+                append(" · ")
+                append(it)
+            }
+        }
+        Text(label, color = TextPrimary, fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+        if (progress.message != null) {
+            Spacer(Modifier.height(4.dp))
+            Text(progress.message, color = TextSecondary, fontSize = 11.sp)
+        }
+        if (progress.done) {
+            Spacer(Modifier.height(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    "${progress.hits} hits",
+                    color = Mint,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Spacer(Modifier.width(12.dp))
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color.White.copy(alpha = 0.06f))
+                        .clickable { onDismiss() }
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                ) {
+                    Text(strings.fullScanDismiss, color = TextSecondary, fontSize = 11.sp)
+                }
             }
         }
     }
