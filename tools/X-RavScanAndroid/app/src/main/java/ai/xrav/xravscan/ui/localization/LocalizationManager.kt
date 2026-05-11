@@ -2,8 +2,9 @@ package ai.xrav.xravscan.ui.localization
 
 import ai.xrav.xravscan.data.local.Preferences
 import android.content.Context
+import android.content.ContextWrapper
 import android.content.res.Configuration
-import androidx.appcompat.app.AppCompatDelegate
+import android.content.res.Resources
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
@@ -12,7 +13,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.core.os.LocaleListCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.Locale
 import javax.inject.Inject
@@ -38,13 +38,16 @@ data class AppLocale(val tag: String?) {
 /**
  * In-process locale manager. Holds the active [AppLocale] in a Flow so
  * Compose can react to changes instantly without recreating the Activity
- * (the Manifest already declares `configChanges=locale`, so the platform
- * locale update from [AppCompatDelegate.setApplicationLocales] is silent
- * for us).
+ * (the Manifest already declares `configChanges=locale`).
  *
  * The single source of truth on the Compose side is [LocalAppLocale];
  * UI code should read it via `LocalAppLocale.current` rather than
  * touching the manager directly.
+ *
+ * NOTE: We deliberately do *not* call `AppCompatDelegate.setApplicationLocales`
+ * here — our theme is not an AppCompat theme, and the platform-level
+ * locale isn't required for Compose `stringResource()` to honour our
+ * choice. The CompositionLocal override below is enough.
  */
 @Singleton
 class LocalizationManager @Inject constructor(
@@ -56,26 +59,16 @@ class LocalizationManager @Inject constructor(
 
     /** Apply the persisted preference at app start. Safe to call before Compose runs. */
     fun applyPersisted() {
-        val tag = preferences.languageTag
-        applyToPlatform(tag)
-        _state.value = AppLocale.ofTag(tag)
+        _state.value = AppLocale.ofTag(preferences.languageTag)
     }
 
     /** Update the active locale. Persists the choice and notifies Compose subscribers. */
     fun setLanguage(tag: String?) {
         preferences.languageTag = tag
-        applyToPlatform(tag)
         _state.value = AppLocale.ofTag(tag)
     }
 
     fun currentTag(): String? = _state.value.tag
-
-    private fun applyToPlatform(tag: String?) {
-        AppCompatDelegate.setApplicationLocales(
-            if (tag.isNullOrBlank()) LocaleListCompat.getEmptyLocaleList()
-            else LocaleListCompat.forLanguageTags(tag),
-        )
-    }
 }
 
 /**
@@ -95,15 +88,34 @@ val LocalAppLocale = compositionLocalOf<AppLocaleController> {
 }
 
 /**
+ * [ContextWrapper] that keeps the chain to the *original* Activity intact
+ * (so consumers like [androidx.hilt.navigation.HiltViewModelFactory.findActivity]
+ * still find the host Activity through `getBaseContext()`) while serving
+ * locale-overridden [Resources] from [getResources].
+ *
+ * `Context.createConfigurationContext(...)` returns a fresh `ContextImpl`
+ * that is **not** a `ContextWrapper` — using it as `LocalContext`
+ * therefore breaks every API that walks up the wrapper chain looking
+ * for an Activity. This wrapper avoids that pitfall.
+ */
+private class LocalizedContextWrapper(
+    base: Context,
+    private val localizedResources: Resources,
+) : ContextWrapper(base) {
+    override fun getResources(): Resources = localizedResources
+}
+
+/**
  * Bridges [LocalizationManager] (Hilt singleton) into the Compose tree.
  *
  * Wraps content in three CompositionLocals:
  *   1. [LocalAppLocale]      — UI-only access object
  *   2. [LocalConfiguration]  — override carrying the requested locale
- *   3. [LocalContext]        — context whose `Resources` resolve via the
- *      requested locale, so every existing `stringResource(R.string.foo)`
- *      call instantly re-reads from `values-XX/strings.xml` when the
- *      user picks a new language.
+ *      (drives Compose recomposition of `stringResource()` callers)
+ *   3. [LocalContext]        — a [LocalizedContextWrapper] whose
+ *      `getResources()` resolves via the requested locale, so every
+ *      existing `stringResource(R.string.foo)` call instantly re-reads
+ *      from `values-XX/strings.xml` when the user picks a new language.
  */
 @Composable
 fun ProvideAppLocale(
@@ -132,14 +144,21 @@ fun ProvideAppLocale(
             setLayoutDirection(targetLocale)
         }
     }
-    val newContext = remember(baseContext, targetLocale) {
-        baseContext.createConfigurationContext(newConfig)
+    // Build locale-aware Resources from `createConfigurationContext`,
+    // but only consume the Resources — never the Context itself. We
+    // then re-wrap the *original* (Activity) context so Hilt can still
+    // find the Activity through ContextWrapper.getBaseContext().
+    val localizedResources = remember(baseContext, targetLocale) {
+        baseContext.createConfigurationContext(newConfig).resources
+    }
+    val localizedContext = remember(baseContext, localizedResources) {
+        LocalizedContextWrapper(baseContext, localizedResources)
     }
 
     CompositionLocalProvider(
         LocalAppLocale provides controller,
         LocalConfiguration provides newConfig,
-        LocalContext provides newContext,
+        LocalContext provides localizedContext,
     ) {
         content()
     }
