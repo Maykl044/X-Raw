@@ -1,8 +1,10 @@
 package ai.xrav.xravscan.ui.screens
 
 import ai.xrav.xravscan.AppContainer
+import ai.xrav.xravscan.data.repository.DiscoveryRepository
 import ai.xrav.xravscan.domain.model.Discovery
 import ai.xrav.xravscan.ui.components.GlassCard
+import ai.xrav.xravscan.ui.localization.LocalAppStrings
 import ai.xrav.xravscan.ui.components.NeonButton
 import ai.xrav.xravscan.ui.theme.Mint
 import ai.xrav.xravscan.ui.theme.SkyBlue
@@ -48,6 +50,14 @@ import kotlinx.coroutines.launch
 fun DiscoveryScreen(modifier: Modifier = Modifier) {
     val container = remember { AppContainer.get() }
     val scope = rememberCoroutineScope()
+    val strings = LocalAppStrings.current
+    val messages = remember(strings.tag) {
+        DiscoveryRepository.Messages(
+            bunnyLoadingViaApi = strings.bunnyLoadingViaApi,
+            bunnyReceivedGrouped = strings.bunnyReceivedGrouped,
+            bunnyFallbackUsed = strings.bunnyFallbackUsed,
+        )
+    }
 
     var running by remember { mutableStateOf(false) }
     val logState = remember { MutableStateFlow<List<String>>(emptyList()) }
@@ -65,7 +75,7 @@ fun DiscoveryScreen(modifier: Modifier = Modifier) {
         logState.value = emptyList()
         scope.launch {
             try {
-                container.discoveryRepository.runSmartAppend { appendLog(it) }
+                container.discoveryRepository.runSmartAppend(messages) { appendLog(it) }
             } catch (t: Throwable) {
                 appendLog("Smart Append failed: ${t.message}")
             } finally {

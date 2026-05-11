@@ -1,6 +1,7 @@
 package ai.xrav.xravscan.data.repository
 
 import ai.xrav.xravscan.data.remote.BgpViewService
+import ai.xrav.xravscan.data.remote.BunnyRangeProvider
 import ai.xrav.xravscan.db.XRavScanDb
 import ai.xrav.xravscan.domain.model.Discovery
 import ai.xrav.xravscan.domain.model.SmartAppendReport
@@ -29,9 +30,27 @@ import org.slf4j.LoggerFactory
 class DiscoveryRepository(
     private val db: XRavScanDb,
     private val bgpView: BgpViewService,
+    private val bunny: BunnyRangeProvider,
 ) {
     private val log = LoggerFactory.getLogger("XRavScan.Discovery")
     private val q get() = db.xRavScanDbQueries
+
+    /**
+     * Localizable status messages used during a Smart Append run. The
+     * repository emits semantic events and the UI supplies a [Messages]
+     * instance built from the active `AppStrings` so log lines render in
+     * the user's selected language. Defaults are English so any caller
+     * that doesn't care about i18n keeps working unchanged.
+     */
+    data class Messages(
+        val bunnyLoadingViaApi: String = "Loading Bunny CDN ranges via direct API…",
+        val bunnyReceivedGrouped: (Int, Int) -> String = { ips, cidrs ->
+            "Bunny: $ips IPs received, grouped into $cidrs CIDRs"
+        },
+        val bunnyFallbackUsed: (Int) -> String = { n ->
+            "Bunny CDN: fell back to built-in list ($n CIDR)"
+        },
+    )
 
     fun observeAll(): Flow<List<Discovery>> =
         q.allDiscoveries().asFlow().mapToList(Dispatchers.IO).map { rows ->
@@ -51,7 +70,10 @@ class DiscoveryRepository(
      * prefixes land in the `discoveries` table with `applied = 0`. Each
      * provider produces one terse iOS-style log line via [onLog].
      */
-    suspend fun runSmartAppend(onLog: suspend (String) -> Unit): List<SmartAppendReport> =
+    suspend fun runSmartAppend(
+        messages: Messages = Messages(),
+        onLog: suspend (String) -> Unit,
+    ): List<SmartAppendReport> =
         withContext(Dispatchers.IO) {
             val providers = q.enabledProviders().executeAsList()
             if (providers.isEmpty()) {
@@ -63,9 +85,13 @@ class DiscoveryRepository(
             coroutineScope {
                 providers.map { row ->
                     async {
-                        val asns = row.asns.split(',')
-                            .mapNotNull { it.trim().toLongOrNull() }
-                        val report = syncProvider(row.id, row.slug, row.name, asns)
+                        val report = if (row.slug.equals("bunny", ignoreCase = true)) {
+                            syncBunny(row.id, row.slug, row.name, messages, onLog)
+                        } else {
+                            val asns = row.asns.split(',')
+                                .mapNotNull { it.trim().toLongOrNull() }
+                            syncProvider(row.id, row.slug, row.name, asns)
+                        }
                         onLog(report.iosLine())
                         report
                     }
@@ -185,6 +211,68 @@ class DiscoveryRepository(
             skipped = outcome.skipped,
             superseded = outcome.superseded.size,
             error = error,
+        )
+    }
+
+    /**
+     * Bunny CDN sync path. BGPView returns essentially nothing for the
+     * Bunny ASN (their edges live on Datacamp parent networks) so we
+     * call the public edge-server list directly and fall back to a
+     * curated hardcoded list if the API is unreachable.
+     */
+    private suspend fun syncBunny(
+        providerId: Long,
+        slug: String,
+        name: String,
+        messages: Messages,
+        onLog: suspend (String) -> Unit,
+    ): SmartAppendReport {
+        onLog(messages.bunnyLoadingViaApi)
+        val result = try {
+            bunny.fetchAll()
+        } catch (t: Throwable) {
+            log.warn("Bunny.fetchAll() threw: {}", t.message)
+            BunnyRangeProvider.Result(
+                cidrs = BunnyRangeProvider.HARDCODED_RANGES,
+                source = BunnyRangeProvider.Source.HARDCODED_FALLBACK,
+                edgeIpCount = 0,
+                fallbackReason = t.message ?: t::class.simpleName ?: "unknown error",
+            )
+        }
+
+        when (result.source) {
+            BunnyRangeProvider.Source.DIRECT_API,
+            BunnyRangeProvider.Source.MIXED -> {
+                onLog(messages.bunnyReceivedGrouped(result.edgeIpCount, result.cidrs.size))
+            }
+            BunnyRangeProvider.Source.HARDCODED_FALLBACK -> {
+                onLog(messages.bunnyFallbackUsed(result.cidrs.size))
+            }
+        }
+
+        if (result.cidrs.isEmpty()) {
+            // Defence in depth — BunnyRangeProvider never returns empty,
+            // but if it ever did we surface the hardcoded list.
+            return SmartAppendReport(slug, name, 0, 0, 0, error = "Bunny: empty CIDR set")
+        }
+
+        val existing = q.cidrsForProvider(providerId).executeAsList()
+        val outcome = smartAppend(existing, result.cidrs)
+
+        if (outcome.added.isNotEmpty()) {
+            val now = System.currentTimeMillis()
+            db.transaction {
+                for (cidr in outcome.added) q.insertDiscovery(slug, cidr, now)
+            }
+        }
+
+        return SmartAppendReport(
+            providerSlug = slug,
+            providerName = name,
+            added = outcome.added.size,
+            skipped = outcome.skipped,
+            superseded = outcome.superseded.size,
+            error = result.fallbackReason?.let { "Bunny fallback: $it" },
         )
     }
 

@@ -3,6 +3,7 @@ package ai.xrav.xravscan
 import ai.xrav.xravscan.data.export.Exporter
 import ai.xrav.xravscan.data.local.DatabaseFactory
 import ai.xrav.xravscan.data.remote.BgpViewService
+import ai.xrav.xravscan.data.remote.BunnyRangeProvider
 import ai.xrav.xravscan.data.repository.DiscoveryRepository
 import ai.xrav.xravscan.data.repository.ProviderRepository
 import ai.xrav.xravscan.data.repository.ScanRepository
@@ -45,12 +46,13 @@ class AppContainer private constructor(
                 report.skipped, report.providers, report.cidrs,
             )
             val bgpView = BgpViewService()
+            val bunny = BunnyRangeProvider()
             val monitor = NetworkMonitor()
             return AppContainer(
                 db = db,
                 bgpViewService = bgpView,
                 providerRepository = ProviderRepository(db),
-                discoveryRepository = DiscoveryRepository(db, bgpView),
+                discoveryRepository = DiscoveryRepository(db, bgpView, bunny),
                 scanRepository = ScanRepository(db, monitor),
                 exporter = Exporter(db),
                 networkMonitor = monitor,

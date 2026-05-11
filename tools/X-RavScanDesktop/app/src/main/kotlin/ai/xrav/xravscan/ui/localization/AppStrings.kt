@@ -67,6 +67,11 @@ data class AppStrings(
     val fullScanPausedVpn: String,
     val fullScanPausedOffline: String,
     val fullScanDismiss: String,
+    val bunnyDirectApiBadge: String,
+    val bunnyLoadingViaApi: String,
+    val bunnyReceivedGrouped: (Int, Int) -> String,
+    val bunnyFallbackUsed: (Int) -> String,
+    val updateUsingDohBypass: String,
 ) {
     companion object {
         val EN = AppStrings(
@@ -117,6 +122,11 @@ data class AppStrings(
             fullScanPausedVpn = "VPN active — Full scan paused.",
             fullScanPausedOffline = "Offline — Full scan paused.",
             fullScanDismiss = "Dismiss",
+            bunnyDirectApiBadge = "Direct API",
+            bunnyLoadingViaApi = "Loading Bunny CDN ranges via direct API…",
+            bunnyReceivedGrouped = { ips, cidrs -> "Bunny: $ips IPs received, grouped into $cidrs CIDRs" },
+            bunnyFallbackUsed = { n -> "Bunny CDN: fell back to built-in list ($n CIDR)" },
+            updateUsingDohBypass = "VPN active — using DoH for update fetches.",
         )
 
         val RU = AppStrings(
@@ -167,6 +177,11 @@ data class AppStrings(
             fullScanPausedVpn = "VPN активен — полный скан на паузе.",
             fullScanPausedOffline = "Нет сети — полный скан на паузе.",
             fullScanDismiss = "Скрыть",
+            bunnyDirectApiBadge = "Прямой API",
+            bunnyLoadingViaApi = "Загрузка диапазонов Bunny CDN через прямой API…",
+            bunnyReceivedGrouped = { ips, cidrs -> "Bunny: получено $ips IP, объединены в $cidrs CIDR" },
+            bunnyFallbackUsed = { n -> "Bunny CDN: fallback на встроенный список ($n CIDR)" },
+            updateUsingDohBypass = "VPN активен — обновление через DoH.",
         )
 
         /** Resolve a tag (`null` = system default) into the matching table. */

@@ -1,8 +1,10 @@
 package ai.xrav.xravscan.ui.screens
 
 import ai.xrav.xravscan.AppContainer
+import ai.xrav.xravscan.data.repository.DiscoveryRepository
 import ai.xrav.xravscan.domain.model.DashboardStats
 import ai.xrav.xravscan.ui.components.GlassCard
+import ai.xrav.xravscan.ui.localization.LocalAppStrings
 import ai.xrav.xravscan.ui.components.NeonButton
 import ai.xrav.xravscan.ui.theme.Mint
 import ai.xrav.xravscan.ui.theme.SkyBlue
@@ -59,6 +61,14 @@ fun DashboardScreen(modifier: Modifier = Modifier) {
     val stats by statsFlow.collectAsState(initial = DashboardStats(0, 0, 0, 0))
 
     val scope = rememberCoroutineScope()
+    val strings = LocalAppStrings.current
+    val bunnyMessages = remember(strings.tag) {
+        DiscoveryRepository.Messages(
+            bunnyLoadingViaApi = strings.bunnyLoadingViaApi,
+            bunnyReceivedGrouped = strings.bunnyReceivedGrouped,
+            bunnyFallbackUsed = strings.bunnyFallbackUsed,
+        )
+    }
     var running by remember { mutableStateOf(false) }
     var runningKind by remember { mutableStateOf("") }
     val logState = remember { MutableStateFlow<List<String>>(emptyList()) }
@@ -91,7 +101,7 @@ fun DashboardScreen(modifier: Modifier = Modifier) {
         logState.value = emptyList()
         scope.launch {
             try {
-                container.discoveryRepository.runSmartAppend { appendLog(it) }
+                container.discoveryRepository.runSmartAppend(bunnyMessages) { appendLog(it) }
             } catch (t: Throwable) {
                 appendLog("Smart Append failed: ${t.message}")
             } finally {

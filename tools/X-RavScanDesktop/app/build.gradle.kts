@@ -38,6 +38,11 @@ dependencies {
     implementation("io.ktor:ktor-serialization-kotlinx-json:3.0.0")
     implementation("io.ktor:ktor-client-logging:3.0.0")
 
+    // Phase G — DNS-over-HTTPS so update fetches keep working when the
+    // system resolver is poisoned / blocked (Cloudflare 1.1.1.1).
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:okhttp-dnsoverhttps:4.12.0")
+
     // Logging
     implementation("org.slf4j:slf4j-api:2.0.16")
     runtimeOnly("org.slf4j:slf4j-simple:2.0.16")

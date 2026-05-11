@@ -2,12 +2,7 @@ package ai.xrav.xravscan.data.remote
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.engine.okhttp.OkHttp
-import io.ktor.client.plugins.HttpTimeout
-import io.ktor.client.plugins.UserAgent
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
-import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -53,24 +48,11 @@ class BgpViewService(
     fun close() = client.close()
 
     companion object {
-        fun defaultClient(): HttpClient = HttpClient(OkHttp) {
-            install(ContentNegotiation) {
-                json(
-                    Json {
-                        ignoreUnknownKeys = true
-                        isLenient = true
-                        explicitNulls = false
-                    },
-                )
-            }
-            install(HttpTimeout) {
-                connectTimeoutMillis = 8_000
-                requestTimeoutMillis = 30_000
-                socketTimeoutMillis = 15_000
-            }
-            install(UserAgent) {
-                agent = "XRavScan-Desktop/1.0 (+https://github.com/Maykl044/X-Raw)"
-            }
-        }
+        /**
+         * Re-uses the shared DoH-backed Ktor client from [UpdateHttpClient]
+         * so BGPView lookups keep working when the system resolver is
+         * blocked / poisoned (the Phase G use case).
+         */
+        fun defaultClient(): HttpClient = UpdateHttpClient.ktor()
     }
 }

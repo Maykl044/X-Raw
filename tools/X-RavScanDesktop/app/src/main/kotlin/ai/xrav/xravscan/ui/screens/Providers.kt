@@ -3,11 +3,14 @@ package ai.xrav.xravscan.ui.screens
 import ai.xrav.xravscan.AppContainer
 import ai.xrav.xravscan.domain.model.Provider
 import ai.xrav.xravscan.ui.components.GlassCard
+import ai.xrav.xravscan.ui.localization.LocalAppStrings
 import ai.xrav.xravscan.ui.theme.GlassStroke
+import ai.xrav.xravscan.ui.theme.Mint
 import ai.xrav.xravscan.ui.theme.SkyBlue
 import ai.xrav.xravscan.ui.theme.TextMuted
 import ai.xrav.xravscan.ui.theme.TextPrimary
 import ai.xrav.xravscan.ui.theme.TextSecondary
+import androidx.compose.foundation.border
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -172,7 +175,13 @@ private fun ProviderRow(
             ProviderDot(provider.color)
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(provider.name, color = TextPrimary, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(provider.name, color = TextPrimary, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                    if (provider.slug.equals("bunny", ignoreCase = true)) {
+                        Spacer(Modifier.width(8.dp))
+                        DirectApiBadge()
+                    }
+                }
                 Text(
                     text = if (provider.asns.isEmpty()) provider.slug
                     else "AS " + provider.asns.joinToString(", "),
@@ -199,6 +208,33 @@ private fun ProviderRow(
                 ),
             )
         }
+    }
+}
+
+/**
+ * Compact "Direct API" pill shown next to Bunny CDN. Mirrors the
+ * Android badge — Mint accent, 0.5dp hairline, 18% fill.
+ */
+@Composable
+private fun DirectApiBadge() {
+    val strings = LocalAppStrings.current
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(Mint.copy(alpha = 0.18f))
+            .border(
+                width = 0.5.dp,
+                color = Mint.copy(alpha = 0.45f),
+                shape = RoundedCornerShape(8.dp),
+            )
+            .padding(horizontal = 8.dp, vertical = 2.dp),
+    ) {
+        Text(
+            text = strings.bunnyDirectApiBadge,
+            color = Mint,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 10.sp,
+        )
     }
 }
 
