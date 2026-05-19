@@ -72,6 +72,30 @@ class IpStreamIterator private constructor(
     fun currentCidr(): String? = cidrs.getOrNull(cidrIndex)
 
     /**
+     * `true` if [next] would return a non-null value (i.e. at least one
+     * more host is reachable in the remaining CIDR span). Loops past
+     * IPv6 / junk entries the same way [next] does, but without mutating
+     * the cursor — the caller can use this as the canonical
+     * `while (hasNext())` loop guard for an uncapped Phase J scan.
+     */
+    fun hasNext(): Boolean {
+        var probeIndex = cidrIndex
+        var probeOffset = ipOffset
+        var probeParsed: Parsed? = currentParsed
+        while (probeIndex < cidrs.size) {
+            val parsed = probeParsed ?: Parsed.parse(cidrs[probeIndex])
+            if (parsed == null || probeOffset >= parsed.hostCount) {
+                probeIndex += 1
+                probeOffset = 0L
+                probeParsed = null
+                continue
+            }
+            return true
+        }
+        return false
+    }
+
+    /**
      * Pure-math next IPv4 host string, or `null` once the walk is done.
      * Bumps the cursor before returning. Skips IPv6 entries, unparseable
      * strings, and the network / broadcast addresses of `/8 … /30`.

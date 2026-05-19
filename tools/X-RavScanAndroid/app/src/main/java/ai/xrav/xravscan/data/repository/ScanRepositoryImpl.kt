@@ -52,7 +52,10 @@ class ScanRepositoryImpl @Inject constructor(
         withContext(Dispatchers.IO) {
             val row = fullScanStateDao.stateFor(providerSlug) ?: return@withContext null
             val cidrs = row.cidrSnapshot.split('\n').filter { it.isNotBlank() }
-            val total = sumIpv4HostCount(cidrs).coerceAtMost(row.maxIps)
+            // Phase J — paused-scan card shows the full uncapped total
+            // so the Resume button picks up exactly where the user left
+            // off (e.g. 4.5M / 6.6M for Cloudflare).
+            val total = sumIpv4HostCount(cidrs)
             ScanRepository.PausedScan(
                 providerSlug = row.providerSlug,
                 cidrIndex = row.cidrIndex,
@@ -211,7 +214,11 @@ class ScanRepositoryImpl @Inject constructor(
             if (persisted != null) fullScanStateDao.clear(providerSlug)
         }
 
-        val total = sumIpv4HostCount(rangesRaw).coerceAtMost(maxIps).coerceAtLeast(0L)
+        // Phase J — uncapped. Total = sum of every IPv4 host in every
+        // CIDR, with no clamping against an artificial ceiling. Cloudflare
+        // resolves to ~6 684 672 IPs end-to-end and the UI progress bar
+        // uses this exact figure as its dynamic maximum.
+        val total = sumIpv4HostCount(rangesRaw).coerceAtLeast(0L)
 
         if (rangesRaw.isEmpty() || total == 0L) {
             send(
@@ -289,10 +296,14 @@ class ScanRepositoryImpl @Inject constructor(
         // suspends when the channel is full, giving us strict reactive
         // backpressure: the producer never gets ahead of the workers by
         // more than IP_CHANNEL_CAPACITY items.
+        // Phase J — true stream condition. The producer ONLY stops when
+        // the iterator runs out of IPs (`hasNext()` returns false) or the
+        // surrounding coroutine is cancelled (Pause/Discard/screen exit).
+        // No `scanned.get() >= maxIps` guard — every IP in every CIDR
+        // makes it through the channel before the producer closes it.
         val producer = launch {
             try {
-                while (isActive) {
-                    if (scanned.get() >= maxIps) break
+                while (isActive && iterator.hasNext()) {
                     val ip = iterator.next() ?: break
                     val currentRaw = iterator.currentCidr() ?: continue
                     lastSeenCidr.set(currentRaw)
@@ -306,10 +317,13 @@ class ScanRepositoryImpl @Inject constructor(
 
         val workers = (1..pool).map {
             launch {
+                // Phase J — uncapped worker. Drains the channel until the
+                // producer closes it; no per-IP ceiling, no cap-based
+                // early continue. Pause = surrounding job cancel = the
+                // for-loop returns naturally and the cursor is flushed.
                 for (handoff in ipChannel) {
-                    if (scanned.get() >= maxIps) continue
                     val result = probeOne(providerSlug, handoff.ip, 443)
-                    val current = scanned.incrementAndGet()
+                    scanned.incrementAndGet()
                     lastSeenCidr.set(handoff.cidr)
                     if (result != null) {
                         pending += result
@@ -329,9 +343,6 @@ class ScanRepositoryImpl @Inject constructor(
                                     .onFailure { Log.w(TAG, "batch flush failed", it) }
                             }
                         }
-                    }
-                    if (current >= maxIps) {
-                        ipChannel.close()
                     }
                     val now = System.currentTimeMillis()
                     val prevEmit = lastEmittedAt.get()
@@ -376,7 +387,6 @@ class ScanRepositoryImpl @Inject constructor(
         }
 
         val cancelled = !currentCoroutineContext().isActive
-        val reachedCap = scanned.get() >= maxIps
         val message: String
         if (cancelled) {
             // Producer / workers were cancelled mid-flight: snapshot the
@@ -384,18 +394,17 @@ class ScanRepositoryImpl @Inject constructor(
             persistCursor()
             message = "Full scan paused — ${scanned.get()} of $total IP(s) probed, ${hits.get()} reachable. Tap Resume to continue."
         } else {
+            // Phase J — clean completion only when the iterator was
+            // mathematically exhausted (no artificial cap). Clear the
+            // cursor so the next launch starts fresh from CIDR #0.
             fullScanStateDao.clear(providerSlug)
-            message = if (reachedCap) {
-                "Full scan complete — ${scanned.get().coerceAtMost(total)} IP(s) probed, ${hits.get()} reachable"
-            } else {
-                "Full scan complete — ${scanned.get().coerceAtMost(total)} IP(s) probed, ${hits.get()} reachable"
-            }
+            message = "Full scan complete — ${scanned.get()} of $total IP(s) probed, ${hits.get()} reachable"
         }
         send(
             FullScanProgress(
                 providerSlug = providerSlug,
                 providerName = provider.name,
-                ipsScanned = scanned.get().coerceAtMost(total),
+                ipsScanned = scanned.get(),
                 ipsTotal = total,
                 hits = hits.get(),
                 currentCidr = lastSeenCidr.get().takeIf { cancelled },

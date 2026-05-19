@@ -32,13 +32,16 @@ interface ScanRepository {
      *  - emissions on the returned [Flow] are conflated by the caller
      *    (Compose), so a hot UI never blocks the producer.
      *
-     * The scan stops at [maxIps] total probes — the default 50 000 is a
-     * sane "looks like a real run" upper bound. Pass [Long.MAX_VALUE] to
-     * truly attempt every IP (be aware: Cloudflare alone is 162M IPs).
+     * Phase J — uncapped. The default [maxIps] is [Long.MAX_VALUE] so the
+     * scan runs through every IP in every CIDR until the iterator is
+     * mathematically exhausted (e.g. ~6 684 672 IPs for the full
+     * Cloudflare prefix list). Pause/Resume freezes the bit-cursor; the
+     * worker pool sees only ~1024 IPs live in volatile memory at any
+     * moment, so the heap stays flat regardless of total scan size.
      */
     fun runFullProviderScan(
         providerSlug: String,
-        maxIps: Long = 50_000L,
+        maxIps: Long = Long.MAX_VALUE,
         concurrency: Int = 64,
         resume: Boolean = false,
     ): Flow<FullScanProgress>

@@ -88,16 +88,17 @@ class ResultsViewModel @Inject constructor(
 
     fun runFullProviderScan(
         providerSlug: String,
-        maxIps: Long = 50_000L,
         resume: Boolean = false,
     ) {
         if (fullScanJob?.isActive == true) return
         fullScanProgress.value = null
         fullScanJob = viewModelScope.launch {
             try {
+                // Phase J — no maxIps argument. The repository default is
+                // Long.MAX_VALUE so the iterator runs every IP in every
+                // CIDR until exhausted (e.g. all ~6.6M Cloudflare hosts).
                 repo.runFullProviderScan(
                     providerSlug = providerSlug,
-                    maxIps = maxIps,
                     concurrency = 64,
                     resume = resume,
                 ).conflate().collect { progress ->
