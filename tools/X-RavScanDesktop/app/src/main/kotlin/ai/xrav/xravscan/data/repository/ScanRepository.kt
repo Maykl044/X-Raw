@@ -4,6 +4,7 @@ import ai.xrav.xravscan.db.XRavScanDb
 import ai.xrav.xravscan.domain.model.FullScanProgress
 import ai.xrav.xravscan.domain.model.ScanResult
 import ai.xrav.xravscan.domain.util.Cidr
+import ai.xrav.xravscan.domain.util.IpStreamIterator
 import ai.xrav.xravscan.ui.network.NetworkMonitor
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
@@ -105,6 +106,62 @@ class ScanRepository(
         withContext(Dispatchers.IO) { q.clearScanResults() }
     }
 
+    /**
+     * Phase I — snapshot of a previously-paused Full Provider Scan, as
+     * persisted in the `full_scan_state` SQLite table. Exposed so the
+     * UI can render a Resume/Discard card before the scan is
+     * re-launched.
+     */
+    data class PausedScan(
+        val providerSlug: String,
+        val cidrIndex: Int,
+        val ipOffset: Long,
+        val ipsScanned: Long,
+        val ipsTotal: Long,
+        val hits: Int,
+        val maxIps: Long,
+        val concurrency: Int,
+    )
+
+    suspend fun pausedScanFor(providerSlug: String): PausedScan? =
+        withContext(Dispatchers.IO) {
+            val row = q.fullScanStateFor(providerSlug).executeAsOneOrNull() ?: return@withContext null
+            val cidrList = row.cidrSnapshot.split('\n').filter { it.isNotBlank() }
+            val total = sumIpv4HostCount(cidrList).coerceAtMost(row.maxIps).coerceAtLeast(0L)
+            PausedScan(
+                providerSlug = row.providerSlug,
+                cidrIndex = row.cidrIndex.toInt(),
+                ipOffset = row.ipOffset,
+                ipsScanned = row.ipsScanned,
+                ipsTotal = total,
+                hits = row.hits.toInt(),
+                maxIps = row.maxIps,
+                concurrency = row.concurrency.toInt(),
+            )
+        }
+
+    suspend fun discardPausedScan(providerSlug: String) {
+        withContext(Dispatchers.IO) { q.clearFullScanState(providerSlug) }
+    }
+
+    /** Sum the IPv4 host count of every CIDR string, skipping IPv6/junk. */
+    private fun sumIpv4HostCount(cidrs: List<String>): Long {
+        var total = 0L
+        for (raw in cidrs) {
+            val net = Cidr.parse(raw) ?: continue
+            if (net.version != 4 || net.prefixLen < 8 || net.prefixLen > 32) continue
+            val hostBits = 32 - net.prefixLen
+            val span = 1L shl hostBits
+            total += when (net.prefixLen) {
+                in 8..30 -> span - 2
+                31 -> 2L
+                32 -> 1L
+                else -> 0L
+            }
+        }
+        return total
+    }
+
     // ------------------------------------------------------------------
     // full provider scan
     // ------------------------------------------------------------------
@@ -133,6 +190,7 @@ class ScanRepository(
         providerSlug: String,
         maxIps: Long = 50_000L,
         concurrency: Int = 64,
+        resume: Boolean = false,
     ): Flow<FullScanProgress> = channelFlow {
         val providerRow = withContext(Dispatchers.IO) {
             q.providerBySlug(providerSlug).executeAsOneOrNull()
@@ -180,12 +238,39 @@ class ScanRepository(
             return@channelFlow
         }
 
-        val cidrs = withContext(Dispatchers.IO) {
-            q.cidrsForProvider(providerRow.id).executeAsList()
-                .mapNotNull { Cidr.parse(it) }
-                .filter { it.version == 4 && it.prefixLen in 8..32 }
+        // Phase I — iterator + cursor. Resume reads the persisted CIDR
+        // snapshot so a provider edit between Pause and Resume cannot
+        // derail the position. A fresh run snapshots the current CIDR
+        // list and clears any stale cursor.
+        val persisted = withContext(Dispatchers.IO) {
+            q.fullScanStateFor(providerSlug).executeAsOneOrNull()
         }
-        if (cidrs.isEmpty()) {
+        val rangesRaw: List<String>
+        var startCidrIndex = 0
+        var startIpOffset = 0L
+        var carriedScanned = 0L
+        var carriedHits = 0
+        if (resume && persisted != null) {
+            rangesRaw = persisted.cidrSnapshot.split('\n').filter { it.isNotBlank() }
+            startCidrIndex = persisted.cidrIndex.toInt()
+            startIpOffset = persisted.ipOffset
+            carriedScanned = persisted.ipsScanned
+            carriedHits = persisted.hits.toInt()
+        } else {
+            rangesRaw = withContext(Dispatchers.IO) {
+                q.cidrsForProvider(providerRow.id).executeAsList()
+                    .filter { raw ->
+                        val parsed = Cidr.parse(raw) ?: return@filter false
+                        parsed.version == 4 && parsed.prefixLen in 8..32
+                    }
+            }
+            if (persisted != null) {
+                withContext(Dispatchers.IO) { q.clearFullScanState(providerSlug) }
+            }
+        }
+
+        val plannedTotal = sumIpv4HostCount(rangesRaw).coerceAtMost(maxIps).coerceAtLeast(0L)
+        if (rangesRaw.isEmpty() || plannedTotal == 0L) {
             send(
                 FullScanProgress(
                     providerSlug = providerSlug,
@@ -201,31 +286,62 @@ class ScanRepository(
             return@channelFlow
         }
 
-        val rawTotal = cidrs.sumOf { it.size }
-        val plannedTotal = minOf(rawTotal, maxIps).coerceAtLeast(0L)
-
         send(
             FullScanProgress(
                 providerSlug = providerSlug,
                 providerName = providerName,
-                ipsScanned = 0,
+                ipsScanned = carriedScanned,
                 ipsTotal = plannedTotal,
-                hits = 0,
-                currentCidr = cidrs.firstOrNull()?.canonical,
-                message = "Full scan starting — ${cidrs.size} CIDR(s), target $plannedTotal IP(s)",
+                hits = carriedHits,
+                currentCidr = rangesRaw.getOrNull(startCidrIndex),
+                message = if (resume && persisted != null) {
+                    "Resuming Full scan — ${rangesRaw.size} CIDR(s), $carriedScanned / $plannedTotal IP(s) already probed"
+                } else {
+                    "Full scan starting — ${rangesRaw.size} CIDR(s), target $plannedTotal IP(s)"
+                },
             ),
         )
 
         val pool = concurrency.coerceIn(1, 256)
-        val workQueue = Channel<Pair<String, String>>(capacity = pool * 4)
-        val scanned = AtomicLong(0)
-        val pushed = AtomicLong(0)
-        val hits = AtomicInteger(0)
-        val currentCidr = AtomicLong(0) // monotonic counter into cidrs list
+        val iterator = if (resume && persisted != null) {
+            IpStreamIterator.resume(rangesRaw, startCidrIndex, startIpOffset)
+        } else {
+            IpStreamIterator.fromStart(rangesRaw)
+        }
+        // Bounded queue — max 1024 live IPs in flight regardless of scan size.
+        val workQueue = Channel<IpHandoff>(capacity = IP_CHANNEL_CAPACITY)
+        val scanned = AtomicLong(carriedScanned)
+        val hits = AtomicInteger(carriedHits)
         val lastEmit = AtomicLong(0)
+        val lastPersist = AtomicLong(0)
+        val lastSeenCidr = java.util.concurrent.atomic.AtomicReference<String?>(
+            rangesRaw.getOrNull(startCidrIndex),
+        )
+        val lastCursor = java.util.concurrent.atomic.AtomicReference(
+            IpStreamIterator.Cursor(startCidrIndex, startIpOffset),
+        )
         val pendingHits = mutableListOf<Probe>()
         val pendingLock = Object()
         var cancelledFlag = false
+
+        suspend fun persistCursor() {
+            val cur = lastCursor.get()
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    q.upsertFullScanState(
+                        providerSlug = providerSlug,
+                        cidrIndex = cur.cidrIndex.toLong(),
+                        ipOffset = cur.ipOffset,
+                        ipsScanned = scanned.get(),
+                        hits = hits.get().toLong(),
+                        maxIps = maxIps,
+                        concurrency = pool.toLong(),
+                        cidrSnapshot = rangesRaw.joinToString("\n"),
+                        updatedAt = System.currentTimeMillis(),
+                    )
+                }.onFailure { log.warn("cursor persist failed: ${it.message}") }
+            }
+        }
 
         suspend fun maybeEmit(force: Boolean = false) {
             val now = System.currentTimeMillis()
@@ -233,7 +349,6 @@ class ScanRepository(
             if (!force && now - prev < EMIT_INTERVAL_MS) return
             if (!force && !lastEmit.compareAndSet(prev, now)) return
             if (force) lastEmit.set(now)
-            val idx = currentCidr.get().toInt().coerceIn(0, cidrs.lastIndex)
             send(
                 FullScanProgress(
                     providerSlug = providerSlug,
@@ -241,7 +356,7 @@ class ScanRepository(
                     ipsScanned = scanned.get(),
                     ipsTotal = plannedTotal,
                     hits = hits.get(),
-                    currentCidr = cidrs[idx].canonical,
+                    currentCidr = lastSeenCidr.get(),
                 ),
             )
         }
@@ -270,35 +385,50 @@ class ScanRepository(
             }
         }
 
+        suspend fun maybePersist() {
+            val now = System.currentTimeMillis()
+            val prev = lastPersist.get()
+            if (now - prev < PERSIST_INTERVAL_MS) return
+            if (!lastPersist.compareAndSet(prev, now)) return
+            persistCursor()
+        }
+
         coroutineScope {
-            // Producer: lazily walks every IP and feeds the bounded channel.
+            // Producer — pumps IpStreamIterator into the bounded channel.
+            // `send` suspends when the channel is full, giving us strict
+            // backpressure: the iterator never gets ahead of the workers
+            // by more than IP_CHANNEL_CAPACITY items.
             val producer = launch(Dispatchers.Default) {
-                outer@ for ((idx, cidr) in cidrs.withIndex()) {
-                    currentCidr.set(idx.toLong())
-                    for (ip in cidr.expandIpv4()) {
-                        if (!isActive) break@outer
-                        if (pushed.get() >= plannedTotal) break@outer
-                        workQueue.send(ip to cidr.canonical)
-                        pushed.incrementAndGet()
+                try {
+                    while (isActive) {
+                        if (scanned.get() >= maxIps) break
+                        val ip = iterator.next() ?: break
+                        val currentRaw = iterator.currentCidr() ?: continue
+                        lastSeenCidr.set(currentRaw)
+                        lastCursor.set(iterator.cursor())
+                        workQueue.send(IpHandoff(ip = ip, cidr = currentRaw))
                     }
+                } finally {
+                    workQueue.close()
                 }
-                workQueue.close()
             }
 
-            // Workers: drain channel, probe, buffer hits, emit progress.
             val workers = List(pool) {
                 async(Dispatchers.IO) {
-                    for ((ip, _) in workQueue) {
+                    for (handoff in workQueue) {
                         if (!isActive) break
-                        val probe = runCatching { probeOne(providerSlug, ip, 443) }
+                        if (scanned.get() >= maxIps) continue
+                        val probe = runCatching { probeOne(providerSlug, handoff.ip, 443) }
                             .getOrNull()
                         scanned.incrementAndGet()
+                        lastSeenCidr.set(handoff.cidr)
                         if (probe != null) {
                             hits.incrementAndGet()
                             synchronized(pendingLock) { pendingHits += probe }
                             flushBatch(force = false)
                         }
                         maybeEmit(force = false)
+                        maybePersist()
                     }
                 }
             }
@@ -315,10 +445,14 @@ class ScanRepository(
             }
         }
 
-        val finalMessage = if (cancelledFlag) {
-            "Full scan cancelled — ${scanned.get()} of $plannedTotal IP(s) probed, ${hits.get()} reachable"
+        val finalMessage: String
+        if (cancelledFlag) {
+            // Snapshot the cursor so the user can Resume from exactly here.
+            persistCursor()
+            finalMessage = "Full scan paused — ${scanned.get()} of $plannedTotal IP(s) probed, ${hits.get()} reachable. Click Resume to continue."
         } else {
-            "Full scan complete — ${scanned.get()} IP(s) probed, ${hits.get()} reachable"
+            withContext(Dispatchers.IO) { q.clearFullScanState(providerSlug) }
+            finalMessage = "Full scan complete — ${scanned.get()} IP(s) probed, ${hits.get()} reachable"
         }
         send(
             FullScanProgress(
@@ -327,13 +461,15 @@ class ScanRepository(
                 ipsScanned = scanned.get(),
                 ipsTotal = plannedTotal,
                 hits = hits.get(),
-                currentCidr = cidrs.lastOrNull()?.canonical,
+                currentCidr = lastSeenCidr.get().takeIf { cancelledFlag },
                 message = finalMessage,
                 done = true,
                 cancelled = cancelledFlag,
             ),
         )
     }.flowOn(Dispatchers.IO)
+
+    private data class IpHandoff(val ip: String, val cidr: String)
 
     // ------------------------------------------------------------------
     // sampling
@@ -443,5 +579,16 @@ class ScanRepository(
 
         /** Minimum gap between progress emissions, in ms. */
         const val EMIT_INTERVAL_MS = 250L
+
+        /**
+         * Hard upper bound on live IP-handoffs sitting between the
+         * producer and the worker pool. With 1024 entries × ~24 bytes
+         * each ≈ 24 KB worst-case — flat regardless of whether the
+         * iterator is walking 50 000 or 50 000 000 IPs. Phase I.
+         */
+        const val IP_CHANNEL_CAPACITY = 1024
+
+        /** Minimum interval between Pause-cursor writes to SQLite. */
+        const val PERSIST_INTERVAL_MS = 250L
     }
 }

@@ -79,6 +79,19 @@ fun ResultsScreen(modifier: Modifier = Modifier) {
     var dropdownOpen by remember { mutableStateOf(false) }
     var fullScanJob by remember { mutableStateOf<Job?>(null) }
     var fullScanProgress by remember { mutableStateOf<FullScanProgress?>(null) }
+    var pausedScans by remember {
+        mutableStateOf<Map<String, ai.xrav.xravscan.data.repository.ScanRepository.PausedScan>>(emptyMap())
+    }
+
+    suspend fun refreshPausedScans() {
+        val all = container.providerRepository.listAll()
+        val out = mutableMapOf<String, ai.xrav.xravscan.data.repository.ScanRepository.PausedScan>()
+        for (p in all) {
+            val snap = container.scanRepository.pausedScanFor(p.slug)
+            if (snap != null) out[p.slug] = snap
+        }
+        pausedScans = out
+    }
 
     LaunchedEffect(Unit) {
         providers = container.providerRepository.listAll()
@@ -86,6 +99,7 @@ fun ResultsScreen(modifier: Modifier = Modifier) {
         if (pickedSlug == null) {
             pickedSlug = providers.firstOrNull()?.slug
         }
+        refreshPausedScans()
     }
 
     fun appendLog(line: String) {
@@ -111,30 +125,40 @@ fun ResultsScreen(modifier: Modifier = Modifier) {
         scope.launch { container.scanRepository.clearAll() }
     }
 
-    fun startFullScan() {
-        val slug = pickedSlug ?: return
+    fun startFullScan(slug: String, resume: Boolean) {
         if (fullScanJob?.isActive == true) return
         fullScanProgress = null
         fullScanJob = scope.launch {
             try {
                 container.scanRepository.runFullProviderScan(
                     providerSlug = slug,
-                    maxIps = 50_000L,
+                    maxIps = if (resume) 150_000L else 50_000L,
+                    resume = resume,
                 ).conflate().collect { p ->
                     fullScanProgress = p
                     p.message?.let { appendLog(it) }
                 }
             } catch (t: Throwable) {
                 appendLog("Full scan failed: ${t.message}")
+            } finally {
+                refreshPausedScans()
             }
         }
     }
 
-    fun cancelFullScan() {
+    fun pauseFullScan() {
         fullScanJob?.cancel()
         fullScanJob = null
-        appendLog("Full scan cancelled")
+        appendLog("Full scan paused — cursor written to disk, tap Resume to continue.")
         fullScanProgress = fullScanProgress?.copy(done = true, cancelled = true)
+        scope.launch { refreshPausedScans() }
+    }
+
+    fun discardPausedScan(slug: String) {
+        scope.launch {
+            container.scanRepository.discardPausedScan(slug)
+            refreshPausedScans()
+        }
     }
 
     Column(modifier = modifier.fillMaxSize()) {
@@ -203,14 +227,17 @@ fun ResultsScreen(modifier: Modifier = Modifier) {
             dropdownOpen = dropdownOpen,
             running = fullScanJob?.isActive == true,
             progress = fullScanProgress,
+            pausedScans = pausedScans,
             onPick = { slug ->
                 pickedSlug = slug
                 dropdownOpen = false
             },
             onToggleDropdown = { dropdownOpen = !dropdownOpen },
             onCloseDropdown = { dropdownOpen = false },
-            onStart = ::startFullScan,
-            onCancel = ::cancelFullScan,
+            onStart = { pickedSlug?.let { startFullScan(it, resume = false) } },
+            onResume = { slug -> startFullScan(slug, resume = true) },
+            onDiscard = ::discardPausedScan,
+            onPause = ::pauseFullScan,
             onDismiss = { fullScanProgress = null },
         )
 
@@ -250,15 +277,19 @@ private fun FullScanCard(
     dropdownOpen: Boolean,
     running: Boolean,
     progress: FullScanProgress?,
+    pausedScans: Map<String, ai.xrav.xravscan.data.repository.ScanRepository.PausedScan>,
     onPick: (String) -> Unit,
     onToggleDropdown: () -> Unit,
     onCloseDropdown: () -> Unit,
     onStart: () -> Unit,
-    onCancel: () -> Unit,
+    onResume: (String) -> Unit,
+    onDiscard: (String) -> Unit,
+    onPause: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     val strings = LocalAppStrings.current
     val picked = providers.firstOrNull { it.slug == pickedSlug }
+    val pausedForPicked = pickedSlug?.let(pausedScans::get)
 
     GlassCard(modifier = Modifier.fillMaxWidth()) {
         Column {
@@ -324,17 +355,56 @@ private fun FullScanCard(
                     text = strings.fullScanStart,
                     accent = Violet,
                     leadingIcon = Icons.Outlined.PlayArrow,
-                    enabled = !running && picked != null,
+                    enabled = !running && picked != null && pausedForPicked == null,
                     onClick = onStart,
                 )
                 if (running) {
                     NeonButton(
-                        text = strings.fullScanCancel,
-                        accent = Color(0xFFFF6B6B),
+                        text = strings.actionPause,
+                        accent = Color(0xFFFFB347),
                         leadingIcon = Icons.Outlined.Cancel,
                         enabled = true,
-                        onClick = onCancel,
+                        onClick = onPause,
                     )
+                }
+            }
+
+            if (pausedForPicked != null && !running) {
+                Spacer(Modifier.height(12.dp))
+                Column {
+                    Text(
+                        strings.pausedScanCardTitle(picked?.name ?: pausedForPicked.providerSlug),
+                        color = TextPrimary,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        strings.pausedScanCardProgress(
+                            pausedForPicked.ipsScanned,
+                            pausedForPicked.ipsTotal,
+                            pausedForPicked.hits,
+                        ),
+                        color = TextSecondary,
+                        fontSize = 12.sp,
+                    )
+                    Spacer(Modifier.height(10.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        NeonButton(
+                            text = strings.actionResume,
+                            accent = SkyBlue,
+                            leadingIcon = Icons.Outlined.PlayArrow,
+                            enabled = true,
+                            onClick = { onResume(pausedForPicked.providerSlug) },
+                        )
+                        NeonButton(
+                            text = strings.actionDiscard,
+                            accent = Color(0xFFFF6B6B),
+                            leadingIcon = Icons.Outlined.Delete,
+                            enabled = true,
+                            onClick = { onDiscard(pausedForPicked.providerSlug) },
+                        )
+                    }
                 }
             }
 

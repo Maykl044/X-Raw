@@ -83,6 +83,12 @@ data class AppStrings(
     val smartAppendProviderLine: (String, Int, Int, Int) -> String,
     val smartAppendProviderLineWithInvalid: (String, Int, Int, Int, Int) -> String,
     val directApiBadge: String,
+    // Phase I — Pause / Resume / Discard UI labels
+    val actionPause: String,
+    val actionResume: String,
+    val actionDiscard: String,
+    val pausedScanCardTitle: (String) -> String,
+    val pausedScanCardProgress: (Long, Long, Int) -> String,
 ) {
     companion object {
         val EN = AppStrings(
@@ -154,6 +160,13 @@ data class AppStrings(
                 "$name: found $found, duplicates $dup, added $added · $invalid invalid"
             },
             directApiBadge = "Direct API",
+            actionPause = "Pause",
+            actionResume = "Resume",
+            actionDiscard = "Discard",
+            pausedScanCardTitle = { name -> "Paused scan · $name" },
+            pausedScanCardProgress = { scanned, total, hits ->
+                "$scanned / $total IPs · $hits hits"
+            },
         )
 
         val RU = AppStrings(
@@ -225,6 +238,13 @@ data class AppStrings(
                 "$name: найдено $found, дубликатов $dup, добавлено $added · невалидных $invalid"
             },
             directApiBadge = "Прямой API",
+            actionPause = "Пауза",
+            actionResume = "Продолжить",
+            actionDiscard = "Сбросить",
+            pausedScanCardTitle = { name -> "Скан на паузе · $name" },
+            pausedScanCardProgress = { scanned, total, hits ->
+                "$scanned / $total IP · $hits попаданий"
+            },
         )
 
         /** Resolve a tag (`null` = system default) into the matching table. */

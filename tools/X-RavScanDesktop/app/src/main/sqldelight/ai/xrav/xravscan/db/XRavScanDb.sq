@@ -41,6 +41,23 @@ CREATE TABLE IF NOT EXISTS discoveries (
 
 CREATE INDEX IF NOT EXISTS idx_disc_foundAt ON discoveries(foundAt DESC);
 
+-- Phase I — Pause / Resume cursor for Full Provider Scan. One row per
+-- provider slug, INSERT OR REPLACE on every cursor flush. `cidrSnapshot`
+-- is the newline-joined list of CIDRs at scan start so a resume is
+-- meaningful even if cidr_ranges has been edited while the scan was
+-- paused.
+CREATE TABLE IF NOT EXISTS full_scan_state (
+    providerSlug TEXT NOT NULL PRIMARY KEY,
+    cidrIndex INTEGER NOT NULL,
+    ipOffset INTEGER NOT NULL,
+    ipsScanned INTEGER NOT NULL,
+    hits INTEGER NOT NULL,
+    maxIps INTEGER NOT NULL,
+    concurrency INTEGER NOT NULL,
+    cidrSnapshot TEXT NOT NULL,
+    updatedAt INTEGER NOT NULL
+);
+
 -- ===== Providers =====
 
 countProviders:
@@ -141,3 +158,26 @@ DELETE FROM discoveries WHERE id = ?;
 
 deletePendingDiscoveries:
 DELETE FROM discoveries WHERE applied = 0;
+
+-- ===== Full Scan State (Phase I) =====
+
+fullScanStateFor:
+SELECT * FROM full_scan_state WHERE providerSlug = ?;
+
+upsertFullScanState:
+INSERT INTO full_scan_state(
+    providerSlug, cidrIndex, ipOffset, ipsScanned, hits,
+    maxIps, concurrency, cidrSnapshot, updatedAt
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+ON CONFLICT(providerSlug) DO UPDATE SET
+    cidrIndex = excluded.cidrIndex,
+    ipOffset = excluded.ipOffset,
+    ipsScanned = excluded.ipsScanned,
+    hits = excluded.hits,
+    maxIps = excluded.maxIps,
+    concurrency = excluded.concurrency,
+    cidrSnapshot = excluded.cidrSnapshot,
+    updatedAt = excluded.updatedAt;
+
+clearFullScanState:
+DELETE FROM full_scan_state WHERE providerSlug = ?;
