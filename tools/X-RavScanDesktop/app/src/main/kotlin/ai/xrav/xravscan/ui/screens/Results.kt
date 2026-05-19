@@ -130,9 +130,12 @@ fun ResultsScreen(modifier: Modifier = Modifier) {
         fullScanProgress = null
         fullScanJob = scope.launch {
             try {
+                // Phase J — uncapped. No maxIps argument; the repository
+                // default is Long.MAX_VALUE so the iterator runs every
+                // IP in every CIDR until exhausted (e.g. all ~6.6M
+                // Cloudflare hosts).
                 container.scanRepository.runFullProviderScan(
                     providerSlug = slug,
-                    maxIps = if (resume) 150_000L else 50_000L,
                     resume = resume,
                 ).conflate().collect { p ->
                     fullScanProgress = p

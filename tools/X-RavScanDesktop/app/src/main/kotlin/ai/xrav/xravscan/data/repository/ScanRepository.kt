@@ -127,7 +127,10 @@ class ScanRepository(
         withContext(Dispatchers.IO) {
             val row = q.fullScanStateFor(providerSlug).executeAsOneOrNull() ?: return@withContext null
             val cidrList = row.cidrSnapshot.split('\n').filter { it.isNotBlank() }
-            val total = sumIpv4HostCount(cidrList).coerceAtMost(row.maxIps).coerceAtLeast(0L)
+            // Phase J — uncapped total; reflects the FULL remaining
+            // span of every CIDR so the Resume button shows the real
+            // "X / 6 684 672" figure for ultra-large CDN sweeps.
+            val total = sumIpv4HostCount(cidrList).coerceAtLeast(0L)
             PausedScan(
                 providerSlug = row.providerSlug,
                 cidrIndex = row.cidrIndex.toInt(),
@@ -186,9 +189,16 @@ class ScanRepository(
      * The flow is collected on [Dispatchers.IO] and the consumer can
      * always `.cancel()` to stop the whole tree.
      */
+    /**
+     * Phase J — uncapped global subnet scan. The default [maxIps] is
+     * [Long.MAX_VALUE] so the iterator runs through every IP in every
+     * CIDR until mathematically exhausted (Cloudflare = ~6 684 672
+     * hosts). Bounded channel + suspending `send` keeps live memory
+     * flat at ~1024 candidate IPs regardless of total scan size.
+     */
     fun runFullProviderScan(
         providerSlug: String,
-        maxIps: Long = 50_000L,
+        maxIps: Long = Long.MAX_VALUE,
         concurrency: Int = 64,
         resume: Boolean = false,
     ): Flow<FullScanProgress> = channelFlow {
@@ -269,7 +279,11 @@ class ScanRepository(
             }
         }
 
-        val plannedTotal = sumIpv4HostCount(rangesRaw).coerceAtMost(maxIps).coerceAtLeast(0L)
+        // Phase J — dynamic total derived from the full set of loaded
+        // CIDRs. No artificial ceiling: the UI progress bar's Maximum is
+        // set to this exact figure and refreshes (throttled to 250 ms)
+        // as the cursor advances.
+        val plannedTotal = sumIpv4HostCount(rangesRaw).coerceAtLeast(0L)
         if (rangesRaw.isEmpty() || plannedTotal == 0L) {
             send(
                 FullScanProgress(
@@ -398,10 +412,14 @@ class ScanRepository(
             // `send` suspends when the channel is full, giving us strict
             // backpressure: the iterator never gets ahead of the workers
             // by more than IP_CHANNEL_CAPACITY items.
+            // Phase J — true stream condition: the producer only stops
+            // when the iterator is mathematically exhausted or the
+            // surrounding coroutine is cancelled (Pause / Discard /
+            // screen close). No `scanned.get() >= maxIps` short-circuit
+            // — every IP in every CIDR makes it through the channel.
             val producer = launch(Dispatchers.Default) {
                 try {
-                    while (isActive) {
-                        if (scanned.get() >= maxIps) break
+                    while (isActive && iterator.hasNext()) {
                         val ip = iterator.next() ?: break
                         val currentRaw = iterator.currentCidr() ?: continue
                         lastSeenCidr.set(currentRaw)
@@ -413,11 +431,15 @@ class ScanRepository(
                 }
             }
 
+            // Phase J — uncapped worker. Drains the bounded channel
+            // until the producer closes it; no per-IP ceiling, no
+            // cap-based skip. Pause = surrounding job cancel = the
+            // for-loop ends naturally and the cursor is flushed by
+            // the channelFlow's finally block.
             val workers = List(pool) {
                 async(Dispatchers.IO) {
                     for (handoff in workQueue) {
                         if (!isActive) break
-                        if (scanned.get() >= maxIps) continue
                         val probe = runCatching { probeOne(providerSlug, handoff.ip, 443) }
                             .getOrNull()
                         scanned.incrementAndGet()
