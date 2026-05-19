@@ -1,5 +1,6 @@
 package ai.xrav.xravscan.data.repository
 
+import ai.xrav.xravscan.data.scan.BunnyVlessProbe
 import ai.xrav.xravscan.db.XRavScanDb
 import ai.xrav.xravscan.domain.model.FullScanProgress
 import ai.xrav.xravscan.domain.model.ScanResult
@@ -44,6 +45,10 @@ class ScanRepository(
 ) {
     private val log = LoggerFactory.getLogger("XRavScan.Scan")
     private val q get() = db.xRavScanDbQueries
+
+    // Phase K — strict VLESS-suitability probe for Bunny CDN edge IPs.
+    // Stateless across probe() calls; safe to reuse.
+    private val bunnyVlessProbe = BunnyVlessProbe()
 
     fun observeRecent(limit: Long = 200): Flow<List<ScanResult>> =
         q.recentScanResults(limit).asFlow().mapToList(Dispatchers.IO).map { rows ->
@@ -549,6 +554,32 @@ class ScanRepository(
     )
 
     private suspend fun probeOne(slug: String, ip: String, port: Int): Probe? {
+        // Phase K — Bunny CDN gets a strict VLESS-suitability probe:
+        // SNI=b.cdn.net + HTTP/1.1 WebSocket Upgrade handshake. Edges
+        // that don't terminate the b.cdn.net hostname (stray cert, wrong
+        // ASN, blackholed pull-zone) are discarded — what we keep is the
+        // exact subset of Bunny edge IPs that a VLESS/WS client would
+        // actually transit through.
+        if (slug == BUNNY_SLUG) {
+            val outcome = withTimeoutOrNull(BUNNY_PROBE_TIMEOUT_MS) {
+                withContext(Dispatchers.IO) {
+                    bunnyVlessProbe.probe(ip = ip, port = port)
+                }
+            } ?: return null
+            if (!outcome.accepted) {
+                log.debug("bunny vless reject {}: {}", ip, outcome.reason)
+                return null
+            }
+            return Probe(
+                providerSlug = slug,
+                ip = ip,
+                port = port,
+                rttMs = outcome.rttMs,
+                tlsCn = outcome.tlsCommonName ?: BunnyVlessProbe.DEFAULT_BUNNY_TARGET,
+                foundAt = System.currentTimeMillis(),
+            )
+        }
+
         val started = System.currentTimeMillis()
         val tcpOpen = withTimeoutOrNull(2_500) {
             runCatching {
@@ -612,5 +643,16 @@ class ScanRepository(
 
         /** Minimum interval between Pause-cursor writes to SQLite. */
         const val PERSIST_INTERVAL_MS = 250L
+
+        /** Slug routed through [BunnyVlessProbe]. Phase K. */
+        const val BUNNY_SLUG = "bunny"
+
+        /**
+         * Hard wall-clock budget for a single Bunny VLESS probe. TLS +
+         * WebSocket round-trip is expensive (~ 400-1500 ms in practice)
+         * so we allow 10 s; anything slower than that and the edge is
+         * functionally unusable for proxying anyway.
+         */
+        const val BUNNY_PROBE_TIMEOUT_MS = 10_000L
     }
 }

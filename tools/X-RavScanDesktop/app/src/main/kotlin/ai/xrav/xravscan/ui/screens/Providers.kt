@@ -7,6 +7,7 @@ import ai.xrav.xravscan.ui.localization.LocalAppStrings
 import ai.xrav.xravscan.ui.theme.GlassStroke
 import ai.xrav.xravscan.ui.theme.Mint
 import ai.xrav.xravscan.ui.theme.SkyBlue
+import ai.xrav.xravscan.ui.theme.Violet
 import ai.xrav.xravscan.ui.theme.TextMuted
 import ai.xrav.xravscan.ui.theme.TextPrimary
 import ai.xrav.xravscan.ui.theme.TextSecondary
@@ -181,6 +182,10 @@ private fun ProviderRow(
                         Spacer(Modifier.width(8.dp))
                         DirectApiBadge()
                     }
+                    if (provider.slug.lowercase() == "bunny") {
+                        Spacer(Modifier.width(6.dp))
+                        VlessBadge()
+                    }
                 }
                 Text(
                     text = if (provider.asns.isEmpty()) provider.slug
@@ -220,6 +225,35 @@ private fun ProviderRow(
 private val DIRECT_API_SLUGS: Set<String> = setOf(
     "cloudflare", "gcp", "aws", "cloudfront", "fastly", "akamai", "bunny",
 )
+
+/**
+ * Phase K — "VLESS" pill shown next to Bunny CDN. Signals that the
+ * Full/Quick scan applies an SNI=b.cdn.net + WebSocket-Upgrade
+ * handshake instead of the generic TLS-CN probe so the keepers are
+ * exactly the IPs a VLESS-over-WebSocket client would transit.
+ */
+@Composable
+private fun VlessBadge() {
+    val strings = LocalAppStrings.current
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(Violet.copy(alpha = 0.18f))
+            .border(
+                width = 0.5.dp,
+                color = Violet.copy(alpha = 0.45f),
+                shape = RoundedCornerShape(8.dp),
+            )
+            .padding(horizontal = 8.dp, vertical = 2.dp),
+    ) {
+        Text(
+            text = strings.bunnyVlessBadge,
+            color = Violet,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 10.sp,
+        )
+    }
+}
 
 /**
  * Compact "Direct API" pill. Mint accent, 0.5dp hairline, 18% fill.
