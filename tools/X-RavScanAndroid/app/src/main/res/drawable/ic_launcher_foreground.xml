@@ -1,0 +1,25 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Outer beam — sky blue -->
+    <path
+        android:fillColor="#7AA9FF"
+        android:pathData="M30,32 L42,32 L54,52 L66,32 L78,32 L62,58 L78,84 L66,84 L54,64 L42,84 L30,84 L46,58 Z"
+        android:fillAlpha="0.92" />
+
+    <!-- Glow stroke — violet -->
+    <path
+        android:strokeColor="#A98BFF"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"
+        android:pathData="M30,32 L42,32 L54,52 L66,32 L78,32 L62,58 L78,84 L66,84 L54,64 L42,84 L30,84 L46,58 Z" />
+
+    <!-- Pivot dot — mint -->
+    <path
+        android:fillColor="#46D58E"
+        android:pathData="M54,58 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
+</vector>

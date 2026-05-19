@@ -1,0 +1,102 @@
+<resources>
+    <string name="app_name">X-RavScan</string>
+
+    <string name="tab_dashboard">Sähypa</string>
+    <string name="tab_providers">Üpjünçilik</string>
+    <string name="tab_discovery">Gözleg</string>
+    <string name="tab_results">Netijeler</string>
+    <string name="tab_settings">Sazlamalar</string>
+
+    <string name="dashboard_title">Sähypa</string>
+    <string name="dashboard_subtitle">Üpjünçilikleriň, skanleriň we tapylan ulgamlaryň gysgaça syny.</string>
+    <string name="dashboard_quick_actions">Çalt amallar</string>
+    <string name="dashboard_status">Skanleýji ýagdaýy</string>
+    <string name="dashboard_status_idle">Garaşýar — «Skanleme» basyň.</string>
+    <string name="dashboard_status_scanning">%1$d host skanlenýär…</string>
+    <string name="stat_providers">Üpjünçilikler</string>
+    <string name="stat_cidr_loaded">CIDR ýüklendi</string>
+    <string name="stat_results">Netijeler</string>
+    <string name="stat_discoveries">Tapylan ulgamlar</string>
+
+    <string name="providers_title">Üpjünçilikler</string>
+    <string name="providers_subtitle">29 sany CDN/Cloud üpjünçiliginiň ASN aralyklary.</string>
+    <string name="providers_placeholder_title">Üpjünçilikler ýüklenýär…</string>
+    <string name="providers_placeholder_body">Room maglumat bazasy bu sanawy indiki tapgyrda doldurar.</string>
+    <string name="providers_search_hint">Üpjünçiligi gözle</string>
+    <string name="providers_enabled_count">%2$d-den %1$d aktiw</string>
+
+    <string name="discovery_title">Ulgam gözlegi</string>
+    <string name="discovery_subtitle">BGPView, RIPEstat we Hackertarget arkaly täze ulgamlary tap.</string>
+    <string name="discovery_placeholder_body">Şu wagt täze ulgam ýok. «Smart Append» basyň — parallel barlag başlanar.</string>
+    <string name="discovery_log_title">Žurnal</string>
+    <string name="discovery_pending_title">Garaşylýan tapyndylar · %1$d</string>
+
+    <string name="results_title">Netijeler</string>
+    <string name="results_subtitle">Tapylan hostlar — TLS yz we RTT bilen.</string>
+    <string name="results_placeholder_body">Skan tamamlanandan soň şu ýerde görkeziler.</string>
+    <string name="results_count">Tapylan host · %1$d</string>
+
+    <string name="settings_title">Sazlamalar</string>
+    <string name="settings_subtitle">Dil, eksport ýollary we daşarky hereketlendirijiler.</string>
+    <string name="settings_external_engines">Daşarky hereketlendirijiler</string>
+    <string name="settings_external_engines_body">masscan / zmap aýratyn gurnamak gerek — RAW soketleri talap edýär, programma bilen birikdirilmedik.</string>
+    <string name="settings_about">Programma barada</string>
+    <string name="settings_about_body">X-RavScan — IP / CDN gözleg guraly. Doly Kotlin + Jetpack Compose ýasalan.</string>
+    <string name="settings_language">Dil</string>
+    <string name="settings_language_system">Ulgam dili</string>
+    <string name="settings_language_en">English</string>
+    <string name="settings_language_ru">Русский</string>
+    <string name="settings_language_tk">Türkmençe</string>
+    <string name="settings_export">Eksport</string>
+    <string name="settings_export_body">Hostlary we CIDR aralyklaryny TXT ýa-da JSON-a eksport edýär. Faýllar ulgamyň ýüklenenler bukjasyna saklanýar.</string>
+    <string name="settings_export_hosts_txt">Hostlary eksport et (TXT)</string>
+    <string name="settings_export_ranges_json">Aralyklary eksport et (JSON)</string>
+    <string name="settings_data">Maglumatlar</string>
+    <string name="settings_data_body">Tapylan ulgamlary we skan netijelerini arassalaýar. Goşulan üpjünçilikler indiki açylanda dikeldilýär.</string>
+    <string name="settings_reset_results">Netijeleri arassala</string>
+    <string name="settings_reset_discoveries">Tapyndylary arassala</string>
+    <string name="settings_app_version">Programma wersiýasy: %1$s</string>
+
+    <string name="action_start_scan">Skanleme</string>
+    <string name="action_smart_append">Smart Append (ASN)</string>
+    <string name="action_clean_optimize">Clean &amp; Optimize</string>
+    <string name="action_deep_discovery">Çuňňur gözleg</string>
+    <string name="action_quick_scan">Çalt skan</string>
+    <string name="action_clear_results">Arassala</string>
+    <string name="action_full_scan">Doly üpjün ediji skan</string>
+    <string name="action_cancel">Ýatyr</string>
+    <string name="action_pause">Pauza</string>
+    <string name="action_resume">Dowam et</string>
+    <string name="action_discard">Taşla</string>
+    <string name="paused_scan_card_title">Skan pauzada · %1$s</string>
+    <string name="paused_scan_card_progress">%1$d / %2$d IP · %3$d urgy</string>
+
+    <!-- Doly skan -->
+    <string name="full_scan_title">Doly skan</string>
+    <string name="full_scan_subtitle">Saýlanan üpjün edijiniň ähli CIDR-leri boýunça her IP-ni barlaýar.</string>
+    <string name="full_scan_pick">Üpjün edijini saýlaň</string>
+    <string name="full_scan_progress">%1$s · %2$d / %3$d · %4$s</string>
+    <string name="full_scan_progress_no_cidr">%1$s · %2$d / %3$d</string>
+    <string name="full_scan_eta">≈%1$s</string>
+    <string name="full_scan_complete">Taýýar · %1$d jogap</string>
+    <string name="bunny_direct_api_badge">Göni API</string>
+    <string name="bunny_vless_badge">VLESS</string>
+    <string name="bunny_vless_accept">Bunny VLESS: %1$s → %2$s (Server=%3$s) · kabul edildi</string>
+    <string name="bunny_vless_reject">Bunny VLESS: %1$s ret edildi — %2$s</string>
+    <string name="bunny_loading_via_api">Bunny CDN diapazonlary göni API arkaly ýüklenýär…</string>
+    <string name="bunny_received_grouped">Bunny: %1$d IP alyndy, %2$d CIDR-e birleşdirildi</string>
+    <string name="bunny_fallback_used">Bunny CDN: gurlan goşmaça sanawa geçildi (%1$d CIDR)</string>
+    <string name="direct_api_badge">Göni API</string>
+    <string name="full_scan_offline">Aragatnaşyk ýok — Smart Append diňe ýagdaý gowulanýança dur.</string>
+    <string name="update_using_doh_bypass">VPN aktiw — täzelenmeler üçin DoH + VPN-den daşary.</string>
+    <string name="smart_append_no_providers">Açyk üpjün ediji ýok — täzelemek üçin hiç zat ýok</string>
+    <string name="smart_append_starting">Smart Append başlady — %1$d üpjün ediji</string>
+    <string name="smart_append_no_asn">%1$s: ASN sazlanmadyk</string>
+    <string name="smart_append_error">%1$s: ýalňyşlyk — %2$s</string>
+    <string name="smart_append_no_prefixes">%1$s: prefiks ýok</string>
+    <string name="smart_append_provider_line">%1$s: tapyldy %2$d, gaýtalanýan %3$d, goşuldy %4$d</string>
+    <string name="smart_append_provider_line_invalid">%1$s: tapyldy %2$d, gaýtalanýan %3$d, goşuldy %4$d · %5$d nädogry</string>
+    <string name="smart_append_fallback_used">%1$s: gurlan goşmaça sanawa geçildi (%2$d CIDR)</string>
+    <string name="smart_append_fallback_used_reason">%1$s: gurlan goşmaça sanawa geçildi (%2$d CIDR) — %3$s</string>
+    <string name="smart_append_summary">Smart Append tamamlandy · %2$d üpjün edijiden %1$d täze</string>
+</resources>

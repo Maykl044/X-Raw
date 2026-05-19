@@ -1,0 +1,254 @@
+{
+  "providers": [
+    {
+      "slug": "cloudflare",
+      "name": "Cloudflare",
+      "color": "#f6821f",
+      "asns": [13335, 132892, 209242, 394536],
+      "seed_file": "cflare_ranges.txt",
+      "sources": [
+        {"type": "plain_v4", "url": "https://www.cloudflare.com/ips-v4/"},
+        {"type": "plain_v6", "url": "https://www.cloudflare.com/ips-v6/"}
+      ]
+    },
+    {
+      "slug": "aws",
+      "name": "Amazon AWS",
+      "color": "#ff9900",
+      "asns": [16509, 14618, 8987, 7224, 38895],
+      "seed_file": "cfront_ranges.txt",
+      "sources": [
+        {"type": "aws_json", "url": "https://ip-ranges.amazonaws.com/ip-ranges.json", "service": "AMAZON"}
+      ]
+    },
+    {
+      "slug": "cloudfront",
+      "name": "Amazon CloudFront",
+      "color": "#ff9900",
+      "asns": [16509, 14618],
+      "seed_file": "cfront_ranges.txt",
+      "sources": [
+        {"type": "aws_json", "url": "https://ip-ranges.amazonaws.com/ip-ranges.json", "service": "CLOUDFRONT"}
+      ]
+    },
+    {
+      "slug": "azure",
+      "name": "Microsoft Azure",
+      "color": "#0078d4",
+      "asns": [8075, 8068, 8069, 12076],
+      "seed_file": "azure_all_ranges.txt",
+      "sources": [
+        {"type": "azure_servicetags", "page": "https://www.microsoft.com/en-us/download/details.aspx?id=56519"}
+      ]
+    },
+    {
+      "slug": "azure_frontdoor",
+      "name": "Azure Front Door",
+      "color": "#0078d4",
+      "asns": [8075],
+      "seed_file": "azure_ranges.txt",
+      "sources": [
+        {"type": "azure_servicetags", "service": "AzureFrontDoor.Frontend"}
+      ]
+    },
+    {
+      "slug": "gcp",
+      "name": "Google Cloud",
+      "color": "#4285f4",
+      "asns": [15169, 396982, 36492],
+      "seed_file": "google_ranges.txt",
+      "sources": [
+        {"type": "gcp_json", "url": "https://www.gstatic.com/ipranges/cloud.json"},
+        {"type": "google_json", "url": "https://www.gstatic.com/ipranges/goog.json"}
+      ]
+    },
+    {
+      "slug": "fastly",
+      "name": "Fastly",
+      "color": "#ff282d",
+      "asns": [54113],
+      "seed_file": "fastly_ranges.txt",
+      "sources": [
+        {"type": "fastly_json", "url": "https://api.fastly.com/public-ip-list"}
+      ]
+    },
+    {
+      "slug": "bunny",
+      "name": "Bunny CDN",
+      "color": "#ff8c1a",
+      "asns": [200325, 213035],
+      "seed_file": "bunny_ranges.txt",
+      "sources": [
+        {"type": "bunny_json", "url": "https://bunnycdn.com/api/system/edgeserverlist"}
+      ]
+    },
+    {
+      "slug": "akamai",
+      "name": "Akamai",
+      "color": "#0099cc",
+      "asns": [16625, 20940, 21342, 21357, 22207, 23454, 23455, 23903, 24319, 26008, 30675, 31107, 31108, 31109, 31110, 31377, 33905, 34164, 34850, 35204, 35993, 35994, 36183, 36408, 39836, 43639, 55409, 55770, 133103],
+      "seed_file": "akamai_ranges.txt",
+      "sources": []
+    },
+    {
+      "slug": "alibaba",
+      "name": "Alibaba Cloud",
+      "color": "#ff6a00",
+      "asns": [37963, 45102],
+      "seed_file": "alibaba_ranges.txt",
+      "sources": []
+    },
+    {
+      "slug": "arvan",
+      "name": "ArvanCloud",
+      "color": "#5cb85c",
+      "asns": [200000, 202468, 213035],
+      "seed_file": "arvan_ranges.txt",
+      "sources": []
+    },
+    {
+      "slug": "cachefly",
+      "name": "CacheFly",
+      "color": "#1b75bc",
+      "asns": [30081],
+      "seed_file": "cachefly_ranges.txt",
+      "sources": []
+    },
+    {
+      "slug": "cdn77",
+      "name": "CDN77",
+      "color": "#1ea0ff",
+      "asns": [60068],
+      "seed_file": "cdn77_ranges.txt",
+      "sources": []
+    },
+    {
+      "slug": "cdnetworks",
+      "name": "CDNetworks",
+      "color": "#7e57c2",
+      "asns": [36408, 38107],
+      "seed_file": "cdnetworks_ranges.txt",
+      "sources": []
+    },
+    {
+      "slug": "cdn77_eu",
+      "name": "DataCamp Limited",
+      "color": "#1ea0ff",
+      "asns": [212238, 60068],
+      "seed_file": "cdn77_ranges.txt",
+      "sources": []
+    },
+    {
+      "slug": "ddos_guard",
+      "name": "DDoS-Guard",
+      "color": "#e57373",
+      "asns": [262254, 51541, 57724],
+      "seed_file": "ddos_guard_ranges.txt",
+      "sources": []
+    },
+    {
+      "slug": "edgecenter",
+      "name": "EdgeCenter",
+      "color": "#26a69a",
+      "asns": [199524, 207957],
+      "seed_file": "edgecenter_ranges.txt",
+      "sources": []
+    },
+    {
+      "slug": "gcore",
+      "name": "G-Core Labs",
+      "color": "#ffb300",
+      "asns": [199524, 202297],
+      "seed_file": "gcore_ranges.txt",
+      "sources": []
+    },
+    {
+      "slug": "ibm",
+      "name": "IBM Cloud",
+      "color": "#0f62fe",
+      "asns": [36351, 36647, 4983],
+      "seed_file": "ibm_ranges.txt",
+      "sources": []
+    },
+    {
+      "slug": "imperva",
+      "name": "Imperva (Incapsula)",
+      "color": "#fb6e52",
+      "asns": [19551],
+      "seed_file": "imperva_ranges.txt",
+      "sources": []
+    },
+    {
+      "slug": "leaseweb",
+      "name": "LeaseWeb",
+      "color": "#5e35b1",
+      "asns": [60781, 16265, 30633, 7203, 7860, 8455, 19318, 28753, 30633, 393886, 396190],
+      "seed_file": "leaseweb_ranges.txt",
+      "sources": []
+    },
+    {
+      "slug": "level3",
+      "name": "Level 3 / Lumen",
+      "color": "#0f9d58",
+      "asns": [3356, 3549, 209],
+      "seed_file": "level3_ranges.txt",
+      "sources": []
+    },
+    {
+      "slug": "limelight",
+      "name": "Limelight Networks",
+      "color": "#43a047",
+      "asns": [22822, 38622, 45396, 27191, 26506, 36408, 55429],
+      "seed_file": "limelight_ranges.txt",
+      "sources": []
+    },
+    {
+      "slug": "maxcdn",
+      "name": "MaxCDN / StackPath",
+      "color": "#673ab7",
+      "asns": [12989, 33438],
+      "seed_file": "maxcdn_ranges.txt",
+      "sources": []
+    },
+    {
+      "slug": "ngenix",
+      "name": "NGENIX",
+      "color": "#0288d1",
+      "asns": [203418, 208627],
+      "seed_file": "ngenix_ranges.txt",
+      "sources": []
+    },
+    {
+      "slug": "stackpath",
+      "name": "StackPath",
+      "color": "#9c27b0",
+      "asns": [12989, 33438, 30176, 393234],
+      "seed_file": "stackpath_ranges.txt",
+      "sources": []
+    },
+    {
+      "slug": "sucuri",
+      "name": "Sucuri",
+      "color": "#388e3c",
+      "asns": [30148],
+      "seed_file": "sucuri_ranges.txt",
+      "sources": []
+    },
+    {
+      "slug": "verizon",
+      "name": "Verizon Digital Media",
+      "color": "#cf2c2c",
+      "asns": [15133, 14361, 14153],
+      "seed_file": "verizon_ranges.txt",
+      "sources": []
+    },
+    {
+      "slug": "volterra",
+      "name": "F5 Volterra",
+      "color": "#0091ea",
+      "asns": [398251, 35280],
+      "seed_file": "volterra_ranges.txt",
+      "sources": []
+    }
+  ]
+}

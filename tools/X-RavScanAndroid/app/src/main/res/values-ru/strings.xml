@@ -1,0 +1,102 @@
+<resources>
+    <string name="app_name">X-RavScan</string>
+
+    <string name="tab_dashboard">Сводка</string>
+    <string name="tab_providers">Провайдеры</string>
+    <string name="tab_discovery">Поиск</string>
+    <string name="tab_results">Результаты</string>
+    <string name="tab_settings">Настройки</string>
+
+    <string name="dashboard_title">Сводка</string>
+    <string name="dashboard_subtitle">Обзор провайдеров, сканирований и найденных подсетей.</string>
+    <string name="dashboard_quick_actions">Быстрые действия</string>
+    <string name="dashboard_status">Состояние сканера</string>
+    <string name="dashboard_status_idle">Ожидание — нажмите «Старт сканирования».</string>
+    <string name="dashboard_status_scanning">Сканирование %1$d хост(ов)…</string>
+    <string name="stat_providers">Провайдеры</string>
+    <string name="stat_cidr_loaded">Подсетей загружено</string>
+    <string name="stat_results">Результатов</string>
+    <string name="stat_discoveries">Найденных подсетей</string>
+
+    <string name="providers_title">Провайдеры</string>
+    <string name="providers_subtitle">CDN / Cloud ASN-диапазоны (29 по умолчанию).</string>
+    <string name="providers_placeholder_title">Загрузка провайдеров…</string>
+    <string name="providers_placeholder_body">База Room заполнит этот список на следующем этапе. Здесь появится pull-to-refresh и переключатели для каждого провайдера.</string>
+    <string name="providers_search_hint">Поиск провайдера</string>
+    <string name="providers_enabled_count">включено %1$d из %2$d</string>
+
+    <string name="discovery_title">Поиск подсетей</string>
+    <string name="discovery_subtitle">Поиск новых подсетей через BGPView, RIPEstat и Hackertarget.</string>
+    <string name="discovery_placeholder_body">Пока ничего не найдено. Нажмите «Smart Append», чтобы параллельно опросить включённых провайдеров.</string>
+    <string name="discovery_log_title">Журнал</string>
+    <string name="discovery_pending_title">Ожидают применения · %1$d</string>
+
+    <string name="results_title">Результаты</string>
+    <string name="results_subtitle">Доступные хосты с TLS-отпечатком и RTT.</string>
+    <string name="results_placeholder_body">После завершения скана здесь появятся доступные IP и SNI-домены. Каждая строка покажет RTT (с цветной индикацией) и поддержит тап-экспорт.</string>
+    <string name="results_count">Доступных хостов · %1$d</string>
+
+    <string name="settings_title">Настройки</string>
+    <string name="settings_subtitle">Язык, пути экспорта и внешние движки.</string>
+    <string name="settings_external_engines">Внешние движки</string>
+    <string name="settings_external_engines_body">masscan / zmap нужно установить отдельно — они требуют RAW-сокетов и в приложение не упакованы.</string>
+    <string name="settings_about">О приложении</string>
+    <string name="settings_about_body">X-RavScan — инструмент разведки IP / CDN. Нативная сборка на Kotlin + Jetpack Compose.</string>
+    <string name="settings_language">Язык</string>
+    <string name="settings_language_system">Системный</string>
+    <string name="settings_language_en">English</string>
+    <string name="settings_language_ru">Русский</string>
+    <string name="settings_language_tk">Türkmençe</string>
+    <string name="settings_export">Экспорт</string>
+    <string name="settings_export_body">Экспорт доступных хостов и CIDR-диапазонов в TXT или JSON. Файлы сохраняются в папку «Загрузки» через системный Downloads-провайдер.</string>
+    <string name="settings_export_hosts_txt">Экспорт хостов (TXT)</string>
+    <string name="settings_export_ranges_json">Экспорт диапазонов (JSON)</string>
+    <string name="settings_data">Данные</string>
+    <string name="settings_data_body">Сброс очистит найденные подсети и результаты сканирования. Встроенные провайдеры и CIDR будут восстановлены при следующем запуске.</string>
+    <string name="settings_reset_results">Очистить результаты</string>
+    <string name="settings_reset_discoveries">Очистить найденные подсети</string>
+    <string name="settings_app_version">Версия приложения: %1$s</string>
+
+    <string name="action_start_scan">Старт сканирования</string>
+    <string name="action_smart_append">Smart Append (ASN)</string>
+    <string name="action_clean_optimize">Clean &amp; Optimize</string>
+    <string name="action_deep_discovery">Глубокий поиск</string>
+    <string name="action_quick_scan">Быстрый скан</string>
+    <string name="action_clear_results">Очистить</string>
+    <string name="action_full_scan">Полный скан провайдера</string>
+    <string name="action_cancel">Отмена</string>
+    <string name="action_pause">Пауза</string>
+    <string name="action_resume">Продолжить</string>
+    <string name="action_discard">Сбросить</string>
+    <string name="paused_scan_card_title">Скан на паузе · %1$s</string>
+    <string name="paused_scan_card_progress">%1$d / %2$d IP · %3$d попаданий</string>
+
+    <!-- Полное сканирование -->
+    <string name="full_scan_title">Полное сканирование</string>
+    <string name="full_scan_subtitle">Прозванивает каждый IP во всех CIDR выбранного провайдера. Адреса генерируются лениво, с лимитом сверху чтобы не уронить устройство.</string>
+    <string name="full_scan_pick">Выберите провайдера</string>
+    <string name="full_scan_progress">%1$s · %2$d / %3$d · %4$s</string>
+    <string name="full_scan_progress_no_cidr">%1$s · %2$d / %3$d</string>
+    <string name="full_scan_eta">≈%1$s</string>
+    <string name="full_scan_complete">Готово · %1$d отвечает</string>
+    <string name="bunny_direct_api_badge">Прямой API</string>
+    <string name="bunny_vless_badge">VLESS</string>
+    <string name="bunny_vless_accept">Bunny VLESS: %1$s → %2$s (Server=%3$s) · принят</string>
+    <string name="bunny_vless_reject">Bunny VLESS: %1$s отброшен — %2$s</string>
+    <string name="bunny_loading_via_api">Загрузка диапазонов Bunny CDN через прямой API…</string>
+    <string name="bunny_received_grouped">Bunny: получено %1$d IP, объединены в %2$d CIDR</string>
+    <string name="bunny_fallback_used">Bunny CDN: fallback на встроенный список (%1$d CIDR)</string>
+    <string name="direct_api_badge">Прямой API</string>
+    <string name="full_scan_offline">Нет связи — Smart Append приостановлен до восстановления.</string>
+    <string name="update_using_doh_bypass">VPN активен — обновление через DoH в обход VPN.</string>
+    <string name="smart_append_no_providers">Нет включённых провайдеров — нечего обновлять</string>
+    <string name="smart_append_starting">Smart Append запущен — %1$d провайдеров</string>
+    <string name="smart_append_no_asn">%1$s: ASN не настроен</string>
+    <string name="smart_append_error">%1$s: ошибка — %2$s</string>
+    <string name="smart_append_no_prefixes">%1$s: префиксы не найдены</string>
+    <string name="smart_append_provider_line">%1$s: найдено %2$d, дубликатов %3$d, добавлено %4$d</string>
+    <string name="smart_append_provider_line_invalid">%1$s: найдено %2$d, дубликатов %3$d, добавлено %4$d · %5$d невалидных</string>
+    <string name="smart_append_fallback_used">%1$s: fallback на встроенный список (%2$d CIDR)</string>
+    <string name="smart_append_fallback_used_reason">%1$s: fallback на встроенный список (%2$d CIDR) — %3$s</string>
+    <string name="smart_append_summary">Smart Append завершён · %1$d новых из %2$d провайдеров</string>
+</resources>
