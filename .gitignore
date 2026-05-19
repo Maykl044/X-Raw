@@ -33,3 +33,10 @@ dist-tools/
 src/Xrav.Desktop/Bundled/x64/
 src/Xrav.Desktop/Bundled/x86/
 src/Xrav.Desktop/Bundled/common/
+
+# Compose Desktop / Gradle build outputs
+tools/X-RavScanDesktop/app/build/
+tools/X-RavScanDesktop/app/.gradle/
+tools/X-RavScanDesktop/.gradle/
+tools/X-RavScanDesktop/.idea/
+tools/X-RavScanDesktop/local.properties

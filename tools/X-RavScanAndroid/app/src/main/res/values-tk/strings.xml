@@ -1,0 +1,66 @@
+<resources>
+    <string name="app_name">X-RavScan</string>
+
+    <string name="tab_dashboard">Sähypa</string>
+    <string name="tab_providers">Üpjünçilik</string>
+    <string name="tab_discovery">Gözleg</string>
+    <string name="tab_results">Netijeler</string>
+    <string name="tab_settings">Sazlamalar</string>
+
+    <string name="dashboard_title">Sähypa</string>
+    <string name="dashboard_subtitle">Üpjünçilikleriň, skanleriň we tapylan ulgamlaryň gysgaça syny.</string>
+    <string name="dashboard_quick_actions">Çalt amallar</string>
+    <string name="dashboard_status">Skanleýji ýagdaýy</string>
+    <string name="dashboard_status_idle">Garaşýar — «Skanleme» basyň.</string>
+    <string name="dashboard_status_scanning">%1$d host skanlenýär…</string>
+    <string name="stat_providers">Üpjünçilikler</string>
+    <string name="stat_cidr_loaded">CIDR ýüklendi</string>
+    <string name="stat_results">Netijeler</string>
+    <string name="stat_discoveries">Tapylan ulgamlar</string>
+
+    <string name="providers_title">Üpjünçilikler</string>
+    <string name="providers_subtitle">29 sany CDN/Cloud üpjünçiliginiň ASN aralyklary.</string>
+    <string name="providers_placeholder_title">Üpjünçilikler ýüklenýär…</string>
+    <string name="providers_placeholder_body">Room maglumat bazasy bu sanawy indiki tapgyrda doldurar.</string>
+    <string name="providers_search_hint">Üpjünçiligi gözle</string>
+    <string name="providers_enabled_count">%2$d-den %1$d aktiw</string>
+
+    <string name="discovery_title">Ulgam gözlegi</string>
+    <string name="discovery_subtitle">BGPView, RIPEstat we Hackertarget arkaly täze ulgamlary tap.</string>
+    <string name="discovery_placeholder_body">Şu wagt täze ulgam ýok. «Smart Append» basyň — parallel barlag başlanar.</string>
+    <string name="discovery_log_title">Žurnal</string>
+    <string name="discovery_pending_title">Garaşylýan tapyndylar · %1$d</string>
+
+    <string name="results_title">Netijeler</string>
+    <string name="results_subtitle">Tapylan hostlar — TLS yz we RTT bilen.</string>
+    <string name="results_placeholder_body">Skan tamamlanandan soň şu ýerde görkeziler.</string>
+    <string name="results_count">Tapylan host · %1$d</string>
+
+    <string name="settings_title">Sazlamalar</string>
+    <string name="settings_subtitle">Dil, eksport ýollary we daşarky hereketlendirijiler.</string>
+    <string name="settings_external_engines">Daşarky hereketlendirijiler</string>
+    <string name="settings_external_engines_body">masscan / zmap aýratyn gurnamak gerek — RAW soketleri talap edýär, programma bilen birikdirilmedik.</string>
+    <string name="settings_about">Programma barada</string>
+    <string name="settings_about_body">X-RavScan — IP / CDN gözleg guraly. Doly Kotlin + Jetpack Compose ýasalan.</string>
+    <string name="settings_language">Dil</string>
+    <string name="settings_language_system">Ulgam dili</string>
+    <string name="settings_language_en">English</string>
+    <string name="settings_language_ru">Русский</string>
+    <string name="settings_language_tk">Türkmençe</string>
+    <string name="settings_export">Eksport</string>
+    <string name="settings_export_body">Hostlary we CIDR aralyklaryny TXT ýa-da JSON-a eksport edýär. Faýllar ulgamyň ýüklenenler bukjasyna saklanýar.</string>
+    <string name="settings_export_hosts_txt">Hostlary eksport et (TXT)</string>
+    <string name="settings_export_ranges_json">Aralyklary eksport et (JSON)</string>
+    <string name="settings_data">Maglumatlar</string>
+    <string name="settings_data_body">Tapylan ulgamlary we skan netijelerini arassalaýar. Goşulan üpjünçilikler indiki açylanda dikeldilýär.</string>
+    <string name="settings_reset_results">Netijeleri arassala</string>
+    <string name="settings_reset_discoveries">Tapyndylary arassala</string>
+    <string name="settings_app_version">Programma wersiýasy: %1$s</string>
+
+    <string name="action_start_scan">Skanleme</string>
+    <string name="action_smart_append">Smart Append (ASN)</string>
+    <string name="action_clean_optimize">Clean &amp; Optimize</string>
+    <string name="action_deep_discovery">Çuňňur gözleg</string>
+    <string name="action_quick_scan">Çalt skan</string>
+    <string name="action_clear_results">Arassala</string>
+</resources>

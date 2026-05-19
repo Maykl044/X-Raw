@@ -1,0 +1,183 @@
+CREATE TABLE IF NOT EXISTS providers (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    slug TEXT NOT NULL UNIQUE,
+    name TEXT NOT NULL,
+    color TEXT NOT NULL,
+    asns TEXT NOT NULL DEFAULT '',
+    enabled INTEGER NOT NULL DEFAULT 1
+);
+
+CREATE TABLE IF NOT EXISTS cidr_ranges (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    providerId INTEGER NOT NULL,
+    cidr TEXT NOT NULL,
+    family INTEGER NOT NULL DEFAULT 4,
+    UNIQUE(providerId, cidr),
+    FOREIGN KEY(providerId) REFERENCES providers(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_cidr_provider ON cidr_ranges(providerId);
+
+CREATE TABLE IF NOT EXISTS scan_results (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    providerSlug TEXT NOT NULL,
+    ip TEXT NOT NULL,
+    port INTEGER NOT NULL,
+    rttMs INTEGER NOT NULL,
+    tlsCn TEXT,
+    foundAt INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_results_foundAt ON scan_results(foundAt DESC);
+
+CREATE TABLE IF NOT EXISTS discoveries (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    providerSlug TEXT NOT NULL,
+    cidr TEXT NOT NULL,
+    foundAt INTEGER NOT NULL,
+    applied INTEGER NOT NULL DEFAULT 0,
+    UNIQUE(providerSlug, cidr)
+);
+
+CREATE INDEX IF NOT EXISTS idx_disc_foundAt ON discoveries(foundAt DESC);
+
+-- Phase I — Pause / Resume cursor for Full Provider Scan. One row per
+-- provider slug, INSERT OR REPLACE on every cursor flush. `cidrSnapshot`
+-- is the newline-joined list of CIDRs at scan start so a resume is
+-- meaningful even if cidr_ranges has been edited while the scan was
+-- paused.
+CREATE TABLE IF NOT EXISTS full_scan_state (
+    providerSlug TEXT NOT NULL PRIMARY KEY,
+    cidrIndex INTEGER NOT NULL,
+    ipOffset INTEGER NOT NULL,
+    ipsScanned INTEGER NOT NULL,
+    hits INTEGER NOT NULL,
+    maxIps INTEGER NOT NULL,
+    concurrency INTEGER NOT NULL,
+    cidrSnapshot TEXT NOT NULL,
+    updatedAt INTEGER NOT NULL
+);
+
+-- ===== Providers =====
+
+countProviders:
+SELECT COUNT(*) FROM providers;
+
+providerById:
+SELECT * FROM providers WHERE id = ?;
+
+providerBySlug:
+SELECT * FROM providers WHERE slug = ?;
+
+allProviders:
+SELECT * FROM providers ORDER BY name COLLATE NOCASE ASC;
+
+enabledProviders:
+SELECT * FROM providers WHERE enabled = 1 ORDER BY name COLLATE NOCASE ASC;
+
+insertProvider:
+INSERT INTO providers(slug, name, color, asns, enabled)
+VALUES (?, ?, ?, ?, ?);
+
+upsertProvider:
+INSERT INTO providers(slug, name, color, asns, enabled)
+VALUES (:slug, :name, :color, :asns, :enabled)
+ON CONFLICT(slug) DO UPDATE SET
+    name = excluded.name,
+    color = excluded.color,
+    asns = excluded.asns;
+
+setProviderEnabled:
+UPDATE providers SET enabled = ? WHERE id = ?;
+
+-- ===== CIDR ranges =====
+
+countCidrRanges:
+SELECT COUNT(*) FROM cidr_ranges;
+
+cidrsForProvider:
+SELECT cidr FROM cidr_ranges WHERE providerId = ?;
+
+cidrsForEnabledProviders:
+SELECT p.slug, p.name, c.cidr
+FROM cidr_ranges c
+JOIN providers p ON p.id = c.providerId
+WHERE p.enabled = 1;
+
+insertCidr:
+INSERT OR IGNORE INTO cidr_ranges(providerId, cidr, family)
+VALUES (?, ?, ?);
+
+deleteCidrsForProvider:
+DELETE FROM cidr_ranges WHERE providerId = ?;
+
+-- Used by Phase D3 Discovery's "Apply" path: insert a CIDR for a provider
+-- looked up by slug, atomically.
+insertCidrBySlug:
+INSERT OR IGNORE INTO cidr_ranges(providerId, cidr, family)
+SELECT id, :cidr, :family FROM providers WHERE slug = :slug;
+
+-- ===== Scan results =====
+
+countScanResults:
+SELECT COUNT(*) FROM scan_results;
+
+recentScanResults:
+SELECT * FROM scan_results ORDER BY foundAt DESC LIMIT ?;
+
+insertScanResult:
+INSERT INTO scan_results(providerSlug, ip, port, rttMs, tlsCn, foundAt)
+VALUES (?, ?, ?, ?, ?, ?);
+
+clearScanResults:
+DELETE FROM scan_results;
+
+-- ===== Discoveries =====
+
+countDiscoveries:
+SELECT COUNT(*) FROM discoveries;
+
+countPendingDiscoveries:
+SELECT COUNT(*) FROM discoveries WHERE applied = 0;
+
+allDiscoveries:
+SELECT * FROM discoveries ORDER BY foundAt DESC;
+
+pendingDiscoveries:
+SELECT * FROM discoveries WHERE applied = 0 ORDER BY foundAt DESC;
+
+insertDiscovery:
+INSERT OR IGNORE INTO discoveries(providerSlug, cidr, foundAt, applied)
+VALUES (?, ?, ?, 0);
+
+setDiscoveryApplied:
+UPDATE discoveries SET applied = 1 WHERE id = ?;
+
+deleteDiscoveryById:
+DELETE FROM discoveries WHERE id = ?;
+
+deletePendingDiscoveries:
+DELETE FROM discoveries WHERE applied = 0;
+
+-- ===== Full Scan State (Phase I) =====
+
+fullScanStateFor:
+SELECT * FROM full_scan_state WHERE providerSlug = ?;
+
+upsertFullScanState:
+INSERT INTO full_scan_state(
+    providerSlug, cidrIndex, ipOffset, ipsScanned, hits,
+    maxIps, concurrency, cidrSnapshot, updatedAt
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+ON CONFLICT(providerSlug) DO UPDATE SET
+    cidrIndex = excluded.cidrIndex,
+    ipOffset = excluded.ipOffset,
+    ipsScanned = excluded.ipsScanned,
+    hits = excluded.hits,
+    maxIps = excluded.maxIps,
+    concurrency = excluded.concurrency,
+    cidrSnapshot = excluded.cidrSnapshot,
+    updatedAt = excluded.updatedAt;
+
+clearFullScanState:
+DELETE FROM full_scan_state WHERE providerSlug = ?;

@@ -1,0 +1,73 @@
+<resources>
+    <string name="app_name">X-RavScan</string>
+
+    <!-- Bottom navigation tabs -->
+    <string name="tab_dashboard">Dashboard</string>
+    <string name="tab_providers">Providers</string>
+    <string name="tab_discovery">Discovery</string>
+    <string name="tab_results">Results</string>
+    <string name="tab_settings">Settings</string>
+
+    <!-- Dashboard -->
+    <string name="dashboard_title">Dashboard</string>
+    <string name="dashboard_subtitle">Live overview of providers, scans and discoveries.</string>
+    <string name="dashboard_quick_actions">Quick actions</string>
+    <string name="dashboard_status">Scanner status</string>
+    <string name="dashboard_status_idle">Idle — press Start scan to begin.</string>
+    <string name="dashboard_status_scanning">Scanning %1$d host(s)…</string>
+    <string name="stat_providers">Providers</string>
+    <string name="stat_cidr_loaded">CIDR loaded</string>
+    <string name="stat_results">Results</string>
+    <string name="stat_discoveries">Discoveries</string>
+
+    <!-- Providers -->
+    <string name="providers_title">Providers</string>
+    <string name="providers_subtitle">Cloud / CDN ASN ranges (29 included by default).</string>
+    <string name="providers_placeholder_title">Loading providers…</string>
+    <string name="providers_placeholder_body">The Room database will populate this list on the next phase. Pull-to-refresh and per-provider toggles will appear here.</string>
+    <string name="providers_search_hint">Search providers</string>
+    <string name="providers_enabled_count">%1$d of %2$d enabled</string>
+
+    <!-- Discovery -->
+    <string name="discovery_title">Discovery</string>
+    <string name="discovery_subtitle">Find new subnets via BGPView, RIPEstat and Hackertarget.</string>
+    <string name="discovery_placeholder_body">No new ranges yet. Press Smart Append to fan out across enabled providers in parallel.</string>
+    <string name="discovery_log_title">Activity</string>
+    <string name="discovery_pending_title">Pending discoveries · %1$d</string>
+
+    <!-- Results -->
+    <string name="results_title">Results</string>
+    <string name="results_subtitle">Reachable hosts found by the scanner with their TLS fingerprint and RTT.</string>
+    <string name="results_placeholder_body">Once a scan completes, reachable IPs and SNI hosts will appear here. Each row shows RTT (colour coded) and supports tap-to-export.</string>
+    <string name="results_count">Reachable hosts · %1$d</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_subtitle">Language, export paths and external engines.</string>
+    <string name="settings_external_engines">External engines</string>
+    <string name="settings_external_engines_body">masscan / zmap need to be installed separately and require RAW socket privileges; they are not bundled with the app.</string>
+    <string name="settings_about">About</string>
+    <string name="settings_about_body">X-RavScan — IP / CDN reconnaissance tool. Native Kotlin + Jetpack Compose build.</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_language_system">System default</string>
+    <string name="settings_language_en">English</string>
+    <string name="settings_language_ru">Русский</string>
+    <string name="settings_language_tk">Türkmençe</string>
+    <string name="settings_export">Export</string>
+    <string name="settings_export_body">Export reachable hosts and CIDR ranges to TXT or JSON. Files are saved to the Downloads folder via the system Downloads provider.</string>
+    <string name="settings_export_hosts_txt">Export hosts (TXT)</string>
+    <string name="settings_export_ranges_json">Export ranges (JSON)</string>
+    <string name="settings_data">Data</string>
+    <string name="settings_data_body">Resetting clears Smart Append discoveries and scan results. Bundled providers and CIDR ranges are restored on next launch.</string>
+    <string name="settings_reset_results">Clear scan results</string>
+    <string name="settings_reset_discoveries">Clear pending discoveries</string>
+    <string name="settings_app_version">App version: %1$s</string>
+
+    <!-- Action buttons -->
+    <string name="action_start_scan">Start scan</string>
+    <string name="action_smart_append">Smart Append (ASN)</string>
+    <string name="action_clean_optimize">Clean &amp; Optimize</string>
+    <string name="action_deep_discovery">Deep Discovery</string>
+    <string name="action_quick_scan">Quick scan</string>
+    <string name="action_clear_results">Clear results</string>
+</resources>

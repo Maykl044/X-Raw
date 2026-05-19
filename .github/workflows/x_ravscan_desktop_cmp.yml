@@ -1,0 +1,63 @@
+name: X-RavScan — Desktop CMP
+
+on:
+  push:
+    branches:
+      - "**"
+    paths:
+      - "tools/X-RavScanDesktop/**"
+      - ".github/workflows/x_ravscan_desktop_cmp.yml"
+  workflow_dispatch:
+
+jobs:
+  build-windows-exe:
+    name: Build Windows .exe (Compose Multiplatform)
+    runs-on: windows-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: tools/X-RavScanDesktop
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-cmp-windows-${{ hashFiles('tools/X-RavScanDesktop/**/*.gradle*', 'tools/X-RavScanDesktop/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: gradle-cmp-windows-
+
+      - name: Build + package distribution (.exe + .msi)
+        shell: bash
+        run: ./gradlew --no-daemon :app:packageDistributionForCurrentOS --stacktrace
+
+      - name: Upload .exe distribution
+        uses: actions/upload-artifact@v4
+        with:
+          name: X-RavScan-desktop-exe
+          path: tools/X-RavScanDesktop/app/build/compose/binaries/main/exe/*.exe
+          if-no-files-found: warn
+
+      - name: Upload .msi distribution
+        uses: actions/upload-artifact@v4
+        with:
+          name: X-RavScan-desktop-msi
+          path: tools/X-RavScanDesktop/app/build/compose/binaries/main/msi/*.msi
+          if-no-files-found: ignore
+
+      - name: Upload portable app folder
+        uses: actions/upload-artifact@v4
+        with:
+          name: X-RavScan-desktop-portable
+          path: tools/X-RavScanDesktop/app/build/compose/binaries/main/app
+          if-no-files-found: warn

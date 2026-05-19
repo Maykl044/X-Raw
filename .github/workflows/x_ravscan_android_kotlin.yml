@@ -1,0 +1,96 @@
+name: x-ravscan-android-kotlin
+
+on:
+  push:
+    branches:
+      - "**"
+    paths:
+      - "tools/X-RavScanAndroid/**"
+      - ".github/workflows/x_ravscan_android_kotlin.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build APK (Kotlin / Compose)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platforms;android-35 build-tools;35.0.0 platform-tools'
+
+      - name: Make gradlew executable
+        working-directory: tools/X-RavScanAndroid
+        run: chmod +x gradlew
+
+      - name: Generate debug keystore (used to sign release too)
+        run: |
+          mkdir -p ~/.android
+          if [ ! -f ~/.android/debug.keystore ]; then
+            keytool -genkey -v \
+              -keystore ~/.android/debug.keystore \
+              -alias androiddebugkey \
+              -storepass android -keypass android \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -dname "CN=X-RavScan, OU=Build, O=X-Raw, L=N/A, S=N/A, C=US"
+          fi
+
+      - name: Gradle cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            tools/X-RavScanAndroid/.gradle
+          key: ${{ runner.os }}-gradle-${{ hashFiles('tools/X-RavScanAndroid/**/*.gradle*', 'tools/X-RavScanAndroid/**/gradle-wrapper.properties', 'tools/X-RavScanAndroid/**/libs.versions.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Assemble debug + release APKs
+        working-directory: tools/X-RavScanAndroid
+        run: ./gradlew :app:assembleDebug :app:assembleRelease --stacktrace --warning-mode all
+
+      - name: Locate debug APK
+        id: locate-debug
+        working-directory: tools/X-RavScanAndroid
+        run: |
+          set -e
+          APK=$(find app/build/outputs/apk/debug -name '*.apk' | head -1)
+          echo "apk=$APK"
+          echo "apk=$APK" >> "$GITHUB_OUTPUT"
+
+      - name: Locate release APK
+        id: locate-release
+        working-directory: tools/X-RavScanAndroid
+        run: |
+          set -e
+          APK=$(find app/build/outputs/apk/release -name '*.apk' | head -1)
+          echo "apk=$APK"
+          echo "apk=$APK" >> "$GITHUB_OUTPUT"
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: X-RavScan-android-kotlin-debug
+          path: tools/X-RavScanAndroid/${{ steps.locate-debug.outputs.apk }}
+          if-no-files-found: error
+
+      - name: Upload release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: X-RavScan-android-kotlin-release
+          path: tools/X-RavScanAndroid/${{ steps.locate-release.outputs.apk }}
+          if-no-files-found: error

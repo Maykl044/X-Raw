@@ -1,0 +1,583 @@
+5.181.40.0/24
+5.181.41.0/24
+23.19.52.0/24
+23.19.53.0/24
+23.19.196.0/24
+23.19.197.0/24
+23.26.240.0/24
+23.82.8.0/21
+23.82.128.0/22
+23.105.0.0/20
+23.105.36.0/22
+23.105.160.0/19
+23.111.252.0/22
+45.145.57.0/24
+64.64.0.0/20
+64.64.16.0/22
+64.120.108.0/24
+64.131.64.0/19
+103.139.50.0/24
+108.59.0.0/20
+108.62.0.0/22
+108.62.116.0/22
+108.62.120.0/22
+162.210.192.0/21
+162.219.212.0/22
+172.98.27.0/24
+172.241.232.0/21
+172.241.240.0/21
+173.208.126.0/24
+185.28.70.0/24
+192.96.200.0/21
+193.5.125.0/24
+193.41.87.0/24
+193.164.199.0/24
+198.7.56.0/21
+199.38.116.0/22
+199.58.84.0/22
+199.102.224.0/21
+199.115.112.0/21
+199.167.40.0/22
+199.167.45.0/24
+199.230.52.0/22
+206.214.216.0/21
+207.58.128.0/18
+207.244.64.0/18
+209.50.224.0/19
+216.22.0.0/18
+216.38.48.0/20
+2.56.100.0/24	Seychelles
+IRR Valid2.56.101.0/24	Seychelles
+IRR Valid2.58.212.0/22	Another Level BVNetherlands
+IRR Parent Valid2.58.213.0/24	Another Level BVNetherlands
+IRR Valid2.59.20.0/24	routed via LeasewebSeychelles
+IRR Valid2.59.21.0/24	routed via LeasewebSeychelles
+IRR ValidROA Signed and Valid5.79.64.0/18	LeaseWeb Netherlands B.V.Netherlands
+IRR ValidROA Signed and Valid5.178.102.0/24	United Kingdom
+IRR ValidROA Signed and Valid5.180.153.0/24	MB "Serverita"Lithuania
+IRR Valid5.181.42.0/24	Seychelles
+IRR Valid5.181.43.0/24	Seychelles
+IRR Valid23.19.52.0/24	LeaseWeb Global Services BV (C07563628)United States
+IRR Valid23.19.53.0/24	LeaseWeb Global Services BV (C07563630)United States
+IRR Valid23.19.196.0/24	LeaseWeb Global Services BV (C07344729)United States
+IRR Valid23.19.197.0/24	LeaseWeb Global Services BV (C07344730)United States
+IRR ValidROA Signed and Valid31.43.167.0/24	Viktor KhymchenkoUkraine
+IRR ValidROA Signed and Valid31.43.174.0/24	BRENAC EURLFrance
+IRR ValidROA Signed and Valid31.186.168.0/23	CLDIN B.V.Netherlands
+IRR ValidROA Signed and Valid37.48.64.0/18	LeaseWeb Netherlands B.V.Netherlands
+IRR Valid37.75.152.0/21	Jan DijkNetherlands
+IRR Valid45.9.116.0/24	routed via LeasewebSeychelles
+IRR Valid45.9.121.0/24	Seychelles
+IRR Valid45.9.122.0/24	Seychelles
+IRR Valid45.9.123.0/24	routed via LeasewebSeychelles
+IRR ValidROA Signed and Valid45.11.190.0/24	Mohammad BoroumandfarIran, Islamic Republic of
+IRR ValidROA Signed and Valid45.13.84.0/22	EnablE-U B.V.Netherlands
+IRR ValidROA Signed and Valid45.13.186.0/24	Seychelles
+IRR ValidROA Signed and Valid45.13.187.0/24	RapidSeedbox LtdSeychelles
+IRR ValidROA Signed and Valid45.67.222.0/24	IPXO LIMITEDGermany
+IRR Valid45.85.160.0/24	Seychelles
+IRR Valid45.85.161.0/24	Seychelles
+IRR Valid45.85.162.0/24	Seychelles
+IRR Valid45.85.163.0/24	Seychelles
+IRR Valid45.86.13.0/24	Seychelles
+IRR Valid45.86.15.0/24	Seychelles
+IRR Valid45.86.244.0/24	Seychelles
+IRR Valid45.86.245.0/24	Seychelles
+IRR ValidROA Signed and Valid45.86.246.0/24	Seychelles
+IRR Valid45.86.247.0/24	Seychelles
+IRR Valid45.87.240.0/24	Seychelles
+IRR Valid45.87.241.0/24	Seychelles
+IRR Valid45.87.242.0/24	Seychelles
+IRR Valid45.87.243.0/24	Seychelles
+IRR Valid45.87.248.0/24	Seychelles
+IRR Valid45.87.249.0/24	Seychelles
+45.87.250.0/24	Seychelles
+IRR ValidROA Signed and Valid45.91.208.0/24	Seychelles
+IRR Valid45.91.209.0/24	Seychelles
+IRR Valid45.91.210.0/24	Seychelles
+IRR ValidROA Signed and Valid45.91.211.0/24	Seychelles
+IRR Valid45.92.20.0/22	RapidSeedbox LtdSeychelles
+IRR Valid45.92.168.0/22	RapidSeedbox LtdSeychelles
+IRR Valid45.92.244.0/23	RapidSeedbox LtdSeychelles
+IRR Valid45.92.247.0/24	routed via LeasewebSeychelles
+IRR Valid45.93.68.0/22	RapidSeedbox LtdSeychelles
+IRR Valid45.94.36.0/22	RapidSeedbox LtdSeychelles
+IRR Valid45.94.44.0/24	Seychelles
+IRR Valid45.94.45.0/24	Seychelles
+IRR Valid45.94.46.0/24	Seychelles
+IRR Valid45.94.47.0/24	Seychelles
+IRR Valid45.95.96.0/24	Seychelles
+IRR Valid45.95.97.0/24	Seychelles
+IRR ValidROA Signed and Valid45.95.98.0/24	Seychelles
+IRR Valid45.95.99.0/24	Seychelles
+IRR ValidROA Signed and Valid45.118.249.0/24	Transferred to the RIPE region on 2022-02-10T12:10:24Z.Seychelles
+IRR Valid45.118.250.0/24	Transferred to the RIPE region on 2022-02-10T12:10:24Z.Seychelles
+IRR Valid45.118.251.0/24	Seychelles
+IRR Valid45.128.24.0/24	routed via LeasewebSeychelles
+IRR Valid45.128.27.0/24	Seychelles
+IRR Valid45.128.76.0/24	Seychelles
+IRR Valid45.128.244.0/24	Seychelles
+IRR Valid45.128.245.0/24	Seychelles
+IRR Valid45.128.246.0/24	Seychelles
+IRR Valid45.128.247.0/24	Seychelles
+IRR Valid45.129.124.0/24	Seychelles
+IRR ValidROA Signed and Valid45.129.125.0/24	Seychelles
+IRR Valid45.130.60.0/22	RapidSeedbox LtdSeychelles
+IRR Valid45.130.124.0/23	RapidSeedbox LtdSeychelles
+IRR Valid45.130.126.0/24	Seychelles
+IRR Valid45.130.127.0/24	Seychelles
+IRR Valid45.130.128.0/22	RapidSeedbox LtdSeychelles
+IRR Valid45.130.252.0/24	Seychelles
+IRR ValidROA Signed and Valid45.130.254.0/24	Seychelles
+IRR Valid45.130.255.0/24	Seychelles
+IRR Valid45.131.212.0/23	RapidSeedbox LtdSeychelles
+IRR ValidROA Signed and Valid45.131.214.0/24	Seychelles
+IRR Valid45.131.215.0/24	routed via LeasewebSeychelles
+IRR Valid45.132.76.0/24	Seychelles
+IRR Valid45.132.77.0/24	Seychelles
+IRR Valid45.132.78.0/24	Seychelles
+IRR Valid45.132.79.0/24	Seychelles
+IRR Valid45.133.208.0/22	RapidSeedbox LtdSeychelles
+IRR Valid45.134.184.0/24	routed via LeasewebSeychelles
+45.134.185.0/24	Seychelles
+IRR ValidROA Signed and Valid45.134.186.0/24	Seychelles
+IRR Valid45.134.187.0/24	routed via LeasewebSeychelles
+IRR Valid45.135.36.0/24	routed via LeasewebSeychelles
+IRR InvalidROA Signed and Valid45.135.38.0/24	Seychelles
+IRR Valid45.135.39.0/24	routed via LeasewebSeychelles
+IRR Valid45.136.172.0/24	Seychelles
+IRR Valid45.136.173.0/24	Seychelles
+IRR Valid45.136.174.0/24	Seychelles
+IRR Valid45.136.175.0/24	Seychelles
+IRR Valid45.136.228.0/24	routed via LeasewebSeychelles
+IRR Valid45.136.229.0/24	Seychelles
+IRR Valid45.136.230.0/24	Seychelles
+IRR Valid45.136.231.0/24	routed via LeasewebSeychelles
+IRR Valid45.137.40.0/24	routed via LeasewebSeychelles
+IRR ValidROA Signed and Valid45.137.41.0/24	Seychelles
+IRR Valid45.137.42.0/24	Seychelles
+IRR Valid45.137.43.0/24	routed via LeasewebSeychelles
+IRR Valid45.137.60.0/24	Seychelles
+IRR Valid45.137.61.0/24	Seychelles
+ROA Signed and Valid45.137.62.0/24	Seychelles
+IRR Valid45.137.63.0/24	Seychelles
+IRR Valid45.137.80.0/24	Seychelles
+IRR Valid45.137.83.0/24	Seychelles
+IRR Valid45.137.84.0/24	Seychelles
+IRR ValidROA Signed and Valid45.137.85.0/24	Seychelles
+IRR ValidROA Signed and Valid45.137.86.0/24	Seychelles
+IRR Valid45.139.84.0/22	RapidSeedbox LtdSeychelles
+IRR Valid45.140.12.0/24	Seychelles
+IRR Valid45.140.13.0/24	Seychelles
+IRR Valid45.140.14.0/24	Seychelles
+IRR Valid45.140.15.0/24	Seychelles
+IRR Valid45.140.248.0/22	RapidSeedbox LtdSeychelles
+IRR Valid45.141.176.0/24	Seychelles
+IRR Valid45.142.28.0/24	Seychelles
+IRR InvalidROA Signed and Valid45.142.29.0/24	UTSeychelles
+IRR Valid45.142.30.0/24	Seychelles
+IRR Valid45.142.31.0/24	Seychelles
+IRR Valid45.142.116.0/22	RapidSeedbox LtdSeychelles
+IRR Valid45.145.12.0/22	RapidSeedbox LtdSeychelles
+IRR Valid45.145.56.0/24	Seychelles
+IRR Valid45.145.58.0/24	routed via LeasewebSeychelles
+IRR ValidROA Signed and Valid45.145.59.0/24	Seychelles
+IRR ValidROA Signed and Valid45.146.88.0/24	PRESIDIO HOLDINGS LLC D/B/A PRESIDIO NETWORKSSeychelles
+IRR Valid45.146.89.0/24	Seychelles
+IRR Valid45.146.90.0/24	Seychelles
+IRR Valid45.146.91.0/24	Seychelles
+IRR Valid45.146.128.0/24	Seychelles
+IRR ValidROA Signed and Valid45.146.129.0/24	Seychelles
+IRR Valid45.146.130.0/24	Seychelles
+IRR Valid45.146.180.0/24	Seychelles
+IRR ValidROA Signed and Valid45.146.181.0/24	RapidSeedbox LtdSeychelles
+IRR Valid45.146.182.0/24	Seychelles
+IRR Valid45.146.183.0/24	Seychelles
+IRR Valid45.147.28.0/24	Seychelles
+IRR Valid45.147.29.0/24	Seychelles
+IRR Valid45.147.30.0/24	Seychelles
+IRR InvalidROA Signed and Valid45.147.31.0/24	Seychelles
+IRR Valid45.147.100.0/24	Seychelles
+IRR Valid45.147.101.0/24	Seychelles
+IRR Valid45.147.102.0/24	Seychelles
+IRR Valid45.147.103.0/24	Seychelles
+IRR Valid45.147.180.0/22	RapidSeedbox LtdSeychelles
+IRR Valid45.148.100.0/22	RapidSeedbox LtdSeychelles
+IRR Valid45.149.144.0/22	RapidSeedbox LtdSeychelles
+IRR Valid45.151.100.0/22	RapidSeedbox LtdSeychelles
+IRR Valid45.151.104.0/24	Seychelles
+IRR Valid45.151.105.0/24	Seychelles
+IRR Valid45.151.106.0/24	Seychelles
+IRR Invalid45.151.107.0/24	Seychelles
+IRR Valid45.152.196.0/24	Seychelles
+IRR Valid45.152.198.0/24	Seychelles
+IRR Valid45.152.199.0/24	Seychelles
+IRR Valid45.152.200.0/24	Seychelles
+IRR Valid45.152.201.0/24	Seychelles
+IRR Valid45.152.202.0/24	Seychelles
+IRR Valid45.152.208.0/24	Seychelles
+IRR Valid45.152.209.0/24	Seychelles
+IRR Valid45.152.210.0/24	Seychelles
+IRR Valid45.152.211.0/24	Seychelles
+IRR ValidROA Signed and Valid45.153.21.0/24	Seychelles
+IRR Valid45.153.22.0/24	Seychelles
+IRR ValidROA Signed and Valid45.153.23.0/24	Seychelles
+IRR Valid45.153.216.0/24	Seychelles
+IRR Valid45.153.217.0/24	Seychelles
+IRR ValidROA Signed and Valid45.153.218.0/24	Seychelles
+IRR ValidROA Signed and Valid45.153.219.0/24	Seychelles
+IRR Valid45.154.56.0/24	Seychelles
+IRR Valid45.154.58.0/24	Seychelles
+IRR Valid45.154.59.0/24	Seychelles
+IRR Valid45.154.84.0/24	Seychelles
+IRR Valid45.154.85.0/24	Seychelles
+IRR Valid45.154.86.0/23	RapidSeedbox LtdSeychelles
+IRR Valid45.154.228.0/24	Seychelles
+IRR ValidROA Signed and Valid45.154.229.0/24	Seychelles
+IRR ValidROA Signed and Valid45.154.230.0/24	Seychelles
+IRR ValidROA Signed and Valid45.154.231.0/24	Seychelles
+IRR Valid45.154.244.0/24	Seychelles
+IRR Valid45.154.245.0/24	Seychelles
+IRR Valid45.154.246.0/24	Seychelles
+IRR Invalid45.154.247.0/24	Seychelles
+IRR Valid45.155.68.0/24	Seychelles
+IRR Valid45.155.69.0/24	Seychelles
+IRR Valid45.155.70.0/24	Seychelles
+IRR Valid45.155.71.0/24	Seychelles
+IRR Valid45.155.200.0/24	Seychelles
+IRR Valid45.155.201.0/24	Seychelles
+IRR Valid45.155.202.0/24	Seychelles
+IRR Valid45.155.203.0/24	Seychelles
+IRR ValidROA Signed and Valid45.157.36.0/24	Seychelles
+IRR ValidROA Signed and Valid45.157.37.0/24	RapidSeedbox LtdSeychelles
+IRR ValidROA Signed and Valid45.157.39.0/24	RapidSeedbox LtdSeychelles
+IRR Valid45.157.120.0/24	Seychelles
+IRR Valid45.157.121.0/24	Seychelles
+IRR Valid45.157.122.0/24	Seychelles
+IRR Valid45.157.123.0/24	Seychelles
+IRR Valid45.158.184.0/24	Seychelles
+IRR Valid45.158.185.0/24	Seychelles
+IRR Valid45.158.186.0/24	RapidSeedbox LtdSeychelles
+IRR Valid45.158.187.0/24	Seychelles
+IRR Valid45.158.196.0/24	Seychelles
+IRR ValidROA Signed and Valid45.158.197.0/24	Seychelles
+IRR ValidROA Signed and Valid45.158.198.0/24	Seychelles
+IRR Valid45.158.199.0/24	Seychelles
+IRR Valid45.159.144.0/22	RapidSeedbox LtdSeychelles
+IRR ValidROA Signed and Valid45.159.204.0/24	Netherlands
+IRR ValidROA Signed and Valid45.159.205.0/24	dicode BVNetherlands
+IRR ValidROA Signed and Valid45.159.206.0/24	dicode BVNetherlands
+IRR ValidROA Signed and Valid45.159.207.0/24	dicode BVNetherlands
+IRR ValidROA Signed and Valid46.17.14.0/23	Ospito B.V.Netherlands
+IRR Valid46.182.120.0/21	LeaseWeb Network B.V.Netherlands
+IRR ValidROA Signed and Valid50.114.126.0/24	IPXO LLCUnited States
+IRR ValidROA Signed and Valid62.212.64.0/19	LeaseWeb Netherlands B.V.Netherlands
+IRR ValidROA Signed and Valid64.226.54.0/24	RapidSeedbox LtdSeychelles
+IRR ValidROA Signed and Valid64.226.55.0/24	RapidSeedbox LtdSeychelles
+IRR ValidROA Signed and Valid64.226.156.0/24	RapidSeedbox LtdSeychelles
+IRR ValidROA Signed and Valid64.226.157.0/24	RapidSeedbox LtdSeychelles
+IRR ValidROA Signed and Valid64.226.158.0/24	Seychelles
+IRR ValidROA Signed and Valid64.226.159.0/24	Seychelles
+IRR Valid77.235.32.0/19	EUCLID SERVICES LIMITEDCyprus
+IRR Valid79.170.241.0/24	Irish Domains LtdIreland
+IRR Valid79.170.242.0/24	Irish Domains LtdIreland
+IRR Valid80.65.32.0/20	Steffen HuuckGermany
+IRR ValidROA Signed and Valid80.253.248.0/24	RapidSeedbox LtdSeychelles
+IRR Invalid80.253.249.0/24	Seychelles
+IRR Invalid80.253.250.0/24	Seychelles
+IRR Invalid80.253.251.0/24	Seychelles
+IRR ValidROA Signed and Valid81.17.47.0/24	LeaseWeb Netherlands B.V.Netherlands
+IRR ValidROA Signed and Valid81.17.49.0/24	LeaseWeb Netherlands B.V.Netherlands
+IRR ValidROA Signed and Valid81.17.50.0/24	LeaseWeb Netherlands B.V.Netherlands
+IRR ValidROA Signed and Valid81.17.51.0/24	LeaseWeb Netherlands B.V.Netherlands
+IRR ValidROA Signed and Valid81.17.52.0/24	LeaseWeb Netherlands B.V.Netherlands
+IRR ValidROA Signed and Valid81.17.53.0/24	LeaseWeb Netherlands B.V.Netherlands
+IRR ValidROA Signed and Valid81.17.54.0/24	LeaseWeb Netherlands B.V.Netherlands
+IRR ValidROA Signed and Valid81.17.55.0/24	LeaseWeb Netherlands B.V.Netherlands
+IRR ValidROA Signed and Valid81.171.0.0/19	LeaseWeb Netherlands B.V.Netherlands
+IRR ValidROA Signed and Valid82.150.152.0/24	Jet-Stream BVNetherlands
+IRR ValidROA Signed and Valid82.192.64.0/19	LeaseWeb Netherlands B.V.Netherlands
+IRR ValidROA Signed and Valid83.118.224.0/22	Euronet Communications B.V.Netherlands
+IRR ValidROA Signed and Valid83.149.64.0/18	LeaseWeb Netherlands B.V.Netherlands
+IRR Valid83.223.34.0/24	Verotel International B.V. - LAN-NetworkNetherlands
+IRR Valid84.21.188.0/24	routed via LeasewebSeychelles
+IRR Valid84.21.191.0/24	routed via LeasewebSeychelles
+IRR ValidROA Signed and Valid85.17.0.0/16	LeaseWeb Netherlands B.V.Netherlands
+IRR Valid85.209.129.0/24	Seychelles
+IRR Valid85.209.130.0/24	Seychelles
+IRR ValidROA Signed and Valid85.209.131.0/24	RapidSeedbox LtdSeychelles
+IRR Valid85.234.224.0/20	PQR B.V.Netherlands
+IRR ValidROA Signed and Valid87.236.96.0/21	Today Concepts B.V.Netherlands
+IRR ValidROA Signed and Valid87.251.19.0/24	VERITEKNIK BILISIM BASIN VE YAYIN LIMITED SIRKETITurkey
+IRR ValidROA Signed and Valid88.218.19.0/24	RSTS HYDRA LTDIran, Islamic Republic of
+IRR ValidROA Signed and Valid89.149.192.0/18	LeaseWeb Netherlands B.V.Netherlands
+IRR ValidROA Signed and Valid89.149.192.0/20	LeaseWeb Netherlands B.V.Netherlands
+IRR Valid91.184.46.0/23	VCN Corp.Germany
+IRR Valid91.184.48.0/20	SpeedPartner GmbHGermany
+IRR ValidROA Signed and Valid91.199.58.0/24	Today Concepts B.V.Netherlands
+IRR ValidROA Signed and Valid91.212.100.0/24	RapidSeedbox LtdSeychelles
+IRR ValidROA Signed and Valid91.212.107.0/24	RapidSeedbox LtdSeychelles
+ROA Signed and Valid91.212.120.0/24	RapidSeedbox LtdSeychelles
+IRR Valid91.212.123.0/24	RapidSeedbox LtdSeychelles
+IRR Valid91.214.108.0/24	NETRC LLCUnited States
+IRR ValidROA Signed and Valid91.232.255.0/24	RapidSeedbox LtdSeychelles
+IRR ValidROA Signed and Valid91.233.20.0/24	RapidSeedbox LtdSeychelles
+IRR Valid91.246.46.0/24	DomainContext Inc.United States
+IRR Valid92.114.86.0/23	IPv4 Management SRLRomania
+IRR Valid93.185.160.0/24	News Services BVNetherlands
+IRR ValidROA Signed and Valid93.190.220.0/22	Promek Yazilim InternetTurkey
+IRR ValidROA Signed and Valid93.190.220.0/24	Promek Yazilim InternetTurkey
+IRR ValidROA Signed and Valid93.190.221.0/24	Promek Yazilim InternetTurkey
+IRR ValidROA Signed and Valid93.190.222.0/24	Promek Yazilim InternetTurkey
+IRR ValidROA Signed and Valid93.190.223.0/24	Promek Yazilim InternetTurkey
+IRR Valid93.190.244.0/24	Seychelles
+IRR Valid93.190.245.0/24	Seychelles
+IRR Parent InvalidROA Signed and Valid93.190.247.0/24	Seychelles
+IRR ValidROA Signed and Valid94.75.192.0/18	LeaseWeb Netherlands B.V.Netherlands
+IRR Valid94.177.98.0/23	Key-Systems GmbHRomania
+IRR Valid94.177.146.0/24	Draico Management SRLRomania
+IRR ValidROA Signed and Valid95.168.160.0/20	LeaseWeb Netherlands B.V.Netherlands
+IRR ValidROA Signed and Valid95.211.0.0/16	LeaseWeb Netherlands B.V.Netherlands
+IRR ValidROA Signed and Valid103.49.40.0/24	DSPCambodia
+IRR InvalidROA Signed and Valid103.59.40.0/24	Transferred to the RIPE region on 2022-02-10T12:10:24Z.Seychelles
+IRR InvalidROA Signed and Valid103.59.41.0/24	Transferred to the RIPE region on 2022-02-10T12:10:24Z.Seychelles
+IRR InvalidROA Signed and Valid103.59.42.0/24	Transferred to the RIPE region on 2022-02-10T12:10:24Z.Seychelles
+IRR InvalidROA Signed and Valid103.59.43.0/24	Transferred to the RIPE region on 2022-02-10T12:10:24Z.Seychelles
+IRR ValidROA Signed and Valid103.74.76.0/24	Transferred to the RIPE region on 2021-11-23T18:36:38Z.Seychelles
+IRR ValidROA Signed and Valid103.74.77.0/24	Transferred to the RIPE region on 2021-11-23T18:36:38Z.Seychelles
+IRR Valid103.74.78.0/24	Transferred to the RIPE region on 2021-11-23T18:36:38Z.Seychelles
+IRR Valid103.74.79.0/24	Transferred to the RIPE region on 2021-11-23T18:36:38Z.Seychelles
+IRR ValidROA Signed and Valid103.76.130.0/24	Transferred to the RIPE region on 2022-06-28T09:46:33Z.Netherlands
+IRR Valid103.139.48.0/24	RapidSeedbox LtdAustralia
+IRR Valid103.139.49.0/24	RapidSeedbox LtdAustralia
+IRR Valid103.139.51.0/24	RapidSeedbox LtdAustralia
+IRR ValidROA Signed and Valid103.227.84.0/24	Transferred to the RIPE region on 2022-03-17T10:53:31Z.Seychelles
+IRR ValidROA Signed and Valid103.227.85.0/24	Transferred to the RIPE region on 2022-03-17T10:53:31Z.Seychelles
+IRR ValidROA Signed and Valid103.227.86.0/24	Seychelles
+IRR Valid103.229.28.0/24	Transferred to the RIPE region on 2021-11-18T10:47:27Z.Seychelles
+IRR Valid103.229.29.0/24	Transferred to the RIPE region on 2021-11-18T10:47:27Z.Seychelles
+IRR Valid103.229.30.0/24	Transferred to the RIPE region on 2021-11-18T10:47:27Z.Seychelles
+IRR ValidROA Signed and Valid103.229.31.0/24	Transferred to the RIPE region on 2021-11-18T10:47:27Z.Seychelles
+IRR Valid109.70.9.0/24	Hosting Infrastructure 03Netherlands
+IRR Valid109.70.10.0/23	Hosting Infrastructure 03Netherlands
+IRR Valid109.70.12.0/22	Hosting InfrastructureNetherlands
+IRR ValidROA Signed and Valid109.121.44.0/24	Orion Telekom Tim d.o.o.BeogradSerbia
+IRR Valid109.122.214.0/24	Navitgo LLCIran, Islamic Republic of
+IRR Valid109.122.223.0/24	Navitgo LLCIran, Islamic Republic of
+IRR InvalidROA Signed and Valid109.234.75.0/24	Netherlands
+IRR ValidROA Signed and Valid113.30.152.0/24	Transferred to the RIPE region on 2021-12-14T04:44:38Z.Seychelles
+IRR ValidROA Signed and Valid113.30.153.0/24	Transferred to the RIPE region on 2021-12-14T04:44:38Z.Seychelles
+IRR ValidROA Signed and Valid113.30.154.0/24	Transferred to the RIPE region on 2021-12-14T04:44:38Z.Seychelles
+IRR ValidROA Signed and Valid113.30.155.0/24	Transferred to the RIPE region on 2021-12-14T04:44:38Z.Seychelles
+IRR Valid141.193.20.0/24	RapidSeedbox LtdSeychelles
+IRR Valid145.255.128.0/21	Copernica BVNetherlands
+IRR ValidROA Signed and Valid146.247.104.0/24	Germany
+IRR Valid149.18.41.0/24	United States
+IRR Valid149.18.98.0/24	United States
+IRR Valid149.18.101.0/24	LogicWeb Inc.United States
+IRR ValidROA Signed and Valid152.89.251.0/24	UAB LinamaLithuania
+IRR Valid154.6.5.0/24	United States
+IRR Valid154.6.126.0/24	United States
+IRR Valid154.6.146.0/24	United States
+IRR Valid154.6.188.0/24	United States
+IRR ValidROA Signed and Valid154.16.104.0/24	Digital Energy Technologies LimitedSouth Africa
+IRR Valid159.255.192.0/22	Saima Sistemas SLSpain
+IRR Valid162.221.63.0/24	2checkout.comUnited States
+IRR ValidROA Signed and Valid163.5.178.0/24	France
+IRR ValidROA Signed and Valid163.5.188.0/24	France
+IRR ValidROA Signed and Valid166.0.16.0/24	United States
+IRR Valid167.94.162.0/24	Seychelles
+IRR Valid167.94.163.0/24	Seychelles
+IRR Valid167.94.164.0/24	RapidSeedbox LtdSeychelles
+IRR ValidROA Signed and Valid167.94.165.0/24	Seychelles
+IRR Parent Valid176.96.140.0/24	Seychelles
+IRR Parent Valid176.96.141.0/24	Seychelles
+IRR Parent Valid176.96.142.0/24	Seychelles
+IRR Parent Valid176.96.143.0/24	Seychelles
+IRR ValidROA Signed and Valid176.103.222.0/23	CLOUD CATALYST NORWAY ASNorway
+IRR Valid178.18.16.0/24	LeaseWebNetherlands
+IRR ValidROA Signed and Valid178.18.20.0/22	FiberMax Networks BVNetherlands
+IRR ValidROA Signed and Valid178.18.24.0/23	FiberMax Networks BVNetherlands
+IRR ValidROA Signed and Valid178.18.27.0/24	FIBERMAX NETWORKSNetherlands
+IRR ValidROA Signed and Valid178.18.30.0/24	GLOBAL-CLOUD-SOLUTIONSNetherlands
+IRR ValidROA Signed and Valid178.18.31.0/24	GLOBAL-CLOUD-SOLUTIONSNetherlands
+IRR ValidROA Signed and Valid178.162.128.0/18	LeaseWeb Netherlands B.V.Netherlands
+IRR ValidROA Signed and Valid178.162.164.0/22	LeaseWeb Netherlands B.V.Netherlands
+IRR ValidROA Signed and Valid178.162.168.0/22	LeaseWeb Netherlands B.V.Netherlands
+IRR ValidROA Signed and Valid178.162.176.0/20	LeaseWeb Netherlands B.V.Netherlands
+IRR ValidROA Signed and Valid178.250.16.0/24	suXus B.V.Netherlands
+IRR ValidROA Signed and Valid178.250.18.0/24	suXus B.V.Netherlands
+IRR Valid185.9.52.0/24	RapidSeedbox LtdSeychelles
+IRR ValidROA Signed and Valid185.17.184.0/22	LeaseWeb Netherlands B.V.Netherlands
+IRR ValidROA Signed and Valid185.24.172.0/23	PEAKFACTORYNetherlands
+IRR ValidROA Signed and Valid185.24.174.0/24	Addional netNetherlands
+IRR ValidROA Signed and Valid185.24.175.0/24	Addional netNetherlands
+IRR ValidROA Signed and Valid185.24.240.0/24	suXus BVNetherlands
+IRR Valid185.28.68.0/24	LeaseWeb CDN B.V.Netherlands
+IRR Valid185.30.232.0/24	RapidSeedbox LtdSeychelles
+IRR Valid185.34.68.0/22	AlexoMedia Ltd.Latvia
+IRR Valid185.38.185.0/24	Drustvo Za Konsalting I Usluge, Export-Import "New Wind D.O.O." BudvaMontenegro
+IRR Valid185.38.187.0/24	Drustvo Za Konsalting I Usluge, Export-Import "New Wind D.O.O." BudvaMontenegro
+IRR Valid185.44.22.0/23	GIMASI SASwitzerland
+IRR ValidROA Signed and Valid185.46.180.0/23	AFAS Software BVNetherlands
+IRR ValidROA Signed and Valid185.46.182.0/23	AFAS Software BVNetherlands
+IRR ValidROA Signed and Valid185.46.232.0/24	ON2IT B.V.Netherlands
+IRR ValidROA Signed and Valid185.51.192.0/24	Panq B.V.Netherlands
+IRR Valid185.60.164.0/24	routed via LeasewebFrance
+IRR ValidROA Signed and Valid185.67.4.0/22	Centralpoint Holding B.V.Netherlands
+IRR ValidROA Signed and Valid185.67.6.0/23	Centralpoint Holding B.V.Netherlands
+IRR Valid185.71.60.0/22	Cobytes B.V.Netherlands
+IRR Valid185.73.32.0/23	Innerheight Internet Diensten B.V.Netherlands
+IRR Parent Valid185.73.33.0/24	Innerheight Internet Diensten B.V.Netherlands
+IRR Valid185.73.34.0/24	Innerheight Internet Diensten B.V.Netherlands
+IRR ValidROA Signed and Valid185.96.140.0/24	Axians-Security-DCNetherlands
+IRR Valid185.99.96.0/24	Seychelles
+IRR Valid185.99.97.0/24	Seychelles
+IRR Valid185.100.132.0/24	Netherlands
+IRR Valid185.108.84.0/23	MTNDUnited States
+IRR Valid185.108.85.0/24	Krukover IlyaUnited States
+IRR Valid185.113.88.0/22	JENT Internet SolutionsNetherlands
+IRR Valid185.122.168.0/22	RapidSeedbox LtdSeychelles
+IRR Parent Valid185.122.168.0/24	routed via LeaseWeb NLSeychelles
+IRR Valid185.123.60.0/24	Routed via Leaseweb NLNetherlands
+IRR Valid185.126.64.0/24	Seychelles
+IRR Valid185.126.65.0/24	Seychelles
+IRR Valid185.126.66.0/24	Seychelles
+IRR ValidROA Signed and Valid185.129.121.0/24	Serbia
+IRR Valid185.131.24.0/22	Copernica BVNetherlands
+IRR Valid185.140.164.0/22	EUCLID SERVICES LIMITEDCyprus
+IRR Valid185.140.164.0/23	EUCLID SERVICES LIMITEDCyprus
+IRR Valid185.140.166.0/24	Cyprus
+IRR ValidROA Signed and Valid185.145.60.0/22	Today Concepts B.V.Netherlands
+185.155.200.0/22	RapidSeedbox LtdSeychelles
+IRR ValidROA Signed and Valid185.155.202.0/24	Seychelles
+IRR Valid185.164.56.0/24	Seychelles
+IRR Valid185.164.57.0/24	Seychelles
+IRR Valid185.164.58.0/24	routed via LeasewebSeychelles
+IRR ValidROA Signed and Valid185.164.59.0/24	Seychelles
+IRR Valid185.168.248.0/22	RapidSeedbox LtdSeychelles
+IRR ValidROA Signed and Valid185.173.146.0/24	IPXO LIMITEDNetherlands
+IRR ValidROA Signed and Valid185.179.217.0/24	Slovenia
+IRR ValidROA Signed and Valid185.181.8.0/24	Gibraltar
+IRR Valid185.192.0.0/22	RapidSeedbox LtdSeychelles
+IRR Valid185.203.249.0/24	United Kingdom
+IRR ValidROA Signed and Valid185.211.154.0/24	Netherlands
+IRR ValidROA Signed and Valid185.211.155.0/24	Netherlands
+IRR ValidROA Signed and Valid185.214.72.0/24	RapidSeedbox LtdSeychelles
+IRR Valid185.214.75.0/24	Seychelles
+IRR ValidROA Signed and Valid185.227.110.0/24	Gibraltar
+IRR Valid185.242.244.0/24	Seychelles
+IRR Valid185.242.245.0/24	Seychelles
+IRR Valid185.242.246.0/24	Seychelles
+IRR Valid185.242.247.0/24	Seychelles
+IRR ValidROA Signed and Valid185.247.117.0/24	Gibraltar
+IRR ValidROA Signed and Valid190.105.193.0/24	Conet N.V.Curaçao
+IRR ValidROA Signed and Valid190.105.195.0/24	Conet N.V.Curaçao
+IRR ValidROA Signed and Valid190.121.212.0/24	Global Cash N.V.Curaçao
+IRR ValidROA Signed and Valid191.101.175.0/24	United Arab Emirates
+IRR Valid192.153.171.0/24	RapidSeedbox LtdSeychelles
+IRR Valid192.156.217.0/24	RapidSeedbox LtdSeychelles
+IRR Valid192.166.81.0/24	RapidSeedbox LtdSeychelles
+IRR Valid192.166.153.0/24	RapidSeedbox LtdSeychelles
+IRR ValidROA Signed and Valid193.5.64.0/24	Seychelles
+IRR Valid193.5.65.0/24	Seychelles
+IRR Valid193.5.145.0/24	OpenS SPRLBelgium
+IRR Valid193.5.251.0/24	Seychelles
+IRR Valid193.5.255.0/24	RapidSeedbox LtdSeychelles
+IRR Valid193.8.1.0/24	RapidSeedbox LtdSeychelles
+IRR Valid193.8.8.0/24	RapidSeedbox LtdSeychelles
+IRR Valid193.8.56.0/24	RapidSeedbox LtdSeychelles
+IRR Valid193.8.94.0/24	RapidSeedbox LtdSeychelles
+IRR Valid193.8.127.0/24	RapidSeedbox LtdSeychelles
+IRR Valid193.8.138.0/24	RapidSeedbox LtdSeychelles
+IRR Valid193.8.215.0/24	RapidSeedbox LtdSeychelles
+IRR Valid193.8.231.0/24	RapidSeedbox LtdSeychelles
+IRR Valid193.8.234.0/24	RapidSeedbox LtdSeychelles
+IRR Valid193.8.238.0/24	RapidSeedbox LtdSeychelles
+IRR ValidROA Signed and Valid193.9.249.0/24	Enapter AGGermany
+IRR Valid193.23.245.0/24	RapidSeedbox LtdSeychelles
+IRR Valid193.23.249.0/24	Seychelles
+IRR Valid193.23.250.0/24	RapidSeedbox LtdSeychelles
+IRR Valid193.23.253.0/24	RapidSeedbox LtdSeychelles
+IRR Valid193.27.10.0/24	RapidSeedbox LtdSeychelles
+IRR Valid193.27.19.0/24	RapidSeedbox LtdSeychelles
+IRR Valid193.27.21.0/24	RapidSeedbox LtdSeychelles
+IRR Valid193.27.23.0/24	RapidSeedbox LtdSeychelles
+IRR Valid193.27.72.0/23	AlexoMedia Ltd.Latvia
+IRR Valid193.32.2.0/24	RapidSeedbox LtdSeychelles
+IRR Valid193.32.8.0/24	RapidSeedbox LtdSeychelles
+IRR Valid193.32.16.0/24	RapidSeedbox LtdSeychelles
+IRR Valid193.32.23.0/24	RapidSeedbox LtdSeychelles
+IRR Valid193.39.142.0/24	Seychelles
+IRR ValidROA Signed and Valid193.39.143.0/24	Seychelles
+IRR ValidROA Signed and Valid193.39.208.0/24	Seychelles
+IRR Parent InvalidROA Signed and Valid193.39.209.0/24	Seychelles
+IRR Valid193.39.245.0/24	Seychelles
+IRR Parent InvalidROA Signed and Valid193.41.38.0/24	Seychelles
+IRR Valid193.41.39.0/24	RapidSeedbox LtdSeychelles
+IRR ValidROA Signed and Valid193.41.68.0/24	RapidSeedbox LtdSeychelles
+IRR ValidROA Signed and Valid193.41.69.0/24	RapidSeedbox LtdSeychelles
+IRR ValidROA Signed and Valid193.41.86.0/24	RapidSeedbox LtdSeychelles
+IRR Valid193.41.114.0/24	Seychelles
+IRR ValidROA Signed and Valid193.41.115.0/24	Seychelles
+IRR ValidROA Signed and Valid193.41.122.0/24	Seychelles
+IRR ValidROA Signed and Valid193.41.123.0/24	Seychelles
+IRR Valid193.42.121.0/24	The Egyptian company for IT Cloud servicesRussian Federation
+IRR Valid193.42.212.0/24	McNolia.com B.V.Netherlands
+IRR ValidROA Signed and Valid193.43.92.0/24	CyberServ B.V.Netherlands
+IRR Valid193.58.108.0/22	RapidSeedbox LtdSeychelles
+IRR ValidROA Signed and Valid193.93.54.0/24	Turkcell Iletisim Hizmetleri A.S.Ukraine
+IRR Valid193.104.219.0/24	KELKOO.COM LIMITEDUnited Kingdom
+IRR ValidROA Signed and Valid193.111.4.0/24	Seychelles
+IRR ValidROA Signed and Valid193.111.5.0/24	Seychelles
+IRR ValidROA Signed and Valid193.111.18.0/24	Seychelles
+IRR ValidROA Signed and Valid193.111.19.0/24	Seychelles
+IRR Valid193.160.152.0/24	Netherlands
+IRR Valid193.239.4.0/23	VCN Corp.Panama
+IRR Valid193.239.6.0/23	VCN Corp.Panama
+IRR ValidROA Signed and Valid193.242.108.0/24	CyberServ B.V.Netherlands
+IRR Valid193.254.234.0/24	Seychelles
+IRR Valid193.254.235.0/24	Seychelles
+IRR Valid193.254.244.0/24	Seychelles
+IRR Valid193.254.245.0/24	Seychelles
+IRR Valid194.33.29.0/24	RapidSeedbox LtdSeychelles
+IRR Valid194.33.61.0/24	Seychelles
+IRR ValidROA Signed and Valid194.33.62.0/24	Seychelles
+IRR Valid194.35.224.0/24	Seychelles
+IRR Valid194.35.227.0/24	Seychelles
+IRR ValidROA Signed and Valid194.37.81.0/24	Gibraltar
+IRR Valid194.41.8.0/24	RapidSeedbox LtdSeychelles
+ROA Signed and Valid194.41.38.0/24	RapidSeedbox LtdSeychelles
+IRR Valid194.41.56.0/24	RapidSeedbox LtdSeychelles
+IRR ValidROA Signed and Valid194.45.34.0/24	RapidSeedbox LtdSeychelles
+IRR Valid194.56.235.0/24	DomainContext Inc.United States
+IRR Valid194.56.240.0/24	DomainContext Inc.United States
+IRR Valid194.56.245.0/24	DomainContext Inc.United States
+IRR Valid194.60.71.0/24	FiberMax Networks BVNetherlands
+IRR Valid194.62.30.0/24	Seychelles
+IRR Valid194.62.31.0/24	Seychelles
+IRR Valid194.62.66.0/24	Seychelles
+IRR Valid194.62.67.0/24	Seychelles
+IRR Valid194.150.208.0/23	ISource B.V.Netherlands
+IRR ValidROA Signed and Valid194.169.245.0/24	CLOUD CATALYST NORWAY ASNorway
+IRR ValidROA Signed and Valid194.180.36.0/24	Bulgaria
+IRR Valid195.66.120.0/24	RapidSeedbox LtdSeychelles
+IRR Valid195.74.90.0/24	RapidSeedbox LtdSeychelles
+IRR Valid195.85.194.0/24	RapidSeedbox LtdSeychelles
+IRR Valid195.85.197.0/24	RapidSeedbox LtdSeychelles
+IRR ValidROA Signed and Valid195.93.238.0/23	Today Concepts B.V.Netherlands
+IRR Valid195.144.10.0/24	ISource B.V.Netherlands
+IRR Valid195.158.192.0/22	RapidSeedbox LtdSeychelles
+IRR Valid195.190.146.0/24	Remon Varkevisser trading as Dutch Web CompanyNetherlands
+IRR Valid195.200.82.0/23	VoipGrow B.V.Netherlands
+IRR ValidROA Signed and Valid195.242.98.0/23	CyberServ B.V.Netherlands
+IRR ValidROA Signed and Valid195.242.237.0/24	OSHS LtdUnited Kingdom
+IRR Valid199.167.44.0/24	Leaseweb USA, Inc.United States
+IRR Valid199.223.212.0/24	Leaseweb USA, Inc.United States
+IRR Valid199.223.214.0/23	Leaseweb USA, Inc.United States
+IRR ValidROA Signed and Valid209.35.158.0/24	RapidSeedbox LtdSeychelles
+IRR ValidROA Signed and Valid212.7.192.0/20	LeaseWeb Netherlands B.V.Netherlands
+IRR ValidROA Signed and Valid212.7.208.0/22	LeaseWeb Netherlands B.V.Netherlands
+IRR ValidROA Signed and Valid212.32.224.0/19	LeaseWeb Netherlands B.V.Netherlands
+IRR Valid213.139.216.0/22	RapidSeedbox LtdSeychelles
+IRR ValidROA Signed and Valid213.227.128.0/19	LeaseWeb Netherlands B.V.
