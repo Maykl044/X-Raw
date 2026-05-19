@@ -177,7 +177,7 @@ private fun ProviderRow(
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(provider.name, color = TextPrimary, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-                    if (provider.slug.equals("bunny", ignoreCase = true)) {
+                    if (provider.slug.lowercase() in DIRECT_API_SLUGS) {
                         Spacer(Modifier.width(8.dp))
                         DirectApiBadge()
                     }
@@ -212,8 +212,18 @@ private fun ProviderRow(
 }
 
 /**
- * Compact "Direct API" pill shown next to Bunny CDN. Mirrors the
- * Android badge — Mint accent, 0.5dp hairline, 18% fill.
+ * Phase H — every vendor that ships its IP-range list directly
+ * (Cloudflare, AWS, GCP, CloudFront, Fastly, Akamai, Bunny) earns
+ * a mint "Direct API" pill in the provider list. The set is kept
+ * in lockstep with [DiscoveryRepository.directProviders].
+ */
+private val DIRECT_API_SLUGS: Set<String> = setOf(
+    "cloudflare", "gcp", "aws", "cloudfront", "fastly", "akamai", "bunny",
+)
+
+/**
+ * Compact "Direct API" pill. Mint accent, 0.5dp hairline, 18% fill.
+ * Matches the Android sibling byte-for-byte.
  */
 @Composable
 private fun DirectApiBadge() {
@@ -230,7 +240,7 @@ private fun DirectApiBadge() {
             .padding(horizontal = 8.dp, vertical = 2.dp),
     ) {
         Text(
-            text = strings.bunnyDirectApiBadge,
+            text = strings.directApiBadge,
             color = Mint,
             fontWeight = FontWeight.SemiBold,
             fontSize = 10.sp,

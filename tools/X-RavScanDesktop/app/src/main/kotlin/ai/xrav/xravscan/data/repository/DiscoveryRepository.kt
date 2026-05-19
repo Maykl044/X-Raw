@@ -2,11 +2,18 @@ package ai.xrav.xravscan.data.repository
 
 import ai.xrav.xravscan.data.remote.BgpViewService
 import ai.xrav.xravscan.data.remote.BunnyRangeProvider
+import ai.xrav.xravscan.data.remote.direct.AkamaiDirectProvider
+import ai.xrav.xravscan.data.remote.direct.AwsDirectProvider
+import ai.xrav.xravscan.data.remote.direct.BunnyDirectProvider
+import ai.xrav.xravscan.data.remote.direct.CloudflareDirectProvider
+import ai.xrav.xravscan.data.remote.direct.DirectRangeProvider
+import ai.xrav.xravscan.data.remote.direct.FastlyDirectProvider
+import ai.xrav.xravscan.data.remote.direct.GoogleCloudDirectProvider
 import ai.xrav.xravscan.db.XRavScanDb
 import ai.xrav.xravscan.domain.model.Discovery
 import ai.xrav.xravscan.domain.model.SmartAppendReport
 import ai.xrav.xravscan.domain.util.Cidr
-import ai.xrav.xravscan.domain.util.smartAppend
+import ai.xrav.xravscan.domain.util.DedupPipeline
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import kotlinx.coroutines.Dispatchers
@@ -24,6 +31,15 @@ import org.slf4j.LoggerFactory
  * is injected with both the database and the BGPView service via
  * [ai.xrav.xravscan.AppContainer].
  *
+ * Phase H — Smart Append now routes each provider to a vendor-specific
+ * [DirectRangeProvider] (Cloudflare ips-v4, AWS ip-ranges.json, GCP
+ * cloud.json, Fastly public-ip-list, Akamai RADB snapshot, Bunny direct
+ * API) whenever the slug matches; everything else still falls back to
+ * the legacy BGPView ASN walk. Every batch then goes through
+ * [DedupPipeline] which normalises canonical form, drops invalid CIDRs,
+ * counts duplicates, and yields a single structured log line per
+ * provider in the form `Name: found N, duplicates M, added K`.
+ *
  * All public APIs marshal the underlying calls onto [Dispatchers.IO]
  * (network + SQLite) so the caller can stay on whatever scope it likes.
  */
@@ -31,9 +47,32 @@ class DiscoveryRepository(
     private val db: XRavScanDb,
     private val bgpView: BgpViewService,
     private val bunny: BunnyRangeProvider,
+    private val cloudflareDirect: CloudflareDirectProvider = CloudflareDirectProvider(),
+    private val googleCloudDirect: GoogleCloudDirectProvider = GoogleCloudDirectProvider(),
+    private val awsDirect: AwsDirectProvider = AwsDirectProvider(),
+    private val fastlyDirect: FastlyDirectProvider = FastlyDirectProvider(),
+    private val akamaiDirect: AkamaiDirectProvider = AkamaiDirectProvider(),
+    private val bunnyDirect: BunnyDirectProvider = BunnyDirectProvider(bunny),
 ) {
     private val log = LoggerFactory.getLogger("XRavScan.Discovery")
     private val q get() = db.xRavScanDbQueries
+
+    /**
+     * Lookup table from provider slug → which [DirectRangeProvider]
+     * to call instead of BGPView. AWS and CloudFront share the same
+     * upstream JSON but pull different `service` rows.
+     */
+    private val directProviders: Map<String, DirectRangeProvider> by lazy {
+        mapOf(
+            "cloudflare" to cloudflareDirect,
+            "gcp" to googleCloudDirect,
+            "aws" to awsDirect.forService("aws", "AMAZON"),
+            "cloudfront" to awsDirect.forService("cloudfront", "CLOUDFRONT"),
+            "fastly" to fastlyDirect,
+            "akamai" to akamaiDirect,
+            "bunny" to bunnyDirect,
+        )
+    }
 
     /**
      * Localizable status messages used during a Smart Append run. The
@@ -43,6 +82,8 @@ class DiscoveryRepository(
      * that doesn't care about i18n keeps working unchanged.
      */
     data class Messages(
+        val noProviders: String = "No enabled providers — nothing to do",
+        val starting: (Int) -> String = { n -> "Smart Append starting — $n provider(s)" },
         val bunnyLoadingViaApi: String = "Loading Bunny CDN ranges via direct API…",
         val bunnyReceivedGrouped: (Int, Int) -> String = { ips, cidrs ->
             "Bunny: $ips IPs received, grouped into $cidrs CIDRs"
@@ -50,6 +91,20 @@ class DiscoveryRepository(
         val bunnyFallbackUsed: (Int) -> String = { n ->
             "Bunny CDN: fell back to built-in list ($n CIDR)"
         },
+        val noAsnConfigured: (String) -> String = { name -> "$name: no ASN configured" },
+        val errorLine: (String, String) -> String =
+            { name, err -> "$name: error — $err" },
+        val noPrefixes: (String) -> String = { name -> "$name: no prefixes" },
+        val fallback: (String, Int) -> String =
+            { name, count -> "$name: fallback to built-in list ($count CIDR)" },
+        val fallbackWithReason: (String, Int, String) -> String =
+            { name, count, reason -> "$name: fallback to built-in list ($count CIDR) — $reason" },
+        val providerLine: (String, Int, Int, Int) -> String =
+            { name, found, dup, added -> "$name: found $found, duplicates $dup, added $added" },
+        val providerLineWithInvalid: (String, Int, Int, Int, Int) -> String =
+            { name, found, dup, added, invalid ->
+                "$name: found $found, duplicates $dup, added $added · $invalid invalid"
+            },
     )
 
     fun observeAll(): Flow<List<Discovery>> =
@@ -66,9 +121,15 @@ class DiscoveryRepository(
         }.flowOn(Dispatchers.IO)
 
     /**
-     * Run a parallel BGPView walk for every enabled provider. Truly-new
-     * prefixes land in the `discoveries` table with `applied = 0`. Each
-     * provider produces one terse iOS-style log line via [onLog].
+     * Run Smart Append for every enabled provider — in parallel, with a
+     * dedicated path per provider:
+     *
+     *  * `cloudflare`, `gcp`, `aws`, `cloudfront`, `fastly`, `akamai`,
+     *    `bunny` → vendor-specific [DirectRangeProvider]
+     *  * any other slug → legacy BGPView ASN walk
+     *
+     * Each call produces one terse iOS-style log line via [onLog]:
+     * `Cloudflare: found 22, duplicates 18, added 4`.
      */
     suspend fun runSmartAppend(
         messages: Messages = Messages(),
@@ -77,22 +138,22 @@ class DiscoveryRepository(
         withContext(Dispatchers.IO) {
             val providers = q.enabledProviders().executeAsList()
             if (providers.isEmpty()) {
-                onLog("No enabled providers — nothing to do")
+                onLog(messages.noProviders)
                 return@withContext emptyList()
             }
-            onLog("Smart Append starting — ${providers.size} provider(s)")
+            onLog(messages.starting(providers.size))
 
             coroutineScope {
                 providers.map { row ->
                     async {
-                        val report = if (row.slug.equals("bunny", ignoreCase = true)) {
-                            syncBunny(row.id, row.slug, row.name, messages, onLog)
+                        val direct = directProviders[row.slug.lowercase()]
+                        val report = if (direct != null) {
+                            syncDirect(direct, row.id, row.slug, row.name, messages, onLog)
                         } else {
                             val asns = row.asns.split(',')
                                 .mapNotNull { it.trim().toLongOrNull() }
-                            syncProvider(row.id, row.slug, row.name, asns)
+                            syncProvider(row.id, row.slug, row.name, asns, messages, onLog)
                         }
-                        onLog(report.iosLine())
                         report
                     }
                 }.awaitAll()
@@ -168,13 +229,82 @@ class DiscoveryRepository(
     // internals
     // ------------------------------------------------------------------
 
+    /**
+     * Generic direct-vendor Smart-Append path used by Cloudflare, GCP,
+     * AWS, CloudFront, Fastly, Akamai, and Bunny. Each vendor's
+     * [DirectRangeProvider] returns a single [DirectRangeProvider.Result]
+     * + a per-vendor source tag; we always run the output through
+     * [DedupPipeline] before inserting so:
+     *
+     *   * invalid CIDRs are dropped (and counted)
+     *   * duplicates (same canonical network already in the table) are
+     *     dropped (and counted)
+     *   * the user sees ONE structured log line:
+     *     "Cloudflare: found 22, duplicates 18, added 4"
+     */
+    private suspend fun syncDirect(
+        provider: DirectRangeProvider,
+        providerId: Long,
+        slug: String,
+        name: String,
+        messages: Messages,
+        onLog: suspend (String) -> Unit,
+    ): SmartAppendReport {
+        if (slug.equals("bunny", ignoreCase = true)) {
+            onLog(messages.bunnyLoadingViaApi)
+        }
+
+        val result = runCatching { provider.fetch() }.getOrElse { t ->
+            log.warn("Direct fetch failed for {}: {}", slug, t.message)
+            DirectRangeProvider.Result.fallback(
+                cidrs = emptyList(),
+                reason = t.message ?: t::class.simpleName ?: "unknown error",
+            )
+        }
+
+        if (result.source == DirectRangeProvider.Source.HARDCODED_FALLBACK) {
+            val reason = result.errorMessage
+            onLog(
+                if (reason.isNullOrBlank()) {
+                    messages.fallback(name, result.cidrs.size)
+                } else {
+                    messages.fallbackWithReason(name, result.cidrs.size, reason)
+                },
+            )
+        }
+
+        val existing = q.cidrsForProvider(providerId).executeAsList()
+        val outcome = DedupPipeline.process(result.cidrs, existing)
+
+        if (outcome.added.isNotEmpty()) {
+            val now = System.currentTimeMillis()
+            db.transaction {
+                for (cidr in outcome.added) q.insertDiscovery(slug, cidr, now)
+            }
+        }
+
+        onLog(formatFoundDuplicatesAdded(name, outcome, messages))
+
+        return SmartAppendReport(
+            providerSlug = slug,
+            providerName = name,
+            added = outcome.added.size,
+            skipped = outcome.duplicates,
+            superseded = 0,
+            error = if (result.cidrs.isEmpty()) result.errorMessage else null,
+        )
+    }
+
     private suspend fun syncProvider(
         providerId: Long,
         slug: String,
         name: String,
         asns: List<Long>,
+        messages: Messages,
+        onLog: suspend (String) -> Unit,
     ): SmartAppendReport {
         if (asns.isEmpty()) {
+            onLog(messages.noAsnConfigured(name))
             return SmartAppendReport(slug, name, 0, 0, 0, error = "no ASN configured")
         }
         val collected = mutableListOf<String>()
@@ -191,11 +321,12 @@ class DiscoveryRepository(
             }
         }
         if (collected.isEmpty()) {
+            onLog(error?.let { messages.errorLine(name, it) } ?: messages.noPrefixes(name))
             return SmartAppendReport(slug, name, 0, 0, 0, error = error)
         }
 
         val existing = q.cidrsForProvider(providerId).executeAsList()
-        val outcome = smartAppend(existing, collected)
+        val outcome = DedupPipeline.process(collected, existing)
 
         if (outcome.added.isNotEmpty()) {
             val now = System.currentTimeMillis()
@@ -204,77 +335,35 @@ class DiscoveryRepository(
             }
         }
 
+        onLog(formatFoundDuplicatesAdded(name, outcome, messages))
+
         return SmartAppendReport(
             providerSlug = slug,
             providerName = name,
             added = outcome.added.size,
-            skipped = outcome.skipped,
-            superseded = outcome.superseded.size,
+            skipped = outcome.duplicates,
+            superseded = 0,
             error = error,
         )
     }
 
-    /**
-     * Bunny CDN sync path. BGPView returns essentially nothing for the
-     * Bunny ASN (their edges live on Datacamp parent networks) so we
-     * call the public edge-server list directly and fall back to a
-     * curated hardcoded list if the API is unreachable.
-     */
-    private suspend fun syncBunny(
-        providerId: Long,
-        slug: String,
+    /** Phase H structured per-provider summary line. */
+    private fun formatFoundDuplicatesAdded(
         name: String,
+        outcome: DedupPipeline.Outcome,
         messages: Messages,
-        onLog: suspend (String) -> Unit,
-    ): SmartAppendReport {
-        onLog(messages.bunnyLoadingViaApi)
-        val result = try {
-            bunny.fetchAll()
-        } catch (t: Throwable) {
-            log.warn("Bunny.fetchAll() threw: {}", t.message)
-            BunnyRangeProvider.Result(
-                cidrs = BunnyRangeProvider.HARDCODED_RANGES,
-                source = BunnyRangeProvider.Source.HARDCODED_FALLBACK,
-                edgeIpCount = 0,
-                fallbackReason = t.message ?: t::class.simpleName ?: "unknown error",
+    ): String =
+        if (outcome.invalid > 0) {
+            messages.providerLineWithInvalid(
+                name,
+                outcome.found,
+                outcome.duplicates,
+                outcome.added.size,
+                outcome.invalid,
             )
+        } else {
+            messages.providerLine(name, outcome.found, outcome.duplicates, outcome.added.size)
         }
-
-        when (result.source) {
-            BunnyRangeProvider.Source.DIRECT_API,
-            BunnyRangeProvider.Source.MIXED -> {
-                onLog(messages.bunnyReceivedGrouped(result.edgeIpCount, result.cidrs.size))
-            }
-            BunnyRangeProvider.Source.HARDCODED_FALLBACK -> {
-                onLog(messages.bunnyFallbackUsed(result.cidrs.size))
-            }
-        }
-
-        if (result.cidrs.isEmpty()) {
-            // Defence in depth — BunnyRangeProvider never returns empty,
-            // but if it ever did we surface the hardcoded list.
-            return SmartAppendReport(slug, name, 0, 0, 0, error = "Bunny: empty CIDR set")
-        }
-
-        val existing = q.cidrsForProvider(providerId).executeAsList()
-        val outcome = smartAppend(existing, result.cidrs)
-
-        if (outcome.added.isNotEmpty()) {
-            val now = System.currentTimeMillis()
-            db.transaction {
-                for (cidr in outcome.added) q.insertDiscovery(slug, cidr, now)
-            }
-        }
-
-        return SmartAppendReport(
-            providerSlug = slug,
-            providerName = name,
-            added = outcome.added.size,
-            skipped = outcome.skipped,
-            superseded = outcome.superseded.size,
-            error = result.fallbackReason?.let { "Bunny fallback: $it" },
-        )
-    }
 
     private fun collapseCidrs(cidrs: List<String>): List<String> {
         val parsed = cidrs.mapNotNull { Cidr.parse(it) }.distinct()

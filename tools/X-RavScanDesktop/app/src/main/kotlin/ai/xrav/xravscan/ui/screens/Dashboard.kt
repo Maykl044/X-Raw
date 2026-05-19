@@ -64,9 +64,18 @@ fun DashboardScreen(modifier: Modifier = Modifier) {
     val strings = LocalAppStrings.current
     val bunnyMessages = remember(strings.tag) {
         DiscoveryRepository.Messages(
+            noProviders = strings.smartAppendNoProviders,
+            starting = strings.smartAppendStarting,
             bunnyLoadingViaApi = strings.bunnyLoadingViaApi,
             bunnyReceivedGrouped = strings.bunnyReceivedGrouped,
             bunnyFallbackUsed = strings.bunnyFallbackUsed,
+            noAsnConfigured = strings.smartAppendNoAsnConfigured,
+            errorLine = strings.smartAppendErrorLine,
+            noPrefixes = strings.smartAppendNoPrefixes,
+            fallback = strings.smartAppendFallback,
+            fallbackWithReason = strings.smartAppendFallbackWithReason,
+            providerLine = strings.smartAppendProviderLine,
+            providerLineWithInvalid = strings.smartAppendProviderLineWithInvalid,
         )
     }
     var running by remember { mutableStateOf(false) }

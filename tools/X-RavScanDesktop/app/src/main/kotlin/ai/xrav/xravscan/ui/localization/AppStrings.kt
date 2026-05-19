@@ -72,6 +72,17 @@ data class AppStrings(
     val bunnyReceivedGrouped: (Int, Int) -> String,
     val bunnyFallbackUsed: (Int) -> String,
     val updateUsingDohBypass: String,
+    // Phase H — Smart Append structured log lines
+    val smartAppendNoProviders: String,
+    val smartAppendStarting: (Int) -> String,
+    val smartAppendNoAsnConfigured: (String) -> String,
+    val smartAppendErrorLine: (String, String) -> String,
+    val smartAppendNoPrefixes: (String) -> String,
+    val smartAppendFallback: (String, Int) -> String,
+    val smartAppendFallbackWithReason: (String, Int, String) -> String,
+    val smartAppendProviderLine: (String, Int, Int, Int) -> String,
+    val smartAppendProviderLineWithInvalid: (String, Int, Int, Int, Int) -> String,
+    val directApiBadge: String,
 ) {
     companion object {
         val EN = AppStrings(
@@ -127,6 +138,22 @@ data class AppStrings(
             bunnyReceivedGrouped = { ips, cidrs -> "Bunny: $ips IPs received, grouped into $cidrs CIDRs" },
             bunnyFallbackUsed = { n -> "Bunny CDN: fell back to built-in list ($n CIDR)" },
             updateUsingDohBypass = "VPN active — using DoH for update fetches.",
+            smartAppendNoProviders = "No enabled providers — nothing to do",
+            smartAppendStarting = { n -> "Smart Append starting — $n provider(s)" },
+            smartAppendNoAsnConfigured = { name -> "$name: no ASN configured" },
+            smartAppendErrorLine = { name, err -> "$name: error — $err" },
+            smartAppendNoPrefixes = { name -> "$name: no prefixes" },
+            smartAppendFallback = { name, count -> "$name: fallback to built-in list ($count CIDR)" },
+            smartAppendFallbackWithReason = { name, count, reason ->
+                "$name: fallback to built-in list ($count CIDR) — $reason"
+            },
+            smartAppendProviderLine = { name, found, dup, added ->
+                "$name: found $found, duplicates $dup, added $added"
+            },
+            smartAppendProviderLineWithInvalid = { name, found, dup, added, invalid ->
+                "$name: found $found, duplicates $dup, added $added · $invalid invalid"
+            },
+            directApiBadge = "Direct API",
         )
 
         val RU = AppStrings(
@@ -182,6 +209,22 @@ data class AppStrings(
             bunnyReceivedGrouped = { ips, cidrs -> "Bunny: получено $ips IP, объединены в $cidrs CIDR" },
             bunnyFallbackUsed = { n -> "Bunny CDN: fallback на встроенный список ($n CIDR)" },
             updateUsingDohBypass = "VPN активен — обновление через DoH.",
+            smartAppendNoProviders = "Нет включённых провайдеров — нечего обновлять",
+            smartAppendStarting = { n -> "Smart Append запущен — $n провайдер(ов)" },
+            smartAppendNoAsnConfigured = { name -> "$name: ASN не настроен" },
+            smartAppendErrorLine = { name, err -> "$name: ошибка — $err" },
+            smartAppendNoPrefixes = { name -> "$name: подсети не получены" },
+            smartAppendFallback = { name, count -> "$name: fallback на встроенный список ($count CIDR)" },
+            smartAppendFallbackWithReason = { name, count, reason ->
+                "$name: fallback на встроенный список ($count CIDR) — $reason"
+            },
+            smartAppendProviderLine = { name, found, dup, added ->
+                "$name: найдено $found, дубликатов $dup, добавлено $added"
+            },
+            smartAppendProviderLineWithInvalid = { name, found, dup, added, invalid ->
+                "$name: найдено $found, дубликатов $dup, добавлено $added · невалидных $invalid"
+            },
+            directApiBadge = "Прямой API",
         )
 
         /** Resolve a tag (`null` = system default) into the matching table. */

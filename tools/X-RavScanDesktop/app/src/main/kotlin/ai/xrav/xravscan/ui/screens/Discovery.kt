@@ -53,9 +53,18 @@ fun DiscoveryScreen(modifier: Modifier = Modifier) {
     val strings = LocalAppStrings.current
     val messages = remember(strings.tag) {
         DiscoveryRepository.Messages(
+            noProviders = strings.smartAppendNoProviders,
+            starting = strings.smartAppendStarting,
             bunnyLoadingViaApi = strings.bunnyLoadingViaApi,
             bunnyReceivedGrouped = strings.bunnyReceivedGrouped,
             bunnyFallbackUsed = strings.bunnyFallbackUsed,
+            noAsnConfigured = strings.smartAppendNoAsnConfigured,
+            errorLine = strings.smartAppendErrorLine,
+            noPrefixes = strings.smartAppendNoPrefixes,
+            fallback = strings.smartAppendFallback,
+            fallbackWithReason = strings.smartAppendFallbackWithReason,
+            providerLine = strings.smartAppendProviderLine,
+            providerLineWithInvalid = strings.smartAppendProviderLineWithInvalid,
         )
     }
 
