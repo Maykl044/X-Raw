@@ -5,6 +5,7 @@ import androidx.room.Room
 import ai.xrav.xravscan.data.local.XRavScanDatabase
 import ai.xrav.xravscan.data.local.dao.CidrRangeDao
 import ai.xrav.xravscan.data.local.dao.DiscoveryDao
+import ai.xrav.xravscan.data.local.dao.FullScanStateDao
 import ai.xrav.xravscan.data.local.dao.ProviderDao
 import ai.xrav.xravscan.data.local.dao.ScanResultDao
 import dagger.Module
@@ -40,4 +41,7 @@ object DatabaseModule {
 
     @Provides
     fun provideDiscoveryDao(db: XRavScanDatabase): DiscoveryDao = db.discoveryDao()
+
+    @Provides
+    fun provideFullScanStateDao(db: XRavScanDatabase): FullScanStateDao = db.fullScanStateDao()
 }

@@ -120,8 +120,11 @@ fun ResultsScreen(viewModel: ResultsViewModel = hiltViewModel()) {
         FullScanCard(
             providers = state.providers.filter { it.enabled },
             progress = state.fullScanProgress,
+            pausedScans = state.pausedScans,
             onStart = { slug -> viewModel.runFullProviderScan(slug) },
-            onCancel = viewModel::cancelFullScan,
+            onResume = { slug -> viewModel.runFullProviderScan(slug, resume = true) },
+            onDiscard = viewModel::discardPausedScan,
+            onPause = viewModel::pauseFullScan,
             onDismiss = viewModel::dismissFullScanProgress,
         )
 
@@ -241,14 +244,18 @@ private fun rttColor(rttMs: Int?): Color = when {
 private fun FullScanCard(
     providers: List<ai.xrav.xravscan.domain.model.Provider>,
     progress: ai.xrav.xravscan.domain.model.FullScanProgress?,
+    pausedScans: Map<String, ai.xrav.xravscan.domain.repository.ScanRepository.PausedScan>,
     onStart: (String) -> Unit,
-    onCancel: () -> Unit,
+    onResume: (String) -> Unit,
+    onDiscard: (String) -> Unit,
+    onPause: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     val running = progress != null && !progress.done
     var menuExpanded by remember { mutableStateOf(false) }
     var selectedSlug by remember(providers) { mutableStateOf(providers.firstOrNull()?.slug) }
     val selectedProvider = providers.firstOrNull { it.slug == selectedSlug }
+    val pausedForSelected = selectedSlug?.let(pausedScans::get)
 
     GlassCard(modifier = Modifier.fillMaxWidth()) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -331,25 +338,81 @@ private fun FullScanCard(
                             modifier = Modifier.size(18.dp),
                         )
                     },
-                    enabled = !running && selectedSlug != null,
+                    enabled = !running && selectedSlug != null && pausedForSelected == null,
                     onClick = { selectedSlug?.let(onStart) },
                     modifier = Modifier.weight(1f),
                 )
                 if (running) {
                     NeonButton(
-                        text = stringResource(R.string.action_cancel),
-                        accent = Color(0xFFFF6B6B),
+                        text = stringResource(R.string.action_pause),
+                        accent = Color(0xFFFFB347),
                         leadingIcon = {
                             Icon(
                                 Icons.Outlined.Cancel,
                                 contentDescription = null,
-                                tint = Color(0xFFFF6B6B),
+                                tint = Color(0xFFFFB347),
                                 modifier = Modifier.size(18.dp),
                             )
                         },
-                        onClick = onCancel,
+                        onClick = onPause,
                         modifier = Modifier.weight(1f),
                     )
+                }
+            }
+
+            // Phase I — render Resume/Discard for the selected provider if it
+            // has a persisted pause cursor. The big "Full provider scan"
+            // button is greyed-out above so the user is forced to either
+            // resume or discard before starting a new run.
+            if (pausedForSelected != null && !running) {
+                val name = selectedProvider?.name ?: pausedForSelected.providerSlug
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(
+                        text = stringResource(R.string.paused_scan_card_title, name),
+                        color = TextPrimary,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 13.sp,
+                    )
+                    Text(
+                        text = stringResource(
+                            R.string.paused_scan_card_progress,
+                            pausedForSelected.ipsScanned,
+                            pausedForSelected.ipsTotal,
+                            pausedForSelected.hits,
+                        ),
+                        color = TextSecondary,
+                        fontSize = 12.sp,
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        NeonButton(
+                            text = stringResource(R.string.action_resume),
+                            accent = Mint,
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Outlined.Radar,
+                                    contentDescription = null,
+                                    tint = Mint,
+                                    modifier = Modifier.size(18.dp),
+                                )
+                            },
+                            onClick = { onResume(pausedForSelected.providerSlug) },
+                            modifier = Modifier.weight(1f),
+                        )
+                        NeonButton(
+                            text = stringResource(R.string.action_discard),
+                            accent = Color(0xFFFF6B6B),
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Outlined.DeleteOutline,
+                                    contentDescription = null,
+                                    tint = Color(0xFFFF6B6B),
+                                    modifier = Modifier.size(18.dp),
+                                )
+                            },
+                            onClick = { onDiscard(pausedForSelected.providerSlug) },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
                 }
             }
 

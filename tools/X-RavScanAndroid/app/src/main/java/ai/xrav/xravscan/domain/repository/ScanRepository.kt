@@ -40,7 +40,28 @@ interface ScanRepository {
         providerSlug: String,
         maxIps: Long = 50_000L,
         concurrency: Int = 64,
+        resume: Boolean = false,
     ): Flow<FullScanProgress>
+
+    /**
+     * Snapshot of a paused Full Provider Scan as persisted in
+     * `full_scan_state`. The UI uses it to render a "Resume" button
+     * with the right counters before a scan is actually started.
+     */
+    data class PausedScan(
+        val providerSlug: String,
+        val cidrIndex: Int,
+        val ipOffset: Long,
+        val ipsScanned: Long,
+        val ipsTotal: Long,
+        val hits: Int,
+        val maxIps: Long,
+        val concurrency: Int,
+    )
+
+    suspend fun pausedScanFor(providerSlug: String): PausedScan?
+
+    suspend fun discardPausedScan(providerSlug: String)
 
     suspend fun clearAll()
 }

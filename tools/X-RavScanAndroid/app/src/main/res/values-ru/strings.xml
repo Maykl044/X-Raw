@@ -65,6 +65,11 @@
     <string name="action_clear_results">Очистить</string>
     <string name="action_full_scan">Полный скан провайдера</string>
     <string name="action_cancel">Отмена</string>
+    <string name="action_pause">Пауза</string>
+    <string name="action_resume">Продолжить</string>
+    <string name="action_discard">Сбросить</string>
+    <string name="paused_scan_card_title">Скан на паузе · %1$s</string>
+    <string name="paused_scan_card_progress">%1$d / %2$d IP · %3$d попаданий</string>
 
     <!-- Полное сканирование -->
     <string name="full_scan_title">Полное сканирование</string>

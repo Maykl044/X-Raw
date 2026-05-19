@@ -72,6 +72,11 @@
     <string name="action_clear_results">Clear results</string>
     <string name="action_full_scan">Full provider scan</string>
     <string name="action_cancel">Cancel</string>
+    <string name="action_pause">Pause</string>
+    <string name="action_resume">Resume</string>
+    <string name="action_discard">Discard</string>
+    <string name="paused_scan_card_title">Paused scan · %1$s</string>
+    <string name="paused_scan_card_progress">%1$d / %2$d IPs · %3$d hits</string>
 
     <!-- Full provider scan -->
     <string name="full_scan_title">Full provider scan</string>

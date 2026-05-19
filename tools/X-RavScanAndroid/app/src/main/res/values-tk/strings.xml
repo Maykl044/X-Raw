@@ -65,6 +65,11 @@
     <string name="action_clear_results">Arassala</string>
     <string name="action_full_scan">Doly üpjün ediji skan</string>
     <string name="action_cancel">Ýatyr</string>
+    <string name="action_pause">Pauza</string>
+    <string name="action_resume">Dowam et</string>
+    <string name="action_discard">Taşla</string>
+    <string name="paused_scan_card_title">Skan pauzada · %1$s</string>
+    <string name="paused_scan_card_progress">%1$d / %2$d IP · %3$d urgy</string>
 
     <!-- Doly skan -->
     <string name="full_scan_title">Doly skan</string>

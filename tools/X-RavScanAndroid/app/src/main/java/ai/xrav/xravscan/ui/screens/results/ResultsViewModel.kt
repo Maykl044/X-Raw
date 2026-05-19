@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.conflate
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -25,6 +26,8 @@ data class ResultsUiState(
     val log: List<String> = emptyList(),
     val providers: List<Provider> = emptyList(),
     val fullScanProgress: FullScanProgress? = null,
+    /** Provider slug → persisted pause cursor, populated by [refreshPausedScans]. */
+    val pausedScans: Map<String, ScanRepository.PausedScan> = emptyMap(),
 )
 
 @HiltViewModel
@@ -36,21 +39,29 @@ class ResultsViewModel @Inject constructor(
     private val running = MutableStateFlow(false)
     private val log = MutableStateFlow<List<String>>(emptyList())
     private val fullScanProgress = MutableStateFlow<FullScanProgress?>(null)
+    private val pausedScans = MutableStateFlow<Map<String, ScanRepository.PausedScan>>(emptyMap())
     private var fullScanJob: Job? = null
 
+    init { refreshPausedScans() }
+
     val uiState: StateFlow<ResultsUiState> = combine(
-        repo.observeRecent(),
-        running,
-        log,
-        providerRepository.observeAll(),
-        fullScanProgress,
-    ) { results, isRunning, lines, providers, progress ->
+        listOf(
+            repo.observeRecent(),
+            running,
+            log,
+            providerRepository.observeAll(),
+            fullScanProgress,
+            pausedScans,
+        ),
+    ) { values ->
+        @Suppress("UNCHECKED_CAST")
         ResultsUiState(
-            results = results,
-            running = isRunning,
-            log = lines,
-            providers = providers,
-            fullScanProgress = progress,
+            results = values[0] as List<ScanResult>,
+            running = values[1] as Boolean,
+            log = values[2] as List<String>,
+            providers = values[3] as List<Provider>,
+            fullScanProgress = values[4] as FullScanProgress?,
+            pausedScans = values[5] as Map<String, ScanRepository.PausedScan>,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -75,7 +86,11 @@ class ResultsViewModel @Inject constructor(
         }
     }
 
-    fun runFullProviderScan(providerSlug: String, maxIps: Long = 50_000L) {
+    fun runFullProviderScan(
+        providerSlug: String,
+        maxIps: Long = 50_000L,
+        resume: Boolean = false,
+    ) {
         if (fullScanJob?.isActive == true) return
         fullScanProgress.value = null
         fullScanJob = viewModelScope.launch {
@@ -84,6 +99,7 @@ class ResultsViewModel @Inject constructor(
                     providerSlug = providerSlug,
                     maxIps = maxIps,
                     concurrency = 64,
+                    resume = resume,
                 ).conflate().collect { progress ->
                     fullScanProgress.value = progress
                     progress.message?.let { line -> log.update { it + line } }
@@ -93,14 +109,49 @@ class ResultsViewModel @Inject constructor(
                 fullScanProgress.update { current ->
                     current?.copy(done = true, message = "Full scan failed: ${t.message}")
                 }
+            } finally {
+                refreshPausedScans()
             }
         }
     }
 
-    fun cancelFullScan() {
+    /**
+     * Phase I — pause cancels the producer / worker pool but keeps the
+     * persisted cursor so the user can Resume from the exact bit-offset.
+     */
+    fun pauseFullScan() {
         fullScanJob?.cancel()
         fullScanProgress.update { current ->
-            current?.copy(done = true, cancelled = true, message = "Cancelled by user")
+            current?.copy(done = true, cancelled = true)
+        }
+        viewModelScope.launch { refreshPausedScans() }
+    }
+
+    fun cancelFullScan() {
+        // "Cancel" still pauses (so progress isn't lost) — the user can
+        // explicitly Discard from the resume card if they want to throw
+        // the cursor away.
+        pauseFullScan()
+    }
+
+    fun discardPausedScan(providerSlug: String) {
+        viewModelScope.launch {
+            repo.discardPausedScan(providerSlug)
+            refreshPausedScans()
+        }
+    }
+
+    fun refreshPausedScans() {
+        viewModelScope.launch {
+            val snapshot = mutableMapOf<String, ScanRepository.PausedScan>()
+            val providers = runCatching {
+                providerRepository.observeAll().first()
+            }.getOrDefault(emptyList())
+            for (p in providers) {
+                val paused = repo.pausedScanFor(p.slug) ?: continue
+                snapshot[p.slug] = paused
+            }
+            pausedScans.value = snapshot
         }
     }
 
