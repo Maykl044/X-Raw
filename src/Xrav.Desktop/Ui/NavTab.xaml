@@ -3,11 +3,19 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Name="Self"
              Background="Transparent">
+  <!-- iOS Control Center segment: один сегмент стеклянной пилюли.
+       - hover: лёгкое внутреннее свечение + scale 1.02
+       - active (IsActive): акцентный glow + чуть ярче foreground
+       - анимации cubic-ease 180 ms -->
   <Button x:Name="Btn" Background="Transparent" BorderThickness="0" Cursor="Hand"
           Command="{Binding Command, ElementName=Self}">
     <Button.Template>
       <ControlTemplate TargetType="Button">
-        <Border x:Name="bd" Background="Transparent" CornerRadius="16" Padding="6,8" Margin="2">
+        <Border x:Name="bd" Background="Transparent" CornerRadius="16" Padding="6,8" Margin="2"
+                BorderBrush="Transparent" BorderThickness="1" RenderTransformOrigin="0.5,0.5">
+          <Border.RenderTransform>
+            <ScaleTransform x:Name="bdScale" ScaleX="1" ScaleY="1" />
+          </Border.RenderTransform>
           <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
             <TextBlock x:Name="GlyphText" Text="{Binding Glyph, ElementName=Self}"
                        FontSize="18" HorizontalAlignment="Center"
@@ -18,14 +26,44 @@
           </StackPanel>
         </Border>
         <ControlTemplate.Triggers>
+          <Trigger Property="IsMouseOver" Value="True">
+            <Setter TargetName="bd" Property="Background" Value="{DynamicResource X.Brush.GlassFillStrong}" />
+            <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource X.Brush.GlassBorder}" />
+            <Trigger.EnterActions>
+              <BeginStoryboard>
+                <Storyboard>
+                  <DoubleAnimation Storyboard.TargetName="bdScale" Storyboard.TargetProperty="ScaleX"
+                                   To="1.02" Duration="0:0:0.18" />
+                  <DoubleAnimation Storyboard.TargetName="bdScale" Storyboard.TargetProperty="ScaleY"
+                                   To="1.02" Duration="0:0:0.18" />
+                </Storyboard>
+              </BeginStoryboard>
+            </Trigger.EnterActions>
+            <Trigger.ExitActions>
+              <BeginStoryboard>
+                <Storyboard>
+                  <DoubleAnimation Storyboard.TargetName="bdScale" Storyboard.TargetProperty="ScaleX"
+                                   To="1" Duration="0:0:0.18" />
+                  <DoubleAnimation Storyboard.TargetName="bdScale" Storyboard.TargetProperty="ScaleY"
+                                   To="1" Duration="0:0:0.18" />
+                </Storyboard>
+              </BeginStoryboard>
+            </Trigger.ExitActions>
+          </Trigger>
+          <Trigger Property="IsPressed" Value="True">
+            <Setter TargetName="bd" Property="Background" Value="{DynamicResource X.Brush.SurfaceHi}" />
+          </Trigger>
           <DataTrigger Binding="{Binding IsActive, ElementName=Self}" Value="True">
             <Setter TargetName="bd" Property="Background" Value="{DynamicResource X.Brush.AccentGrad}" />
+            <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource X.Brush.Accent}" />
             <Setter TargetName="GlyphText" Property="Foreground" Value="White" />
             <Setter TargetName="TitleText" Property="Foreground" Value="White" />
+            <Setter TargetName="bd" Property="Effect">
+              <Setter.Value>
+                <DropShadowEffect Color="{DynamicResource X.Color.Accent}" BlurRadius="16" ShadowDepth="0" Opacity="0.55" />
+              </Setter.Value>
+            </Setter>
           </DataTrigger>
-          <Trigger Property="IsMouseOver" Value="True">
-            <Setter TargetName="bd" Property="Opacity" Value="0.92" />
-          </Trigger>
         </ControlTemplate.Triggers>
       </ControlTemplate>
     </Button.Template>

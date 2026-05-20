@@ -509,21 +509,33 @@
         <ui:SettingsView DataContext="{Binding}" Visibility="{Binding IsSettingsTab, Converter={StaticResource BoolToVis}}" />
       </Grid>
 
-      <!-- Нижняя навигация (скрывается когда доступен sidebar) -->
-      <Border Grid.Row="4" Margin="14,8,14,4" Background="{DynamicResource X.Brush.GlassFill}"
-              BorderBrush="{DynamicResource X.Brush.GlassBorder}" BorderThickness="1" CornerRadius="22" Padding="6"
+      <!-- Нижняя навигация: iOS Control Center segmented pill. Тонкие 1px разделители,
+           inner glow + scale 1.02 на hover/active. Скрывается когда доступен sidebar. -->
+      <Border Grid.Row="4" Margin="14,8,14,4" CornerRadius="22"
+              Background="{DynamicResource X.Brush.GlassFill}"
+              BorderBrush="{DynamicResource X.Brush.GlassBorder}" BorderThickness="1"
+              Padding="4" SnapsToDevicePixels="True"
               Visibility="{Binding IsNarrowLayout, Converter={StaticResource BoolToVisHelper}}">
+        <Border.Effect>
+          <DropShadowEffect Color="{DynamicResource X.Color.GlassShadow}" BlurRadius="24" ShadowDepth="0" Opacity="0.28" />
+        </Border.Effect>
         <Grid>
           <Grid.ColumnDefinitions>
             <ColumnDefinition />
+            <ColumnDefinition Width="1" />
             <ColumnDefinition />
+            <ColumnDefinition Width="1" />
             <ColumnDefinition />
+            <ColumnDefinition Width="1" />
             <ColumnDefinition />
           </Grid.ColumnDefinitions>
           <ui:NavTab Grid.Column="0" Glyph="🌐" Title="{loc:T nav.servers}"      IsActive="{Binding IsServersTab}"      Command="{Binding GoServersCommand}" />
-          <ui:NavTab Grid.Column="1" Glyph="🔗" Title="{loc:T nav.subscription}" IsActive="{Binding IsSubscriptionTab}" Command="{Binding GoSubscriptionCommand}" />
-          <ui:NavTab Grid.Column="2" Glyph="📜" Title="{loc:T nav.log}"          IsActive="{Binding IsLogTab}"          Command="{Binding GoLogCommand}" />
-          <ui:NavTab Grid.Column="3" Glyph="⚙"  Title="{loc:T nav.settings}"     IsActive="{Binding IsSettingsTab}"     Command="{Binding GoSettingsCommand}" />
+          <Rectangle Grid.Column="1" Width="1" Margin="0,8" Fill="{DynamicResource X.Brush.GlassBorder}" Opacity="0.5" />
+          <ui:NavTab Grid.Column="2" Glyph="🔗" Title="{loc:T nav.subscription}" IsActive="{Binding IsSubscriptionTab}" Command="{Binding GoSubscriptionCommand}" />
+          <Rectangle Grid.Column="3" Width="1" Margin="0,8" Fill="{DynamicResource X.Brush.GlassBorder}" Opacity="0.5" />
+          <ui:NavTab Grid.Column="4" Glyph="📜" Title="{loc:T nav.log}"          IsActive="{Binding IsLogTab}"          Command="{Binding GoLogCommand}" />
+          <Rectangle Grid.Column="5" Width="1" Margin="0,8" Fill="{DynamicResource X.Brush.GlassBorder}" Opacity="0.5" />
+          <ui:NavTab Grid.Column="6" Glyph="⚙"  Title="{loc:T nav.settings}"     IsActive="{Binding IsSettingsTab}"     Command="{Binding GoSettingsCommand}" />
         </Grid>
       </Border>
     </Grid>

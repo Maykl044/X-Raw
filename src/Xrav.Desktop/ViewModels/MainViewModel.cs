@@ -42,6 +42,12 @@ public sealed class MainViewModel : ViewModelBase
     private string _newSubscriptionLabel = "";
     private string _bootstrapStatus = "";
     private bool _bootstrapBusy;
+    private readonly HevSocks5Updater _hev = new();
+    private string _hevCurrentVersion = "";
+    private string _hevStateText = "";
+    private string _hevStateKind = "idle"; // idle | loading | success | error
+    private double _hevProgress;
+    private bool _hevBusy;
     private string _manualKeyText = "";
     private bool _urlSchemeRegistered;
 
@@ -81,6 +87,8 @@ public sealed class MainViewModel : ViewModelBase
             async () => await RefreshActiveSubscriptionAsync(),
             () => Subscriptions.Count > 0);
         BootstrapToolsCommand = new RelayCommand(async () => await BootstrapToolsAsync(), () => !BootstrapBusy);
+        UpdateHevCommand = new RelayCommand(async () => await UpdateHevAsync(), () => !HevBusy);
+        HevCurrentVersion = _hev.GetCurrentVersion();
         OpenDataFolderCommand = new RelayCommand(OpenDataFolder);
         OpenLogFileCommand = new RelayCommand(OpenLogFile);
         OpenWebsiteCommand = new RelayCommand(() => OpenUrl("https://rock.rockefellers.store"));
@@ -480,6 +488,111 @@ public sealed class MainViewModel : ViewModelBase
     public ICommand RefreshAllSubscriptionsCommand { get; }
     public ICommand RefreshActiveSubscriptionCommand { get; }
     public ICommand BootstrapToolsCommand { get; }
+    public ICommand UpdateHevCommand { get; }
+
+    public string HevCurrentVersion
+    {
+        get => _hevCurrentVersion;
+        private set => Set(ref _hevCurrentVersion, value);
+    }
+
+    public string HevStateText
+    {
+        get => _hevStateText;
+        private set => Set(ref _hevStateText, value);
+    }
+
+    public string HevStateKind
+    {
+        get => _hevStateKind;
+        private set => Set(ref _hevStateKind, value);
+    }
+
+    public double HevProgress
+    {
+        get => _hevProgress;
+        private set => Set(ref _hevProgress, value);
+    }
+
+    public bool HevBusy
+    {
+        get => _hevBusy;
+        private set
+        {
+            if (_hevBusy == value) return;
+            _hevBusy = value;
+            OnPropertyChanged();
+            (UpdateHevCommand as RelayCommand)?.RaiseCanExecuteChanged();
+        }
+    }
+
+    private async Task UpdateHevAsync()
+    {
+        if (HevBusy) return;
+        HevBusy = true;
+        HevStateKind = "loading";
+        HevStateText = "Проверяю GitHub Releases…";
+        HevProgress = 0;
+        var progress = new Progress<HevUpdateProgress>(p =>
+        {
+            Application.Current?.Dispatcher.InvokeAsync(() =>
+            {
+                switch (p.Stage)
+                {
+                    case HevUpdateStage.Checking:
+                    case HevUpdateStage.Downloading:
+                    case HevUpdateStage.Extracting:
+                    case HevUpdateStage.Installing:
+                        HevStateKind = "loading";
+                        HevStateText = p.Message ?? "Загрузка…";
+                        HevProgress = p.Progress;
+                        break;
+                    case HevUpdateStage.UpToDate:
+                        HevStateKind = "success";
+                        HevStateText = p.Message ?? "Актуальная версия";
+                        break;
+                    case HevUpdateStage.Success:
+                        HevStateKind = "success";
+                        HevStateText = p.Message ?? "Успешно обновлено";
+                        break;
+                    case HevUpdateStage.Error:
+                        HevStateKind = "error";
+                        HevStateText = p.Message ?? "Ошибка обновления";
+                        break;
+                }
+            });
+        });
+        try
+        {
+            var (ok, version, _) = await _hev.UpdateAsync(progress).ConfigureAwait(true);
+            HevCurrentVersion = version;
+            if (ok)
+            {
+                HevStateKind = "success";
+                if (string.IsNullOrEmpty(HevStateText) || HevStateText.Contains("Проверяю"))
+                    HevStateText = $"Успешно обновлено до {version}";
+                _ = Task.Run(async () =>
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(4)).ConfigureAwait(false);
+                    Application.Current?.Dispatcher.InvokeAsync(() =>
+                    {
+                        HevStateKind = "idle";
+                        HevStateText = "";
+                        HevProgress = 0;
+                    });
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            HevStateKind = "error";
+            HevStateText = "Ошибка: " + ex.Message;
+        }
+        finally
+        {
+            HevBusy = false;
+        }
+    }
     public ICommand OpenDataFolderCommand { get; }
     public ICommand OpenLogFileCommand { get; }
     public ICommand PingSelectedKeyCommand { get; }
