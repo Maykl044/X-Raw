@@ -43,6 +43,7 @@ public sealed class MainViewModel : ViewModelBase
     private string _bootstrapStatus = "";
     private bool _bootstrapBusy;
     private readonly HevSocks5Updater _hev = new();
+    private readonly ClientIdentityService _identity = new();
     private string _hevCurrentVersion = "";
     private string _hevStateText = "";
     private string _hevStateKind = "idle"; // idle | loading | success | error
@@ -89,6 +90,8 @@ public sealed class MainViewModel : ViewModelBase
         BootstrapToolsCommand = new RelayCommand(async () => await BootstrapToolsAsync(), () => !BootstrapBusy);
         UpdateHevCommand = new RelayCommand(async () => await UpdateHevAsync(), () => !HevBusy);
         HevCurrentVersion = _hev.GetCurrentVersion();
+        CopyClientUidCommand = new RelayCommand(CopyClientUidToClipboard);
+        RegenerateClientUidCommand = new RelayCommand(RegenerateClientUid);
         OpenDataFolderCommand = new RelayCommand(OpenDataFolder);
         OpenLogFileCommand = new RelayCommand(OpenLogFile);
         OpenWebsiteCommand = new RelayCommand(() => OpenUrl("https://rock.rockefellers.store"));
@@ -489,6 +492,38 @@ public sealed class MainViewModel : ViewModelBase
     public ICommand RefreshActiveSubscriptionCommand { get; }
     public ICommand BootstrapToolsCommand { get; }
     public ICommand UpdateHevCommand { get; }
+    public ICommand CopyClientUidCommand { get; }
+    public ICommand RegenerateClientUidCommand { get; }
+
+    /// <summary>UUIDv4 текущей установки X-Rav. Передаётся панели в заголовке/UA/query при загрузке подписок.</summary>
+    public string ClientUid => _identity.Uid;
+
+    private bool _clientUidCopied;
+    /// <summary>Флаг для UI: «UID только что скопирован», галочка горит 1.5 секунды.</summary>
+    public bool ClientUidCopied
+    {
+        get => _clientUidCopied;
+        private set { if (_clientUidCopied == value) return; _clientUidCopied = value; OnPropertyChanged(); }
+    }
+
+    private void CopyClientUidToClipboard()
+    {
+        try { System.Windows.Clipboard.SetText(_identity.Uid); }
+        catch { /* clipboard busy — не критично */ }
+        ClientUidCopied = true;
+        _ = Task.Run(async () =>
+        {
+            await Task.Delay(TimeSpan.FromMilliseconds(1500)).ConfigureAwait(false);
+            Application.Current?.Dispatcher.InvokeAsync(() => ClientUidCopied = false);
+        });
+    }
+
+    private void RegenerateClientUid()
+    {
+        _identity.Regenerate();
+        OnPropertyChanged(nameof(ClientUid));
+        FileLogger.Log("identity", "client UID regenerated to " + ClientIdentityService.Mask(_identity.Uid));
+    }
 
     public string HevCurrentVersion
     {
@@ -1197,7 +1232,7 @@ public sealed class MainViewModel : ViewModelBase
         try
         {
             FileLogger.Log("subscription", $"refreshing {entry.Url}");
-            var fetched = await SubscriptionFetcher.FetchAsync(SharedHttp, entry.Url, entry.Id).ConfigureAwait(false);
+            var fetched = await SubscriptionFetcher.FetchAsync(SharedHttp, entry.Url, entry.Id, _identity.Uid).ConfigureAwait(false);
             await Application.Current.Dispatcher.InvokeAsync(() =>
             {
                 var staleIds = Keys.Where(k => k.SubscriptionId == entry.Id).Select(k => k.Id).ToHashSet();

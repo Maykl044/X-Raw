@@ -661,7 +661,7 @@
           </Grid>
         </Border>
 
-        <!-- Тех-карточка: AppId / Xray engine / TUN-мост. -->
+        <!-- Тех-карточка: AppId / Xray engine / TUN-мост / Client UID. -->
         <Border Background="{DynamicResource X.Brush.GlassFill}" BorderBrush="{DynamicResource X.Brush.GlassBorder}"
                 BorderThickness="1" CornerRadius="14" Padding="16,12" Margin="0,0,0,12">
           <Grid>
@@ -670,6 +670,7 @@
               <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
+              <RowDefinition Height="Auto" />
               <RowDefinition Height="Auto" />
               <RowDefinition Height="Auto" />
               <RowDefinition Height="Auto" />
@@ -685,9 +686,81 @@
                        Foreground="{DynamicResource X.Brush.Text}" Margin="0,0,0,8" />
 
             <TextBlock Grid.Row="2" Grid.Column="0" Text="TUN-мост" FontSize="12"
-                       Foreground="{DynamicResource X.Brush.TextSoft}" Margin="0,0,8,0" />
+                       Foreground="{DynamicResource X.Brush.TextSoft}" Margin="0,0,8,8" />
             <TextBlock Grid.Row="2" Grid.Column="1" Text="hev-socks5-tunnel" FontSize="12" FontWeight="SemiBold"
-                       Foreground="{DynamicResource X.Brush.Text}" />
+                       Foreground="{DynamicResource X.Brush.Text}" Margin="0,0,0,8" />
+
+            <!-- Client UID: моноширинный, справа iOS-кнопка «Copy» с галочкой на 1.5с. -->
+            <TextBlock Grid.Row="3" Grid.Column="0" Text="Client UID" FontSize="12"
+                       Foreground="{DynamicResource X.Brush.TextSoft}" Margin="0,0,8,0" VerticalAlignment="Center" />
+            <Grid Grid.Row="3" Grid.Column="1">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+              <TextBlock Grid.Column="0" Text="{Binding ClientUid}" FontSize="11"
+                         FontFamily="Consolas, Cascadia Mono, Courier New, Segoe UI Mono"
+                         Foreground="{DynamicResource X.Brush.Text}" VerticalAlignment="Center"
+                         TextTrimming="CharacterEllipsis" />
+              <Button Grid.Column="1" Command="{Binding CopyClientUidCommand}"
+                      ToolTip="Скопировать UID"
+                      Width="28" Height="24" Padding="0" Margin="6,0,0,0" Cursor="Hand"
+                      Background="Transparent" BorderThickness="0">
+                <Button.Template>
+                  <ControlTemplate TargetType="Button">
+                    <Border x:Name="uidBd" Background="{DynamicResource X.Brush.GlassFillStrong}"
+                            BorderBrush="{DynamicResource X.Brush.GlassBorder}" BorderThickness="1"
+                            CornerRadius="8">
+                      <Grid>
+                        <TextBlock x:Name="uidCopyGlyph" Text="⧉" FontSize="13"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource X.Brush.TextSoft}" />
+                        <TextBlock x:Name="uidCheckGlyph" Text="✓" FontSize="13" FontWeight="Bold"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource X.Brush.Success}" Opacity="0" />
+                      </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                      <Trigger Property="IsMouseOver" Value="True">
+                        <Setter TargetName="uidBd" Property="BorderBrush" Value="{DynamicResource X.Brush.Accent}" />
+                      </Trigger>
+                      <DataTrigger Binding="{Binding ClientUidCopied}" Value="True">
+                        <Setter TargetName="uidCopyGlyph" Property="Opacity" Value="0" />
+                        <Setter TargetName="uidCheckGlyph" Property="Opacity" Value="1" />
+                        <Setter TargetName="uidBd" Property="Background">
+                          <Setter.Value>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                              <GradientStop Color="#3322C55E" Offset="0" />
+                              <GradientStop Color="#5516A34A" Offset="1" />
+                            </LinearGradientBrush>
+                          </Setter.Value>
+                        </Setter>
+                        <DataTrigger.EnterActions>
+                          <BeginStoryboard>
+                            <Storyboard>
+                              <DoubleAnimation Storyboard.TargetName="uidCheckGlyph" Storyboard.TargetProperty="Opacity"
+                                               From="0" To="1" Duration="0:0:0.18" />
+                              <DoubleAnimation Storyboard.TargetName="uidCopyGlyph" Storyboard.TargetProperty="Opacity"
+                                               From="1" To="0" Duration="0:0:0.18" />
+                            </Storyboard>
+                          </BeginStoryboard>
+                        </DataTrigger.EnterActions>
+                        <DataTrigger.ExitActions>
+                          <BeginStoryboard>
+                            <Storyboard>
+                              <DoubleAnimation Storyboard.TargetName="uidCheckGlyph" Storyboard.TargetProperty="Opacity"
+                                               From="1" To="0" Duration="0:0:0.18" />
+                              <DoubleAnimation Storyboard.TargetName="uidCopyGlyph" Storyboard.TargetProperty="Opacity"
+                                               From="0" To="1" Duration="0:0:0.18" />
+                            </Storyboard>
+                          </BeginStoryboard>
+                        </DataTrigger.ExitActions>
+                      </DataTrigger>
+                    </ControlTemplate.Triggers>
+                  </ControlTemplate>
+                </Button.Template>
+              </Button>
+            </Grid>
           </Grid>
         </Border>
 
