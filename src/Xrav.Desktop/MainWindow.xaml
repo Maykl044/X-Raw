@@ -95,14 +95,38 @@
 
     <!-- Brushed-metal sidebar: появляется при ActualWidth >= 900 (adaptive layout).
          Внутри — вертикальная навигация по тем же 4 вкладкам что и в нижнем баре.
-         Тонкая правая граница (1px) визуально отделяет sidebar от основной зоны. -->
+         Правая граница — вертикальный gradient (затухает к низу) + мягкая тень, чтобы
+         sidebar «парил» как iPad-sidebar в iOS. -->
     <Border Grid.Column="0" Width="220" Style="{StaticResource X.Panel.BrushedMetal}"
-            BorderBrush="{DynamicResource X.Brush.GlassBorder}" BorderThickness="0,0,1,0"
+            BorderThickness="0"
             Visibility="{Binding IsWideLayout, Converter={StaticResource BoolToVisHelper}}">
+      <Border.Effect>
+        <DropShadowEffect Color="{DynamicResource X.Color.GlassShadow}" BlurRadius="22" ShadowDepth="0" Opacity="0.30" Direction="0" />
+      </Border.Effect>
       <Grid>
         <!-- Шлифовка поверх (тонкие горизонтальные штрихи + шум) -->
         <Rectangle Fill="{DynamicResource X.Brush.BrushedScratches}" IsHitTestVisible="False" />
         <Rectangle Fill="{DynamicResource X.Brush.GrainOverlay}" IsHitTestVisible="False" />
+        <!-- Top-sheen: тонкий блик у верхней кромки sidebar — стекло «преломляет свет». -->
+        <Rectangle VerticalAlignment="Top" Height="120" IsHitTestVisible="False">
+          <Rectangle.Fill>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+              <GradientStop Color="{DynamicResource X.Color.GlassHighlight}" Offset="0" />
+              <GradientStop Color="#00000000" Offset="1" />
+            </LinearGradientBrush>
+          </Rectangle.Fill>
+        </Rectangle>
+        <!-- Правая «hairline» — вертикальный gradient, иммитирует iOS-divider. -->
+        <Rectangle HorizontalAlignment="Right" Width="1" IsHitTestVisible="False">
+          <Rectangle.Fill>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+              <GradientStop Color="#00FFFFFF" Offset="0" />
+              <GradientStop Color="{DynamicResource X.Color.GlassBorder}" Offset="0.20" />
+              <GradientStop Color="{DynamicResource X.Color.GlassBorder}" Offset="0.80" />
+              <GradientStop Color="#00FFFFFF" Offset="1" />
+            </LinearGradientBrush>
+          </Rectangle.Fill>
+        </Rectangle>
         <StackPanel Margin="10,20,10,20">
           <StackPanel Orientation="Horizontal" Margin="6,0,0,24">
             <Border Width="34" Height="34" CornerRadius="10" ClipToBounds="True">
@@ -152,8 +176,19 @@
                   Visibility="{Binding HasSubscriptions, Converter={StaticResource BoolToVisHelper}}">
             <TextBlock Text="↻" FontSize="15" FontWeight="Bold" />
           </Button>
-          <Border Background="{DynamicResource X.Brush.GlassFill}" CornerRadius="14"
+          <!-- Статус-пилюля: стекло + top-sheen + мягкая тень. Цвет точки = состояние туннеля. -->
+          <Border CornerRadius="14"
                   BorderBrush="{DynamicResource X.Brush.GlassBorder}" BorderThickness="1" Padding="10,5">
+            <Border.Background>
+              <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="{DynamicResource X.Color.GlassHighlight}" Offset="0" />
+                <GradientStop Color="{DynamicResource X.Color.GlassFill}" Offset="0.55" />
+                <GradientStop Color="{DynamicResource X.Color.GlassFill}" Offset="1" />
+              </LinearGradientBrush>
+            </Border.Background>
+            <Border.Effect>
+              <DropShadowEffect Color="{DynamicResource X.Color.GlassShadow}" BlurRadius="14" ShadowDepth="0" Opacity="0.30" />
+            </Border.Effect>
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
               <Ellipse Width="8" Height="8" Margin="0,0,8,0" VerticalAlignment="Center"
                        Fill="{Binding TunnelState, Converter={StaticResource StateToColor}}" />
@@ -164,17 +199,24 @@
         </StackPanel>
       </Grid>
 
-      <!-- Сообщение об ошибке + баннер обновления -->
+      <!-- Сообщение об ошибке + баннер обновления — стеклянные «банеры»
+           с тонированной тенью под цвет состояния (red/yellow). -->
       <StackPanel Grid.Row="1" Margin="20,6,20,0">
         <Border CornerRadius="10" Padding="12,8" Margin="0,0,0,6"
                 Background="{DynamicResource X.Brush.DangerTint}" BorderBrush="{DynamicResource X.Brush.Danger}" BorderThickness="1"
                 Visibility="{Binding TunnelError, Converter={StaticResource StringToVis}}">
+          <Border.Effect>
+            <DropShadowEffect Color="{DynamicResource X.Color.Danger}" BlurRadius="16" ShadowDepth="0" Opacity="0.25" />
+          </Border.Effect>
           <TextBlock Text="{Binding TunnelError}" Foreground="{DynamicResource X.Brush.Text}"
                      FontSize="12" TextWrapping="Wrap" />
         </Border>
         <Border CornerRadius="10" Padding="12,8"
                 Background="{DynamicResource X.Brush.WarnTint}" BorderBrush="{DynamicResource X.Brush.Warn}" BorderThickness="1"
                 Visibility="{Binding UpdateBanner, Converter={StaticResource StringToVis}}">
+          <Border.Effect>
+            <DropShadowEffect Color="{DynamicResource X.Color.Warn}" BlurRadius="16" ShadowDepth="0" Opacity="0.25" />
+          </Border.Effect>
           <Grid>
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="*" />
