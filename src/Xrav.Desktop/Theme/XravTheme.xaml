@@ -828,4 +828,69 @@
     <Setter Property="ui:CursorLight.Enabled" Value="True" />
   </Style>
 
+  <!-- ============================================================
+       Implicit defaults: каждый стандартный TextBox / ComboBox /
+       CheckBox / RadioButton / ListBox / ListBoxItem / Button во всём
+       приложении автоматически получает премиальный iOS-glass-вид.
+       Не нужно прописывать Style на каждом контроле.
+       ============================================================ -->
+
+  <!-- Любой <TextBox> без явного стиля = стеклянный, accent-каретка/выделение,
+       1px-граница, accent-glow на focus. (CheckBox/RadioButton/ComboBox уже
+       реализуют implicit defaults выше при первом объявлении.) -->
+  <Style TargetType="TextBox" BasedOn="{StaticResource X.TextBox}" />
+  <Style TargetType="ComboBoxItem" BasedOn="{StaticResource X.ComboBoxItem}" />
+
+  <!-- Slider: тонкий track-капсул + стеклянный thumb с тенью. -->
+  <Style TargetType="Slider">
+    <Setter Property="Foreground" Value="{DynamicResource X.Brush.Accent}" />
+    <Setter Property="Background" Value="{DynamicResource X.Brush.GlassFill}" />
+    <Setter Property="MinHeight" Value="24" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Slider">
+          <Grid VerticalAlignment="Center">
+            <Border Height="4" CornerRadius="2"
+                    Background="{DynamicResource X.Brush.GlassFill}"
+                    BorderBrush="{DynamicResource X.Brush.GlassBorder}" BorderThickness="1" />
+            <Track x:Name="PART_Track">
+              <Track.DecreaseRepeatButton>
+                <RepeatButton Command="Slider.DecreaseLarge" Opacity="0" />
+              </Track.DecreaseRepeatButton>
+              <Track.Thumb>
+                <Thumb Width="18" Height="18">
+                  <Thumb.Template>
+                    <ControlTemplate TargetType="Thumb">
+                      <Ellipse Fill="{DynamicResource X.Brush.GlassFillStrong}"
+                               Stroke="{DynamicResource X.Brush.GlassBorder}" StrokeThickness="1">
+                        <Ellipse.Effect>
+                          <DropShadowEffect Color="{DynamicResource X.Color.GlassShadow}" BlurRadius="8" ShadowDepth="0" Opacity="0.5" />
+                        </Ellipse.Effect>
+                      </Ellipse>
+                    </ControlTemplate>
+                  </Thumb.Template>
+                </Thumb>
+              </Track.Thumb>
+              <Track.IncreaseRepeatButton>
+                <RepeatButton Command="Slider.IncreaseLarge" Opacity="0" />
+              </Track.IncreaseRepeatButton>
+            </Track>
+          </Grid>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- ListBox без явной Style — наследует compact-стеклянный шаблон.
+       Внутренние ListBoxItem не делаем implicit-default, чтобы кастомные
+       шаблоны (карточки серверов с avatar/ping) не получили дублирующий
+       стеклянный border поверх своего. -->
+  <Style TargetType="ListBox" BasedOn="{StaticResource X.ListBox}" />
+
+  <!-- Внимание: НЕ ставим implicit <Style TargetType="Button"> — слишком много
+       кнопок имеют inline Template или Background=Transparent (закрытие баннеров,
+       копирование UID, нижний навбар, центральная power-кнопка). Каждая такая
+       кнопка уже имеет премиальное оформление вручную; глобальная подмена
+       перетёрла бы их шаблоны. -->
+
 </ResourceDictionary>
